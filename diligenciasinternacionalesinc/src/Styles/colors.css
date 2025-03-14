@@ -1,19 +1,21 @@
 :root {
     /* Colores base */
-    --primary-color: #010440;
-    --secondary-color: #025E73;
-    --accent-color: #D9328E;
-    --warning-color: #D97904;
-    --background-color: #FEFEFF;
-    --text-color: #010440;
+    --color-primary: #010440;       /* Color principal (azul oscuro) */
+    --color-secondary: #025E73;     /* Color secundario (verde azulado) */
+    --color-accent: #D9328E;        /* Color de acento (rosa fuerte) */
+    --color-warning: #D97904;       /* Color de advertencia (naranja) */
+    --color-background: #FEFEFF;    /* Color de fondo (blanco) */
+    --color-text: #010440;          /* Color de texto (azul oscuro) */
+    --color-text-light: #FEFEFF;    /* Color de texto claro (blanco) */
   }
   
   [data-theme="dark"] {
     /* Colores para el tema oscuro */
-    --primary-color: #010440;
-    --secondary-color: #025E73;
-    --accent-color: #D9328E;
-    --warning-color: #D97904;
-    --background-color: #010440;
-    --text-color: #FEFEFF;
+    --color-primary: #010440;       /* Color principal (azul oscuro) */
+    --color-secondary: #025E73;     /* Color secundario (verde azulado) */
+    --color-accent: #D9328E;        /* Color de acento (rosa fuerte) */
+    --color-warning: #D97904;       /* Color de advertencia (naranja) */
+    --color-background: #010440;    /* Color de fondo (azul oscuro) */
+    --color-text: #FEFEFF;          /* Color de texto (blanco) */
+    --color-text-light: #FEFEFF;    /* Color de texto claro (blanco) */
   }

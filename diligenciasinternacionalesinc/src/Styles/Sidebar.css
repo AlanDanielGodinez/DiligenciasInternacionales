@@ -4,8 +4,8 @@
 .sidebar {
   width: 250px;
   height: 100vh;
-  background-color: var(--primary-color);
-  color: var(--text-color);
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
   transition: all 0.3s ease;
   position: relative;
 }
@@ -16,52 +16,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  background-color: var(--secondary-color);
-}
-
-/* Logo */
-.logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-/* Menú de opciones */
-.menu {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-/* Elementos del menú */
-.menu-item {
-  border-bottom: 1px solid var(--secondary-color);
-}
-
-/* Enlace del menú */
-.menu-link {
-  display: flex;
-  align-items: center;
-  padding: 15px 20px;
-  color: var(--text-color);
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.menu-link:hover {
-  background-color: var(--accent-color);
+  background-color: var(--color-secondary);
 }
 
 /* Botón para cambiar el tema */
-.theme-toggle {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-}
-
 .theme-button {
-  background-color: var(--accent-color);
-  color: var(--text-color);
+  background-color: var(--color-accent);
+  color: var(--color-text-light);
   border: none;
   padding: 10px 15px;
   cursor: pointer;
@@ -70,5 +31,5 @@
 }
 
 .theme-button:hover {
-  background-color: var(--warning-color);
+  background-color: var(--color-warning);
 }
