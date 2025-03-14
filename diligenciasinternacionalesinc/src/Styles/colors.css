@@ -1,0 +1,19 @@
+:root {
+    /* Colores base */
+    --primary-color: #010440;
+    --secondary-color: #025E73;
+    --accent-color: #D9328E;
+    --warning-color: #D97904;
+    --background-color: #FEFEFF;
+    --text-color: #010440;
+  }
+  
+  [data-theme="dark"] {
+    /* Colores para el tema oscuro */
+    --primary-color: #010440;
+    --secondary-color: #025E73;
+    --accent-color: #D9328E;
+    --warning-color: #D97904;
+    --background-color: #010440;
+    --text-color: #FEFEFF;
+  }
