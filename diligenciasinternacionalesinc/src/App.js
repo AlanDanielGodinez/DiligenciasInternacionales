@@ -1,10 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; // Importar react-router-dom
 import { ThemeProvider } from "../src/Components/ThemeContext"; // Importar el proveedor del tema
-import Sidebar from "./Components/Sidebar";
+import Navbar from "./Components/Navbar";
 import Dashboard from "./Pages/Dashboard"; // Importar la página Dashboard
-import OtraPagina from "./Pages/OtraPagina"; // Importar otras páginas
-import MasOpciones from "./Pages/MasOpciones"; // Importar más páginas
 import "./App.css";
 
 // Enlaces de estilos:
@@ -16,9 +14,8 @@ function App() {
     <ThemeProvider>
       <Router>
         <div className="app">
-          {/* Sidebar presente en todas las páginas */}
-          <Sidebar />
-
+          {/* NavBar presente en todas las páginas */}
+          <Navbar />
           {/* Contenido principal que cambia según la ruta */}
           <div className="content">
             <Routes>
@@ -26,8 +23,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
 
               {/* Otras rutas */}
-              <Route path="/otra-pagina" element={<OtraPagina />} />
-              <Route path="/mas-opciones" element={<MasOpciones />} />
+              
 
               {/* Ruta para manejar páginas no encontradas (opcional) */}
               <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
