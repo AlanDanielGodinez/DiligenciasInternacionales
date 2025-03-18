@@ -8,6 +8,7 @@ import "./App.css";
 // Enlaces de estilos:
 import "../src/Styles/Navbar.css"; // Importamos el archivo CSS
 import "../src/Styles/Sidebar.css";
+import "../src/Styles/Dashboard.css"
 
 function App() {
   return (
