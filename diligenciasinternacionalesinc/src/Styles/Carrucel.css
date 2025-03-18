@@ -1,6 +1,7 @@
 #carouselExampleDark {
   width: 100%; /* Ocupa todo el ancho del contenedor */
-  height: 50vh; /* Reducimos la altura al 70% de la ventana */
+  height: 50vh; /* Altura reducida al 50% de la ventana */
+  position: relative; /* Asegura que los controles estén posicionados correctamente */
 }
 
 .carousel-inner {
@@ -20,38 +21,86 @@
 }
 
 /* Estilos para los controles del carrusel */
+.carousel-control-prev,
+.carousel-control-next {
+  width: 5%; /* Ancho de los controles */
+  background-color: rgba(0, 0, 0, 0.3); /* Fondo semitransparente para mejorar la visibilidad */
+  border-radius: 50%; /* Bordes redondeados */
+  opacity: 1; /* Asegura que los controles sean visibles */
+  transition: background-color 0.3s ease; /* Transición suave para el hover */
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+  background-color: rgba(0, 0, 0, 0.6); /* Fondo más oscuro al hacer hover */
+}
+
 .carousel-control-prev-icon,
 .carousel-control-next-icon {
-  background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
+  background-color: rgba(255, 255, 255, 0.8); /* Fondo blanco semitransparente */
+  border-radius: 50%; /* Bordes redondeados */
+  width: 40px; /* Tamaño del ícono */
+  height: 40px; /* Tamaño del ícono */
+  background-size: 60%; /* Tamaño del ícono dentro del círculo */
+  background-position: center; /* Centra el ícono */
 }
 
 .carousel-control-prev-icon {
-  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'><path d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z'/></svg>");
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'><path d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z'/></svg>");
 }
 
 .carousel-control-next-icon {
-  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'><path d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/></svg>");
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'><path d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/></svg>");
+}
+
+/* Estilos para los indicadores */
+.carousel-indicators {
+  bottom: 10px; /* Posición desde la parte inferior */
 }
 
 .carousel-indicators [data-bs-target] {
-  width: 30px;
-  height: 3px;
-  background-color: rgba(255, 255, 255, 0.5);
-  border: none;
-  margin: 0 3px;
+  width: 10px; /* Ancho de los indicadores */
+  height: 10px; /* Altura de los indicadores */
+  border-radius: 50%; /* Forma circular */
+  background-color: rgba(255, 255, 255, 0.5); /* Color semitransparente */
+  border: none; /* Sin borde */
+  margin: 0 5px; /* Espacio entre indicadores */
+  transition: background-color 0.3s ease; /* Transición suave para el hover */
+}
+
+.carousel-indicators [data-bs-target]:hover {
+  background-color: rgba(255, 255, 255, 0.8); /* Color más claro al hacer hover */
 }
 
 .carousel-indicators .active {
-  background-color: rgba(255, 255, 255, 1);
+  background-color: rgba(255, 255, 255, 1); /* Color sólido para el indicador activo */
 }
 
+/* Estilos para el texto del carrusel */
 .carousel-caption {
-  width: 70%;
-  color: #fff;
-  padding: 1.25rem;
-  background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 5px;
+  position: absolute;
+  bottom: 20%; /* Posición desde la parte inferior */
+  left: 50%; /* Centrado horizontal */
+  transform: translateX(-50%); /* Ajuste fino para centrar */
+  text-align: center;
+  color: white; /* Color del texto */
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+  padding: 20px; /* Espaciado interno */
+  border-radius: 10px; /* Bordes redondeados */
+  max-width: 80%; /* Ancho máximo del texto */
+  transition: background-color 0.3s ease; /* Transición suave para el hover */
+}
+
+.carousel-caption:hover {
+  background-color: rgba(0, 0, 0, 0.7); /* Fondo más oscuro al hacer hover */
+}
+
+.carousel-caption h5 {
+  font-size: 2.5rem; /* Tamaño del título */
+  font-weight: bold; /* Negrita */
+  margin-bottom: 10px; /* Espacio inferior */
+}
+
+.carousel-caption p {
+  font-size: 1.5rem; /* Tamaño de la descripción */
 }
