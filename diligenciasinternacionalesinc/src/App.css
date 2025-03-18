@@ -2,6 +2,17 @@
   text-align: center;
 }
 
+/* Aplicar Plus Jakarta Sans para títulos */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600; /* Puedes ajustar el peso según lo necesites */
+}
+
+/* Aplicar Lexend Deca para el resto del texto */
+body, p, a, span, div, input, button {
+  font-family: 'Lexend Deca', sans-serif;
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;

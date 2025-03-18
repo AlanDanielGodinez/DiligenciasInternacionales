@@ -3,17 +3,27 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
-    background-color: var(--color-primary); /* Usa el color principal (azul oscuro) */
-    color: var(--color-text-light);        /* Usa el color de texto claro (blanco) */
+    padding: 15px 40px;
+    background-color: var(--color-primary); /* Fondo azul oscuro */
+    color: var(--color-text-light);        /* Texto blanco */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 2px solid var(--color-warning); /* Línea inferior de acento (naranja) */
 }
 
 /* Logo */
 .navbar-logo a {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: bold;
-    color: var(--color-text-light);        /* Usa el color de texto claro (blanco) */
+    color: var(--color-text-light);        /* Texto blanco */
     text-decoration: none;
+    transition: transform 0.3s ease;
+}
+
+.navbar-logo a:hover {
+    transform: scale(1.05); /* Efecto de escala al hacer hover */
 }
 
 /* Menú de opciones */
@@ -25,18 +35,38 @@
 }
 
 .navbar-menu li {
-    margin: 0 15px;
+    margin: 0 20px;
+    position: relative;
 }
 
 .navbar-menu a {
-    color: var(--color-text-light);        /* Usa el color de texto claro (blanco) */
+    color: var(--color-text-light);        /* Texto blanco */
     text-decoration: none;
-    font-size: 1rem;
+    font-size: 1.1rem;
+    font-weight: 500;
     transition: color 0.3s ease;
+    padding: 5px 10px;
+    border-radius: 5px;
 }
 
 .navbar-menu a:hover {
-    color: var(--color-accent);           /* Usa el color de acento (rosa fuerte) al hacer hover */
+    color: var(--color-warning);           /* Color de acento (naranja) al hacer hover */
+    background-color: rgba(217, 121, 4, 0.1); /* Fondo suave al hacer hover */
+}
+
+.navbar-menu a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    background-color: var(--color-warning); /* Color de acento (naranja) */
+    bottom: -5px;
+    left: 0;
+    transition: width 0.3s ease;
+}
+
+.navbar-menu a:hover::after {
+    width: 100%; /* Subrayado animado al hacer hover */
 }
 
 /* Opciones de autenticación */
@@ -46,13 +76,55 @@
 }
 
 .auth-link {
-    color: var(--color-text-light);       /* Usa el color de texto claro (blanco) */
+    color: var(--color-text-light);       /* Texto blanco */
     text-decoration: none;
-    margin-left: 15px;
-    font-size: 1rem;
-    transition: color 0.3s ease;
+    margin-left: 20px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 8px 15px;
+    border-radius: 25px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .auth-link:hover {
-    color: var(--color-accent);          /* Usa el color de acento (rosa fuerte) al hacer hover */
+    color: var(--color-primary);         /* Texto azul oscuro al hacer hover */
+    background-color: var(--color-warning); /* Fondo de acento (naranja) al hacer hover */
+}
+
+.auth-link:first-child {
+    margin-left: 0;
+}
+
+/* Efecto de botón para el enlace de registro */
+.auth-link:last-child {
+    background-color: var(--color-warning); /* Fondo de acento (naranja) */
+    color: var(--color-primary);         /* Texto azul oscuro */
+    border: 2px solid var(--color-warning); /* Borde de acento (naranja) */
+}
+
+.auth-link:last-child:hover {
+    background-color: transparent;
+    color: var(--color-warning);         /* Texto de acento (naranja) al hacer hover */
+}
+
+/* Responsive Design (opcional) */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        padding: 10px;
+    }
+
+    .navbar-menu {
+        flex-direction: column;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .navbar-menu li {
+        margin: 10px 0;
+    }
+
+    .navbar-auth {
+        margin-top: 10px;
+    }
 }
