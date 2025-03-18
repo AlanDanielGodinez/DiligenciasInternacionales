@@ -1,6 +1,5 @@
 import React from 'react';
 
-
 const Carousel = ({ images }) => {
   return (
     <div id="carouselExampleDark" className="carousel carousel-dark slide" data-bs-ride="carousel">

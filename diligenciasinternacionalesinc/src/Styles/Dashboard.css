@@ -12,42 +12,12 @@ body {
 }
 
 .main-content {
-  padding: 20px 40px;
-}
-
-.hero-section {
-  background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.4)), url('https://cdn.usegalileo.ai/sdxl10/d59c4801-4cf4-486a-8017-dc5627a10cbc.png');
-  background-size: cover;
-  background-position: center;
-  padding: 40px;
-  border-radius: 12px;
-  color: white;
-}
-
-.search-bar {
-  display: flex;
-  gap: 8px;
-  margin-top: 20px;
-}
-
-.search-bar input {
-  flex-grow: 1;
-  padding: 10px;
-  border: 1px solid #d0dbe7;
-  border-radius: 12px;
-}
-
-.search-bar button {
-  background-color: #1980e6;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 12px;
-  cursor: pointer;
+  padding: 0; /* Elimina el padding para que el carrusel ocupe toda la pantalla */
 }
 
 .projects-section, .team-section, .activity-section {
-  margin-top: 40px;
+  margin-top: 20px; /* Reducimos el margen superior para que no quede demasiado espacio */
+  padding: 20px 40px; /* Añade padding solo a estas secciones */
 }
 
 .projects-grid, .team-grid {
