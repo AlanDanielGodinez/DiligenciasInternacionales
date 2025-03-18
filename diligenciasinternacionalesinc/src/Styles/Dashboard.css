@@ -1,20 +1,90 @@
-.parent {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: 100vh auto; /* La primera fila ocupa toda la pantalla */
-  gap: 8px;
-  padding: 16px;
-  background-color: var(--color-background);
+body {
+  font-family: 'Inter', 'Noto Sans', sans-serif;
+  background-color: #f0f4f8;
+  margin: 0;
+  padding: 0;
 }
 
-.div1 {
-  grid-column: span 5 / span 5;
-  grid-row: 1; /* Ocupa la primera fila */
-  background-color: var(--color-primary);
-  color: var(--color-text-light);
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  padding: 20px 40px;
+}
+
+.hero-section {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.4)), url('https://cdn.usegalileo.ai/sdxl10/d59c4801-4cf4-486a-8017-dc5627a10cbc.png');
+  background-size: cover;
+  background-position: center;
+  padding: 40px;
+  border-radius: 12px;
+  color: white;
+}
+
+.search-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.search-bar input {
+  flex-grow: 1;
+  padding: 10px;
+  border: 1px solid #d0dbe7;
+  border-radius: 12px;
+}
+
+.search-bar button {
+  background-color: #1980e6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.projects-section, .team-section, .activity-section {
+  margin-top: 40px;
+}
+
+.projects-grid, .team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+  gap: 16px;
+}
+
+.project-card, .team-member {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.project-image, .member-avatar, .activity-avatar {
+  width: 100%;
+  aspect-ratio: 1;
+  background-size: cover;
+  border-radius: 12px;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activity-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  overflow: hidden; /* Evita que el contenido se desborde */
-  height: 100vh; /* Ocupa toda la altura de la pantalla */
+  gap: 16px;
+  background-color: white;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.activity-info {
+  flex-grow: 1;
 }
