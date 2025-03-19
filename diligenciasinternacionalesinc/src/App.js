@@ -9,6 +9,7 @@ import "./App.css";
 import "../src/Styles/Navbar.css"; // Importamos el archivo CSS
 import "../src/Styles/Sidebar.css";
 import "../src/Styles/Dashboard.css"
+import "../src/Styles/Footer.css";
 
 function App() {
   return (

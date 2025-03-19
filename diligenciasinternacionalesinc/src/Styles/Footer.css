@@ -1,0 +1,85 @@
+.footer {
+    background-color: var(--color-primary);
+    color: var(--color-text-light);
+    padding: 2rem 0;
+    font-family: 'Arial', sans-serif;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 200px;
+    margin: 1rem 0;
+}
+
+.footer-title {
+    color: var(--color-accent);
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.footer-text {
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-links li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-links a {
+    color: var(--color-text-light);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: var(--color-accent);
+}
+
+.footer-bottom {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-secondary);
+}
+
+.footer-bottom-text {
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+/* Estilos para el tema oscuro */
+[data-theme="dark"] .footer {
+    background-color: var(--color-background);
+    color: var(--color-text);
+}
+
+[data-theme="dark"] .footer-links a {
+    color: var(--color-text);
+}
+
+[data-theme="dark"] .footer-links a:hover {
+    color: var(--color-accent);
+}
+
+[data-theme="dark"] .footer-title {
+    color: var(--color-accent);
+}
+
+[data-theme="dark"] .footer-bottom {
+    border-top: 1px solid var(--color-secondary);
+}

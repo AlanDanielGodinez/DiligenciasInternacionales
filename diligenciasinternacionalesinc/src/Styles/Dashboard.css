@@ -148,17 +148,23 @@ p {
 }
 
 .project-card {
-  background-color: white;
+  background-color: var(--color-primary);
   border-radius: 12px;
   padding: 16px;
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   animation: fadeInUp 1s ease-out;
+  color: white;
 }
 
 .project-card:hover {
   transform: translateY(-10px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  color: var(--color-primary);
+  border: 2px solid #ffa500; /* Borde naranja */
+  
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .project-image {
@@ -236,4 +242,122 @@ p {
 
 .activity-info {
   flex-grow: 1;
+}
+/* Estilos para el menú de navegación */
+.navigation-menu {
+  margin-top: 60px;
+  padding: 20px;
+}
+
+.navigation-menu h2 {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 30px;
+  text-align: center;
+  animation: fadeInUp 1s ease-out;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: stretch; /* Asegura que la imagen y el contenido tengan la misma altura */
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden; /* Evita que la imagen se salga de la tarjeta */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeInUp 1s ease-out;
+}
+
+.menu-item:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.menu-image {
+  width: 150px; /* Ancho fijo para la imagen */
+  height: auto; /* Altura automática para que abarque todo el alto */
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0; /* Evita que la imagen se reduzca */
+}
+
+.menu-content {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.menu-content h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.menu-content p {
+  font-size: 1rem;
+  color: #666;
+}
+/* Estilos para las banderas */
+.flags-container {
+  display: flex;
+  justify-content: left;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap; /* Asegura que las banderas se ajusten en pantallas pequeñas */
+}
+
+.flag {
+  width: 50px; /* Tamaño base de las banderas */
+  height: auto;
+  transition: transform 0.3s ease;
+  border-radius: 5px;
+}
+
+.flag:hover {
+  transform: scale(1.1); /* Efecto de zoom al pasar el mouse */
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 100px 20px; /* Ajusta el padding para pantallas más pequeñas */
+  }
+
+  .hero-section h1 {
+    font-size: 2rem; /* Reduce el tamaño del título */
+  }
+
+  .hero-section h2 {
+    font-size: 1.2rem; /* Reduce el tamaño del subtítulo */
+  }
+
+  .flag {
+    width: 40px; /* Reduce el tamaño de las banderas en pantallas pequeñas */
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 80px 10px; /* Ajusta el padding para pantallas muy pequeñas */
+  }
+
+  .hero-section h1 {
+    font-size: 1.5rem; /* Reduce aún más el tamaño del título */
+  }
+
+  .hero-section h2 {
+    font-size: 1rem; /* Reduce aún más el tamaño del subtítulo */
+  }
+
+  .flag {
+    width: 30px; /* Reduce aún más el tamaño de las banderas */
+  }
 }
