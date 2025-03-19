@@ -1,107 +1,120 @@
 import React from 'react';
-import image1 from "../Images/Dashboard.jpg"
-
+import image1 from "../Images/Dashboard.jpg";
+import a1 from "../Images/a1.jpeg";
+import usaFlag from "../Images/usa.png"; // Importa las imágenes de las banderas
+import mexicoFlag from "../Images/mexico.webp";
+import guatemalaFlag from "../Images/guatemala.png";
+import elSalvadorFlag from "../Images/salvador.png";
+import hondurasFlag from "../Images/honduras.png";
+import Footer from '../Components/Footer'; // Importa el componente Footer
 
 const Dashboard = () => {
   // Cambia esta URL por la imagen de fondo que quieras
   const heroBackgroundImage = image1;
 
+  // Opciones del menú de navegación
+  const menuOptions = [
+    {
+      title: "Asesoría Legal",
+      image: a1,
+      description: "Brindamos asesoría legal especializada en trámites internacionales.",
+    },
+    {
+      title: "Operadora Turística",
+      image: "https://www.cesuma.mx/blog/wp-content/uploads/2023/04/operador-turstico-entregando-boletos-de-avion.jpg",
+      description: "Organizamos viajes y paquetes turísticos a nivel internacional.",
+    },
+    {
+      title: "Trámite eTA (Autorización Electrónica de Viaje)",
+      image: "https://media.istockphoto.com/id/1020968912/es/vector/icono-de-la-hoja-de-arce-s%C3%ADmbolo-canadiense-ilustraci%C3%B3n-de-vector.jpg?s=612x612&w=0&k=20&c=XYbDMGplNJvpSQECqiDl-6ahBzewF_RpSfQhYcEhSMY=",
+      description: "Te ayudamos a obtener tu Autorización Electrónica de Viaje (eTA) de manera rápida y segura.",
+    },
+    {
+      title: "Apostille Americana",
+      image: "https://apostilladoytraduccion.com/wp-content/uploads/2022/12/Apostilla-desde-CDMX-Actas-de-Nacimiento-de-Estados-Unidos.jpg",
+      description: "Realizamos trámites de apostilla para documentos americanos.",
+    },
+    {
+      title: "Traducciones",
+      image: "https://transpanish.biz/es/wp-content/uploads/2012/08/bigstockphoto_Businessteam_Wrapping_Up_A_Mee_931545.jpg",
+      description: "Ofrecemos servicios de traducción certificada para documentos oficiales.",
+    },
+    {
+      title: "Cita ante Notario Público",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbtSk1uozBz8It1aDbkIItUldiFYt4I9aTbA&s",
+      description: "Agendamos citas con notarios públicos para trámites legales.",
+    },
+    {
+      title: "Trámites de Certificados Americanos",
+      image: "https://c.pxhere.com/images/05/4f/cd9cc55daa249e2fa5960f7c7443-1450317.jpg!s2",
+      description: "Gestionamos la obtención de certificados americanos.",
+    },
+    {
+      title: "Registro de Nacimiento en el Exterior",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIucBD4D0sWL6Nl6GiedNplsxHdTSkAXWzbw&s",
+      description: "Te ayudamos a registrar nacimientos ocurridos en el extranjero.",
+    },
+  ];
+
   return (
     <div className="dashboard">
       <main className="main-content">
-        <section 
-          className="hero-section" 
+        <section
+          className="hero-section"
           style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.4)), url(${heroBackgroundImage})` }}
         >
-          <h1>Diligencias Internacionales <br></br> Mèxico</h1>
+          <h1>Diligencias Internacionales <br /> México</h1>
           <h2>VISAS & REENCUENTROS FAMILIARES</h2>
-          
+          <div className="flags-container">
+            <img src={usaFlag} alt="USA Flag" className="flag" />
+            <img src={mexicoFlag} alt="Mexico Flag" className="flag" />
+            <img src={guatemalaFlag} alt="Guatemala Flag" className="flag" />
+            <img src={elSalvadorFlag} alt="El Salvador Flag" className="flag" />
+            <img src={hondurasFlag} alt="Honduras Flag" className="flag" />
+          </div>
         </section>
+
         <section className="projects-section">
-          <h2>Nuestros servicios</h2>
+          <h2>Servicios</h2>
           <div className="projects-grid">
             <div className="project-card">
-              <div className="project-image" style={{backgroundImage: 'url("https://www.informador.mx/__export/1656644816650/sites/elinformador/img/2022/06/30/passport-gd8629affd_1920_crop1656644700108.jpg_1902800913.jpg")'}}></div>
-              <p>Tramite de visa</p>
-             
+              <div className="project-image" style={{ backgroundImage: 'url("https://www.informador.mx/__export/1656644816650/sites/elinformador/img/2022/06/30/passport-gd8629affd_1920_crop1656644700108.jpg_1902800913.jpg")' }}></div>
+              <p>Trámite de visa</p>
             </div>
             <div className="project-card">
-              <div className="project-image" style={{backgroundImage: 'url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdbuSZknOOdQO3lJkxJ0XxTxn-A0-XyaxLcqbrQh5v3_VSZ38gZI3Bkx1rk8CTQo1oGmM&usqp=CAU")' }}></div>
-              <p>Reecuentros familiares</p>
-              
+              <div className="project-image" style={{ backgroundImage: 'url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdbuSZknOOdQO3lJkxJ0XxTxn-A0-XyaxLcqbrQh5v3_VSZ38gZI3Bkx1rk8CTQo1oGmM&usqp=CAU")' }}></div>
+              <p>Reencuentros familiares</p>
             </div>
             <div className="project-card">
-              <div className="project-image" style={{backgroundImage: 'url("https://visafacil.mx/wp-content/uploads/2024/06/producto-pasaporte-americano-visa-facil-copy.webp")'}}></div>
-              <p>Tramite de pasaporte</p>
-              
+              <div className="project-image" style={{ backgroundImage: 'url("https://visafacil.mx/wp-content/uploads/2024/06/producto-pasaporte-americano-visa-facil-copy.webp")' }}></div>
+              <p>Trámite de pasaporte</p>
             </div>
             <div className="project-card">
-              <div className="project-image" style={{backgroundImage: 'url("https://tramitvisa.com/wp-content/uploads/2018/08/Asesor%C3%ADa-para-cita-consular.jpg")'}}></div>
-              <p>Asesoria consular</p>
-            
+              <div className="project-image" style={{ backgroundImage: 'url("https://tramitvisa.com/wp-content/uploads/2018/08/Asesor%C3%ADa-para-cita-consular.jpg")' }}></div>
+              <p>Asesoría consular</p>
             </div>
           </div>
         </section>
-        <section className="team-section">
-          <h2>Your team</h2>
-          <div className="team-grid">
-            <div className="team-member">
-              <div className="member-avatar" style={{backgroundImage: 'url("https://cdn.usegalileo.ai/sdxl10/0394ea29-3d1d-4989-992c-2ba2e9069bda.png")'}}></div>
-            </div>
-            <div className="team-member">
-              <div className="member-avatar" style={{backgroundImage: 'url("https://cdn.usegalileo.ai/sdxl10/3a48aa23-af7e-475a-84c9-31220c03d86b.png")'}}></div>
-            </div>
-            <div className="team-member">
-              <div className="member-avatar" style={{backgroundImage: 'url("https://cdn.usegalileo.ai/sdxl10/083e0f53-195a-4d1e-bc49-3b9daa5be411.png")'}}></div>
-            </div>
-            <div className="team-member">
-              <div className="member-avatar" style={{backgroundImage: 'url("https://cdn.usegalileo.ai/sdxl10/1b088bd1-cf6f-46ff-95dd-e51fb22706f5.png")'}}></div>
-            </div>
-            <div className="team-member">
-              <div className="member-avatar" style={{backgroundImage: 'url("https://cdn.usegalileo.ai/sdxl10/bc4a93d8-373c-4089-88de-401ec335d5d3.png")'}}></div>
-            </div>
-            <div className="team-member">
-              <div className="member-avatar" style={{backgroundImage: 'url("https://cdn.usegalileo.ai/sdxl10/75a46306-4693-4c88-98c9-229193ddd0b3.png")'}}></div>
-            </div>
-            <div className="team-member">
-              <div className="member-avatar" style={{backgroundImage: 'url("https://cdn.usegalileo.ai/sdxl10/9df2eab8-f8ae-4de9-9165-c58d9bfac259.png")'}}></div>
-            </div>
-          </div>
-        </section>
-        <section className="activity-section">
-          <h2>Latest activity</h2>
-          <div className="activity-list">
-            <div className="activity-item">
-              <div className="activity-avatar" style={{backgroundImage: 'url("https://cdn.usegalileo.ai/sdxl10/4b31f68e-862e-461d-90a5-6a48493d3513.png")'}}></div>
-              <div className="activity-info">
-                <p>Refactor the React components</p>
-                <p>Task created · June 10</p>
+
+        {/* Menú de navegación */}
+        <section className="navigation-menu">
+          <h2>Otros Servicios</h2>
+          <div className="menu-grid">
+            {menuOptions.map((option, index) => (
+              <div key={index} className="menu-item">
+                <div className="menu-image" style={{ backgroundImage: `url(${option.image})` }}></div>
+                <div className="menu-content">
+                  <h3>{option.title}</h3>
+                  <p>{option.description}</p>
+                </div>
               </div>
-            </div>
-            <div className="activity-item">
-              <div className="activity-avatar" style={{backgroundImage: 'url("https://cdn.usegalileo.ai/sdxl10/7b79c9c5-1810-4ce3-9500-7ced82ad3ae2.png")'}}></div>
-              <div className="activity-info">
-                <p>Any update on this issue?</p>
-                <p>Commented on issue #23 · June 9</p>
-              </div>
-            </div>
-            <div className="activity-item">
-              <div className="activity-avatar" style={{backgroundImage: 'url("https://cdn.usegalileo.ai/sdxl10/ade8efeb-3fed-4a0a-aabe-7491cfb11415.png")'}}></div>
-              <div className="activity-info">
-                <p>Update the design spec</p>
-                <p>Task completed · June 8</p>
-              </div>
-            </div>
-            <div className="activity-item">
-              <div className="activity-avatar" style={{backgroundImage: 'url("https://cdn.usegalileo.ai/sdxl10/bbd0d90d-6bc8-444c-b5f6-66353f6ddbd4.png")'}}></div>
-              <div className="activity-info">
-                <p>Add missing error message</p>
-                <p>Task created · June 7</p>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
       </main>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };
