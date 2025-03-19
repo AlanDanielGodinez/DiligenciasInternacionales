@@ -50,6 +50,25 @@
     color: var(--color-accent);
 }
 
+.social-icons {
+    display: flex;
+    gap: 1rem;
+}
+
+.social-icons a {
+    color: var(--color-text-light);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.social-icons a:hover {
+    color: var(--color-accent);
+}
+
+.icon {
+    font-size: 1.5rem;
+}
+
 .footer-bottom {
     text-align: center;
     margin-top: 2rem;
@@ -82,4 +101,12 @@
 
 [data-theme="dark"] .footer-bottom {
     border-top: 1px solid var(--color-secondary);
+}
+
+[data-theme="dark"] .social-icons a {
+    color: var(--color-text);
+}
+
+[data-theme="dark"] .social-icons a:hover {
+    color: var(--color-accent);
 }
