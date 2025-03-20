@@ -1,5 +1,5 @@
 import React from "react";
-import logoImage from "../Images/logoNavbar.jpg"; // Ajusta la ruta a tu imagen
+import logoImage from "../Images/LogoDIItrazadoblanco.png"; // Ajusta la ruta a tu imagen
 
 const Navbar = () => {
   return (

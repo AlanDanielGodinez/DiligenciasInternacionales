@@ -1,363 +1,203 @@
-body {
-  font-family: 'Inter', 'Noto Sans', sans-serif;
-  background-color: #f0f4f8;
+/* Reset básico para eliminar márgenes y padding predeterminados */
+.dashboard-unique * {
   margin: 0;
   padding: 0;
+  box-sizing: border-box; /* Incluye padding y bordes en el ancho y alto */
 }
 
-.dashboard {
+/* Estilos generales */
+.dashboard-unique {
+  width: 100%; /* Ocupa el 100% del ancho */
+  min-height: 100vh; /* Ocupa al menos el 100% de la altura de la ventana */
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  font-family: 'Inter', 'Noto Sans', sans-serif;
+  overflow-x: hidden; /* Evita el desbordamiento horizontal */
 }
 
-.main-content {
-  padding: 20px 40px;
-}
-
-/* Animación para la sección hero */
-.hero-section {
-  background-size: cover;
-  background-position: center;
-  padding: 160px;
-  border-radius: 12px;
-  color: white;
-  position: relative;
-  overflow: hidden;
-  transition: filter 0.3s ease, transform 0.3s ease;
-  border: 2px solid #ffa500; /* Borde naranja */
-}
-
-.hero-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: inherit;
-  background-size: cover;
-  background-position: center;
-  filter: blur(0);
-  transition: filter 0.3s ease;
-  z-index: -1;
-}
-
-.hero-section:hover::before {
-  filter: blur(10px); /* Blur del 40% */
-}
-
-.hero-section:hover {
-  transform: scale(1.02); /* Efecto de zoom suave */
-}
-
-.hero-section h1 {
-  font-size: 3rem;
-  font-weight: 900;
-  animation: fadeInUp 1s ease-out;
-}
-
-.hero-section h2 {
-  font-size: 1.5rem;
-  font-weight: 400;
-  animation: fadeInUp 1.5s ease-out;
-}
-
-p {
-  padding-top: 30px;
-  font-size: 25px;
-  animation: fadeIn 2s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animación para la barra de búsqueda */
-.search-bar {
+/* Estilos para los contenedores */
+.dashboard-unique-container {
+  width: 100%; /* Ocupa el 100% del ancho disponible */
+  min-height: 90vh; /* Cada contenedor ocupa al menos el 90% de la altura de la pantalla */
   display: flex;
-  gap: 8px;
-  margin-top: 20px;
-  animation: slideInLeft 1s ease-out;
-}
-
-.search-bar input {
-  flex-grow: 1;
-  padding: 10px;
-  border: 1px solid #d0dbe7;
-  border-radius: 12px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.search-bar input:focus {
-  transform: scale(1.02);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.search-bar button {
-  background-color: #1980e6;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.search-bar button:hover {
-  background-color: #146bbd;
-  transform: scale(1.05);
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* Animación para las tarjetas de proyectos */
-.projects-section {
-  margin-top: 40px;
-}
-
-.projects-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
-  gap: 16px;
-}
-
-.project-card {
-  background-color: var(--color-primary);
-  border-radius: 12px;
-  padding: 16px;
-  text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  animation: fadeInUp 1s ease-out;
-  color: white;
-}
-
-.project-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  background-color: white;
-  color: var(--color-primary);
-  border: 2px solid #ffa500; /* Borde naranja */
-  
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.project-image {
-  width: 100%;
-  aspect-ratio: 1;
-  background-size: cover;
-  border-radius: 12px;
-}
-
-/* Animación para los miembros del equipo */
-.team-section {
-  margin-top: 40px;
-}
-
-.team-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
-  gap: 16px;
-}
-
-.team-member {
-  background-color: white;
-  border-radius: 12px;
-  padding: 16px;
-  text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  animation: fadeInUp 1.5s ease-out;
-}
-
-.team-member:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-}
-
-.member-avatar {
-  width: 100%;
-  aspect-ratio: 1;
-  background-size: cover;
-  border-radius: 12px;
-}
-
-/* Animación para las actividades recientes */
-.activity-section {
-  margin-top: 40px;
-}
-
-.activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.activity-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background-color: white;
-  padding: 16px;
-  border-radius: 12px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  animation: fadeInUp 2s ease-out;
-}
-
-.activity-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.activity-avatar {
-  width: 56px;
-  height: 56px;
-  background-size: cover;
-  border-radius: 50%;
-}
-
-.activity-info {
-  flex-grow: 1;
-}
-/* Estilos para el menú de navegación */
-.navigation-menu {
-  margin-top: 60px;
-  padding: 20px;
-}
-
-.navigation-menu h2 {
+  justify-content: flex-start; /* Alinea el contenido a la izquierda */
+  align-items: flex-end; /* Alinea el contenido en la parte inferior */
   font-size: 2rem;
-  font-weight: 900;
-  margin-bottom: 30px;
-  text-align: center;
-  animation: fadeInUp 1s ease-out;
+  font-weight: bold;
+  color: #333;
+  border-bottom: 2px solid #ccc; /* Línea divisoria entre contenedores */
+  background-size: cover; /* La imagen cubre todo el contenedor */
+  background-position: center; /* Centra la imagen */
+  position: relative; /* Necesario para posicionar el texto correctamente */
 }
 
-.menu-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+/* Estilos para el texto */
+.dashboard-unique-text {
+  color: white; /* Color del texto */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Sombra para mejorar la legibilidad */
+  margin: 0 0 40px 40px; /* Margen inferior y izquierdo */
+  text-align: left; /* Alinea el texto a la izquierda */
 }
 
-.menu-item {
+.Titulo-Dashboard {
+  font-size: 4rem; /* Tamaño grande del título */
+  font-weight: bold; /* Negrita */
+  margin-bottom: 10px; /* Espacio entre título y subtítulo */
+}
+
+.Subtitulo-Dashboard {
+  font-size: 2rem; /* Tamaño del subtítulo */
+  font-weight: normal; /* Peso normal */
+}
+
+/* Estilos para dividir el contenedor en dos mitades */
+.dashboard-unique-split {
   display: flex;
-  align-items: stretch; /* Asegura que la imagen y el contenido tengan la misma altura */
-  background-color: white;
-  border-radius: 12px;
-  overflow: hidden; /* Evita que la imagen se salga de la tarjeta */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  animation: fadeInUp 1s ease-out;
+  width: 100%;
+  height: 100%;
+  padding: 0px; /* Padding general */
 }
 
-.menu-item:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+
+/* Mitad izquierda: Imagen fija */
+.dashboard-unique-image {
+  flex: 1; /* Ocupa la mitad del espacio */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px; /* Padding interno */
 }
 
-.menu-image {
-  width: 150px; /* Ancho fijo para la imagen */
-  height: auto; /* Altura automática para que abarque todo el alto */
-  background-size: cover;
-  background-position: center;
-  flex-shrink: 0; /* Evita que la imagen se reduzca */
+.fixed-image {
+  width: 80%; /* Reducimos el ancho de la imagen al 80% */
+  height: auto; /* Altura automática para mantener la proporción */
+  max-height: 80%; /* Reducimos la altura máxima al 80% */
+  object-fit: cover; /* Ajusta la imagen para cubrir el espacio sin distorsionar */
+  border-radius: 10px; /* Bordes redondeados para un mejor aspecto */
 }
 
-.menu-content {
-  flex: 1;
-  padding: 20px;
+/* Mitad derecha: Texto */
+.dashboard-unique-text-container {
+  flex: 1; /* Ocupa la mitad del espacio */
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: center; /* Centra el texto verticalmente */
+  align-items: flex-start; /* Alinea el texto a la izquierda */
+  padding: 20px; /* Padding interno */
 }
 
-.menu-content h3 {
-  font-size: 1.5rem;
-  font-weight: 700;
+/* Estilos para el texto */
+.dashboard-unique-text-container h2 {
+  font-size: 2rem;
+  font-weight: bold;
   margin-bottom: 10px;
 }
 
-.menu-content p {
-  font-size: 1rem;
-  color: #666;
+.dashboard-unique-text-container p {
+  font-size: 1.2rem;
+  color: #333;
 }
-/* Estilos para las banderas */
-.flags-container {
+/* Estilos para el contenedor 3 */
+.contenedor-3 {
+  width: 100%;
+  height: 100%;
   display: flex;
-  justify-content: left;
-  gap: 10px;
-  margin-top: 20px;
-  flex-wrap: wrap; /* Asegura que las banderas se ajusten en pantallas pequeñas */
+  flex-direction: column;
+  align-items: center;
+  padding: 0; /* Eliminamos el padding para que esté pegado al tope */
 }
 
-.flag {
-  width: 50px; /* Tamaño base de las banderas */
-  height: auto;
-  transition: transform 0.3s ease;
-  border-radius: 5px;
+/* Título del contenedor 3 */
+.titulo-contenedor-3 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #ffffff;
+  margin: 20px 0; /* Margen solo arriba y abajo para separar del borde */
+  text-align: center;
 }
 
-.flag:hover {
-  transform: scale(1.1); /* Efecto de zoom al pasar el mouse */
+/* Contenedor de imágenes */
+.imagenes-contenedor-3 {
+  display: flex;
+  justify-content: space-around; /* Distribuye las imágenes de manera uniforme */
+  width: 100%;
+  max-width: 1200px; /* Ancho máximo del contenedor de imágenes */
+  margin-top: 20px; /* Espacio entre el título y las imágenes */
 }
 
-/* Responsividad */
-@media (max-width: 768px) {
-  .hero-section {
-    padding: 100px 20px; /* Ajusta el padding para pantallas más pequeñas */
-  }
-
-  .hero-section h1 {
-    font-size: 2rem; /* Reduce el tamaño del título */
-  }
-
-  .hero-section h2 {
-    font-size: 1.2rem; /* Reduce el tamaño del subtítulo */
-  }
-
-  .flag {
-    width: 40px; /* Reduce el tamaño de las banderas en pantallas pequeñas */
-  }
+/* Cada item de imagen */
+.imagen-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  
 }
 
-@media (max-width: 480px) {
-  .hero-section {
-    padding: 80px 10px; /* Ajusta el padding para pantallas muy pequeñas */
-  }
+/* Imagen cuadrada */
+.imagen-cuadrada {
+  width: 350px; /* Tamaño fijo para las imágenes */
+  height: 400px; /* Tamaño fijo para las imágenes */
+  object-fit: cover; /* Ajusta la imagen sin distorsionar */
+   /* Bordes redondeados */
+  margin-bottom: 10px; /* Espacio entre la imagen y el subtítulo */
+}
 
-  .hero-section h1 {
-    font-size: 1.5rem; /* Reduce aún más el tamaño del título */
-  }
+/* Subtítulo de la imagen */
+.subtitulo-imagen {
+  font-size: 1.2rem;
+  color: var(--color-secondary);
+  font-weight: bold;
+  padding: 10px;
+}
+/* Estilos para el contenedor 4 */
+.contenedor-4 {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px; /* Espaciado interno */
+  color: white; /* Color del texto */
+}
 
-  .hero-section h2 {
-    font-size: 1rem; /* Reduce aún más el tamaño del subtítulo */
-  }
+/* Título del contenedor 4 */
+.titulo-contenedor-4 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 40px; /* Espacio debajo del título */
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Sombra para mejorar la legibilidad */
+}
 
-  .flag {
-    width: 30px; /* Reduce aún más el tamaño de las banderas */
-  }
+/* Contenedor de mini contenedores de texto */
+.textos-contenedor-4 {
+  display: flex;
+  justify-content: space-around; /* Distribuye los mini contenedores de manera uniforme */
+  width: 100%;
+  max-width: 1200px; /* Ancho máximo del contenedor de textos */
+}
+
+/* Cada mini contenedor de texto */
+.texto-item {
+  background-color: rgba(255, 255, 255, 0.1); /* Fondo semi-transparente */
+  border-radius: 10px; /* Bordes redondeados */
+  padding: 20px; /* Espaciado interno */
+  width: 30%; /* Ancho de cada mini contenedor */
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Sombra para un efecto elevado */
+}
+
+/* Título del mini contenedor */
+.texto-item h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* Texto del mini contenedor */
+.texto-item p {
+  font-size: 1rem;
+  line-height: 1.5; /* Espaciado entre líneas */
 }
