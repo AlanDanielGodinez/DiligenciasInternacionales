@@ -15,14 +15,19 @@
 
 /* Logo */
 .navbar-logo a {
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: var(--color-text-light);        /* Texto blanco */
-    text-decoration: none;
-    transition: transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    height: 100%; /* Asegura que el enlace ocupe toda la altura del navbar */
 }
 
-.navbar-logo a:hover {
+.logo-image {
+    height: 50px; /* Ajusta la altura de la imagen según sea necesario */
+    width: auto; /* Mantiene la proporción de la imagen */
+    transition: transform 0.3s ease;
+    border-radius: 5px;
+}
+
+.logo-image:hover {
     transform: scale(1.05); /* Efecto de escala al hacer hover */
 }
 
