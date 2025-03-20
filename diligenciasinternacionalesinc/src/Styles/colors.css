@@ -1,11 +1,11 @@
 :root {
     /* Colores base */
-    --color-primary: #010440;       /* Color principal (azul oscuro) */
-    --color-secondary: #025E73;     /* Color secundario (verde azulado) */
-    --color-accent: #D9328E;        /* Color de acento (rosa fuerte) */
-    --color-warning: #D97904;       /* Color de advertencia (naranja) */
+    --color-primary: #0d1a4e;       /* Color principal (azul oscuro) */
+    --color-secondary: #1f96b8;     /* Color secundario (verde azulado) */
+    --color-accent: #ed3b89;        /* Color de acento (rosa fuerte) */
+    --color-warning: #ff9e1c;       /* Color de advertencia (naranja) */
     --color-background: #FEFEFF;    /* Color de fondo (blanco) */
-    --color-text: #010440;          /* Color de texto (azul oscuro) */
+    --color-text: #0d1a4e;          /* Color de texto (azul oscuro) */
     --color-text-light: #FEFEFF;    /* Color de texto claro (blanco) */
   }
   

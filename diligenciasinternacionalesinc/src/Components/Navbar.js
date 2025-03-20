@@ -1,12 +1,14 @@
 import React from "react";
-
+import logoImage from "../Images/logoNavbar.jpg"; // Ajusta la ruta a tu imagen
 
 const Navbar = () => {
   return (
     <nav className="navbar">
       {/* Logo a la izquierda */}
       <div className="navbar-logo">
-        <a href="/">LOGO</a>
+        <a href="/">
+          <img src={logoImage} alt="Logo" className="logo-image" />
+        </a>
       </div>
 
       {/* Opciones de navegación al centro */}
