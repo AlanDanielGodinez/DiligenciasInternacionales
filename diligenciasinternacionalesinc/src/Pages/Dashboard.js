@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { FaPlane, FaPassport, FaHeart } from "react-icons/fa"; // Importamos los iconos
 import backgroundImage from "../Images/PI.jpg"; // Importa la imagen de fondo
 import fixedImage from "../Images/Carrucel/carrucel5.jpg"; // Importa la imagen fija
 import backgroundImage4 from "../Images/Carrucel/carrucel4.jpg"; // Importa la imagen de fondo para el contenedor 4
 import imageD from "../Images/Carrucel/carrucel6.jpg"; // Importa la imagen para el contenedor 5
+import Footer from "../Components/Footer";
 
 // Importa las imágenes para el contenedor 3
 import imageA from "../Images/Carrucel/carrucel1.jpg";
@@ -17,7 +18,50 @@ import hondurasFlag from "../Images/Flags/honduras.png";
 import elSalvadorFlag from "../Images/Flags/salvador.png";
 import guatemalaFlag from "../Images/Flags/guatemala.png";
 
+// Importa el componente InfiniteScroll
+import InfiniteScroll from "../Components/InfiniteScroll";
+
 const Dashboard = () => {
+  // Array de banderas para el carrusel
+  const banderas = [
+    { content: <img src={usaFlag} alt="Estados Unidos" className="bandera-carrusel" /> },
+    { content: <img src={mexicoFlag} alt="México" className="bandera-carrusel" /> },
+    { content: <img src={hondurasFlag} alt="Honduras" className="bandera-carrusel" /> },
+    { content: <img src={elSalvadorFlag} alt="El Salvador" className="bandera-carrusel" /> },
+    { content: <img src={guatemalaFlag} alt="Guatemala" className="bandera-carrusel" /> },
+  ];
+
+  // Efecto para activar animaciones al hacer scroll
+  useEffect(() => {
+    const elements = document.querySelectorAll(
+      ".dashboard-unique-container, .dashboard-unique-split, .imagen-item, .texto-item, .titulo-sobrepuesto"
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          }
+        });
+      },
+      {
+        threshold: 0.1, // Activa la animación cuando el 10% del elemento es visible
+      }
+    );
+
+    elements.forEach((element) => {
+      observer.observe(element);
+    });
+
+    // Limpia el observer al desmontar el componente
+    return () => {
+      elements.forEach((element) => {
+        observer.unobserve(element);
+      });
+    };
+  }, []);
+
   return (
     <div className="dashboard-unique">
       {/* Contenedor 1 con imagen de fondo y texto */}
@@ -77,7 +121,7 @@ const Dashboard = () => {
       {/* Contenedor 4 con imagen de fondo y mini contenedores de texto */}
       <div
         className="dashboard-unique-container"
-        style={{ backgroundImage: `url(${backgroundImage4})`, backgroundColor: 'rgba(0, 0, 0, 0.5)', backgroundBlendMode: 'darken' }}
+        style={{ backgroundImage: `url(${backgroundImage4})`, backgroundColor: "rgba(0, 0, 0, 0.5)", backgroundBlendMode: "darken" }}
       >
         <div className="contenedor-4">
           {/* Título centrado */}
@@ -87,21 +131,21 @@ const Dashboard = () => {
             {/* Mini contenedor 1 */}
             <div className="texto-item">
               <FaPlane className="icono" /> {/* Icono de compromiso */}
-              <h3>Vuelos mas bartos</h3>
+              <h3>Vuelos más baratos</h3>
               <p>Nos comprometemos a brindar un servicio de calidad y a trabajar con pasión por nuestras familias.</p>
             </div>
 
             {/* Mini contenedor 2 */}
             <div className="texto-item">
               <FaPassport className="icono" /> {/* Icono de transparencia */}
-              <h3>Tramites asegurados</h3>
+              <h3>Trámites asegurados</h3>
               <p>Creemos en la honestidad y la claridad en cada uno de nuestros procesos.</p>
             </div>
 
             {/* Mini contenedor 3 */}
             <div className="texto-item">
               <FaHeart className="icono" /> {/* Icono de empatía */}
-              <h3>Asesorias gratuitas</h3>
+              <h3>Asesorías gratuitas</h3>
               <p>Ponemos el corazón en cada caso, entendiendo las necesidades de quienes nos buscan.</p>
             </div>
           </div>
@@ -122,51 +166,27 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Contenedor 6 con países */}
-      <div className="dashboard-unique-container" >
-        <div className="contenedor-6">
-          {/* Título centrado */}
-          <h2 className="titulo-contenedor-6">Países que atendemos</h2>
-
-          {/* Contenedor de banderas y nombres de países */}
-          <div className="paises-contenedor-6">
-            {/* Estados Unidos */}
-            <div className="pais-item">
-              <img src={usaFlag} alt="Estados Unidos" className="bandera" />
-              <p>Estados Unidos</p>
-            </div>
-
-            {/* México */}
-            <div className="pais-item">
-              <img src={mexicoFlag} alt="México" className="bandera" />
-              <p>México</p>
-            </div>
-
-            {/* Honduras */}
-            <div className="pais-item">
-              <img src={hondurasFlag} alt="Honduras" className="bandera" />
-              <p>Honduras</p>
-            </div>
-
-            {/* El Salvador */}
-            <div className="pais-item">
-              <img src={elSalvadorFlag} alt="El Salvador" className="bandera" />
-              <p>El Salvador</p>
-            </div>
-
-            {/* Guatemala */}
-            <div className="pais-item">
-              <img src={guatemalaFlag} alt="Guatemala" className="bandera" />
-              <p>Guatemala</p>
-            </div>
-          </div>
+      {/* Contenedor 7 con carrusel de banderas */}
+      <div className="dashboard-unique-container" style={{ backgroundColor: "#0d1a4e", position: "relative", height: "100vh" }}>
+        {/* Título sobrepuesto */}
+        <div className="titulo-sobrepuesto">
+          <h2>Países <br></br> que atendemos</h2>
         </div>
+
+        {/* Carrusel de banderas */}
+        <InfiniteScroll
+          items={banderas}
+          isTilted={true}
+          tiltDirection="left"
+          autoplay={true}
+          autoplaySpeed={0.1}
+          autoplayDirection="down"
+          pauseOnHover={true}
+        />
       </div>
 
-      {/* Contenedor 7 */}
-      <div className="dashboard-unique-container" style={{ backgroundColor: '#6f8cbb' }}>
-        Contenedor 7
-      </div>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

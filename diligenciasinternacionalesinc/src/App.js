@@ -11,6 +11,7 @@ import "../src/Styles/Sidebar.css";
 import "../src/Styles/Dashboard.css"
 import "../src/Styles/Footer.css";
 import "../src/Styles/Carrucel.css";
+import "../src/Styles/InfiniteScroll.css";
 
 function App() {
   return (

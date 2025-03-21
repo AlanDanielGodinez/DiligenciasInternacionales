@@ -1,8 +1,9 @@
 .footer {
-    background-color: var(--color-primary);
+    background-color: rgb(40, 40, 40);
     color: var(--color-text-light);
     padding: 2rem 0;
     font-family: 'Arial', sans-serif;
+    
 }
 
 .footer-content {
@@ -47,7 +48,7 @@
 }
 
 .footer-links a:hover {
-    color: var(--color-accent);
+    color: var(--color-warning);
 }
 
 .social-icons {
@@ -73,7 +74,7 @@
     text-align: center;
     margin-top: 2rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--color-secondary);
+    border-top: 1px solid white;
 }
 
 .footer-bottom-text {
