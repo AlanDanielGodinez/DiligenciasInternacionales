@@ -24,8 +24,8 @@
   align-items: flex-end; /* Alinea el contenido en la parte inferior */
   font-size: 2rem;
   font-weight: bold;
-  color: #333;
-  border-bottom: 2px solid #ccc; /* Línea divisoria entre contenedores */
+  color: var(--color-primary);
+   /* Línea divisoria entre contenedores */
   background-size: cover; /* La imagen cubre todo el contenedor */
   background-position: center; /* Centra la imagen */
   position: relative; /* Necesario para posicionar el texto correctamente */
@@ -50,7 +50,7 @@
   font-weight: normal; /* Peso normal */
 }
 
-/* Estilos para dividir el contenedor en dos mitades */
+/* Estilos para dividir e l contenedor en dos mitades */
 .dashboard-unique-split {
   display: flex;
   width: 100%;
@@ -80,6 +80,7 @@
 .dashboard-unique-text-container {
   flex: 1; /* Ocupa la mitad del espacio */
   display: flex;
+  text-align: left;
   flex-direction: column;
   justify-content: center; /* Centra el texto verticalmente */
   align-items: flex-start; /* Alinea el texto a la izquierda */
@@ -91,14 +92,17 @@
   font-size: 2rem;
   font-weight: bold;
   margin-bottom: 10px;
+  text-align: left;
 }
 
 .dashboard-unique-text-container p {
   font-size: 1.2rem;
   color: #333;
 }
+
 /* Estilos para el contenedor 3 */
 .contenedor-3 {
+  background-color: var(--color-primary);
   width: 100%;
   height: 100%;
   display: flex;
@@ -114,6 +118,7 @@
   color: #ffffff;
   margin: 20px 0; /* Margen solo arriba y abajo para separar del borde */
   text-align: center;
+  
 }
 
 /* Contenedor de imágenes */
@@ -146,10 +151,11 @@
 /* Subtítulo de la imagen */
 .subtitulo-imagen {
   font-size: 1.2rem;
-  color: var(--color-secondary);
+  color: var(--color-warning);
   font-weight: bold;
-  padding: 10px;
+  padding: 30px;
 }
+/* Estilos para el contenedor 4 */
 /* Estilos para el contenedor 4 */
 .contenedor-4 {
   width: 100%;
@@ -157,8 +163,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 20px; /* Espaciado interno */
+  justify-content: center; 
+ /* Centra el contenido verticalmente */
+  padding-bottom: 100px; /* Espaciado interno */
   color: white; /* Color del texto */
 }
 
@@ -168,6 +175,7 @@
   font-weight: bold;
   margin-bottom: 40px; /* Espacio debajo del título */
   text-align: center;
+  color: var(--color-warning);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Sombra para mejorar la legibilidad */
 }
 
@@ -176,17 +184,19 @@
   display: flex;
   justify-content: space-around; /* Distribuye los mini contenedores de manera uniforme */
   width: 100%;
+ color: white;
   max-width: 1200px; /* Ancho máximo del contenedor de textos */
 }
 
 /* Cada mini contenedor de texto */
 .texto-item {
-  background-color: rgba(255, 255, 255, 0.1); /* Fondo semi-transparente */
+  background-color: rgba(182, 182, 182, 0.261); /* Fondo semi-transparente */
   border-radius: 10px; /* Bordes redondeados */
-  padding: 20px; /* Espaciado interno */
+  padding: 60px; /* Espaciado interno */
   width: 30%; /* Ancho de cada mini contenedor */
   text-align: center;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Sombra para un efecto elevado */
+  backdrop-filter: blur(0.1rem); /* Efecto de desenfoque */
 }
 
 /* Título del mini contenedor */
@@ -200,4 +210,105 @@
 .texto-item p {
   font-size: 1rem;
   line-height: 1.5; /* Espaciado entre líneas */
+}
+/* Estilos para los iconos */
+.icono {
+  font-size: 3rem; /* Tamaño grande del icono */
+  color: var(--color-accent); /* Color del icono */
+  margin-bottom: 20px; 
+  /* Espacio entre el icono y el título */
+}
+
+/* Estilos para el contenedor 5 */
+.dashboard-unique-split {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: 0px; /* Padding general */
+}
+
+/* Mitad izquierda: Texto */
+.dashboard-unique-text-container5 {
+  flex: 1; /* Ocupa la mitad del espacio */
+  display: flex;
+  
+  text-align: right;
+  flex-direction: column;
+  justify-content: center; /* Centra el texto verticalmente */
+  align-items: flex-start; /* Alinea el texto a la izquierda */
+  padding: 20px; /* Padding interno */
+}
+
+/* Mitad derecha: Imagen */
+.dashboard-unique-image {
+  flex: 1; /* Ocupa la mitad del espacio */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px; /* Padding interno */
+}
+
+.fixed-image {
+  width: 80%; /* Reducimos el ancho de la imagen al 80% */
+  height: auto; /* Altura automática para mantener la proporción */
+  max-height: 80%; /* Reducimos la altura máxima al 80% */
+  object-fit: cover; /* Ajusta la imagen para cubrir el espacio sin distorsionar */
+  border-radius: 10px; /* Bordes redondeados para un mejor aspecto */
+}
+
+/* Estilos para el contenedor 6 */
+.contenedor-6 {
+  background-color: var(--color-primary);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px; /* Espaciado interno */
+}
+
+/* Título del contenedor 6 */
+.titulo-contenedor-6 {
+  
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 40px; /* Espacio debajo del título */
+  text-align: center;
+  color: white; /* Color del texto */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Sombra para mejorar la legibilidad */
+}
+
+/* Contenedor de países */
+.paises-contenedor-6 {
+  display: flex;
+  justify-content: space-around; /* Distribuye los países de manera uniforme */
+  width: 100%;
+  max-width: 1200px; /* Ancho máximo del contenedor de países */
+  flex-wrap: wrap; /* Permite que los elementos se ajusten en pantallas pequeñas */
+}
+
+/* Cada item de país */
+.pais-item {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin: 10px; /* Espacio entre los países */
+}
+
+/* Bandera del país */
+.bandera {
+  width: 200px; /* Tamaño de la bandera */
+  height: auto; /* Altura automática para mantener la proporción */
+  border-radius: 10px; /* Bordes redondeados */
+  margin-bottom: 10px; /* Espacio entre la bandera y el nombre */
+}
+
+/* Nombre del país */
+.pais-item p {
+  font-size: 1.2rem;
+  color: white; /* Color del texto */
+  font-weight: bold;
 }
