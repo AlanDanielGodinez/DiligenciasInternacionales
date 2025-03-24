@@ -1,17 +1,17 @@
 :root {
     /* Colores light theme */
-    --light-primary: #0d1a4e;
-    --light-secondary: #1f96b8;
-    --light-accent: #ed3b89;
+    --light-primary: #2c3e50;
+    --light-secondary: #3a3a3a;
+    --light-accent: #e74c3c;
     --light-background: #FEFEFF;
-    --light-text: #0d1a4e;
-    --light-text-light: #FEFEFF;
+    --light-text: #2c3e50;
+    --light-text-light: #f7d091;
     
     /* Colores dark theme */
-    --dark-primary: #010440;
-    --dark-secondary: #025E73;
-    --dark-accent: #D9328E;
-    --dark-background: #010440;
+    --dark-primary: #2c3e50;
+    --dark-secondary: #9fd3f6;
+    --dark-accent: #f7d091;
+    --dark-background: #2c3e50;
     --dark-text: #FEFEFF;
   }
   
@@ -190,12 +190,12 @@
   
   .light-theme .welcome-panel {
     background: linear-gradient(135deg, var(--light-primary), var(--light-secondary));
-    color: white;
+    color: var(--dark-secondary);
   }
   
   .dark-theme .welcome-panel {
     background: linear-gradient(135deg, var(--dark-primary), var(--dark-secondary));
-    color: white;
+    color: var(--light-background);
   }
   
   .welcome-title {
