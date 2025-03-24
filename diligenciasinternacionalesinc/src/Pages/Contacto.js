@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock } from 'react-icons/fa';
 import Footer from "../Components/Footer";
+import Navbar from "../Components/Navbar";
 
 const Contacto = () => {
   const [formData, setFormData] = useState({
@@ -42,6 +43,7 @@ const Contacto = () => {
 
   return (
     <div className="contact-page">
+      <Navbar />
       {/* Hero Section */}
       <section className="contact-hero">
         <div className="contact-hero-content">

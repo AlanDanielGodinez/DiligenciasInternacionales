@@ -1,37 +1,38 @@
 import React from "react";
-import logoImage from "../Images/LogoDIItrazadoblanco.png"; // Ajusta la ruta a tu imagen
+import { Link } from "react-router-dom";
+import logoImage from "../Images/LogoDIItrazadoblanco.png";
 
 const Navbar = () => {
   return (
     <nav className="navbar">
       {/* Logo a la izquierda */}
       <div className="navbar-logo">
-        <a href="/">
+        <Link to="/">
           <img src={logoImage} alt="Logo" className="logo-image" />
-        </a>
+        </Link>
       </div>
 
       {/* Opciones de navegación al centro */}
       <ul className="navbar-menu">
         <li>
-          <a href="/">HOME</a>
+          <Link to="/">HOME</Link>
         </li>
         <li>
-          <a href="/Tramites">TRAMITES Y SERVCIOS</a>
+          <Link to="/tramites">TRAMITES Y SERVICIOS</Link>
         </li>
         <li>
-          <a href="/Contacto">CONTACT</a>
+          <Link to="/contacto">CONTACTO</Link>
         </li>
       </ul>
 
       {/* Opciones de inicio de sesión y registro a la derecha */}
       <div className="navbar-auth">
-        <a href="/login" className="auth-link">
+        <Link to="/login" className="auth-link">
           Iniciar sesión
-        </a>
-        <a href="/register" className="auth-link">
+        </Link>
+        <Link to="/login/register" className="auth-link register-link">
           Registrarte
-        </a>
+        </Link>
       </div>
     </nav>
   );
