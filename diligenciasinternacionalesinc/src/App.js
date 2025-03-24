@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; // Im
 import { ThemeProvider } from "../src/Components/ThemeContext"; // Importar el proveedor del tema
 import Navbar from "./Components/Navbar";
 import Dashboard from "./Pages/Dashboard"; 
+import Contacto from "./Pages/Contacto";
 import Tramites from "./Pages/Tramites";// Importar la página Dashboard
 import "./App.css";
 
@@ -14,6 +15,7 @@ import "../src/Styles/Footer.css";
 import "../src/Styles/Carrucel.css";
 import "../src/Styles/InfiniteScroll.css";
 import "../src/Styles/Tramites.css";
+import "../src/Styles/Contacto.css";
 
 function App() {
   return (
@@ -30,6 +32,7 @@ function App() {
 
               {/* Otras rutas */}
               <Route path="/Tramites" element={<Tramites />} />
+              <Route path="/Contacto" element={<Contacto />} />
               {/* Ruta para manejar páginas no encontradas (opcional) */}
               <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
             </Routes>

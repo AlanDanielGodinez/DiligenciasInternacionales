@@ -20,7 +20,7 @@ const Navbar = () => {
           <a href="/Tramites">TRAMITES Y SERVCIOS</a>
         </li>
         <li>
-          <a href="/contact">CONTACT</a>
+          <a href="/Contacto">CONTACT</a>
         </li>
       </ul>
 
