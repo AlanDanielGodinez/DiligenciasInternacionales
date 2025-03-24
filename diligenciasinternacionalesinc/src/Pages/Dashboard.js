@@ -5,6 +5,7 @@ import fixedImage from "../Images/Carrucel/carrucel5.jpg"; // Importa la imagen 
 import backgroundImage4 from "../Images/Carrucel/carrucel4.jpg"; // Importa la imagen de fondo para el contenedor 4
 import imageD from "../Images/Carrucel/carrucel6.jpg"; // Importa la imagen para el contenedor 5
 import Footer from "../Components/Footer";
+import Card from "../Components/Card"
 
 // Importa las imágenes para el contenedor 3
 import imageA from "../Images/Carrucel/carrucel1.jpg";
@@ -89,31 +90,17 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Contenedor 3 con título, imágenes y subtítulos */}
       <div className="dashboard-unique-container">
         <div className="contenedor-3">
           {/* Título centrado */}
           <h2 className="titulo-contenedor-3">¡Con esfuerzo y esperanza todo es posible!</h2>
 
-          {/* Contenedor de imágenes y subtítulos */}
+          {/* Contenedor de cards */}
           <div className="imagenes-contenedor-3">
-            {/* Imagen 1 */}
-            <div className="imagen-item">
-              <img src={imageA} alt="Servicio 1" className="imagen-cuadrada" />
-              <p className="subtitulo-imagen">Reuniendo familias</p>
-            </div>
-
-            {/* Imagen 2 */}
-            <div className="imagen-item">
-              <img src={imageB} alt="Servicio 2" className="imagen-cuadrada" />
-              <p className="subtitulo-imagen">Visa asegurada</p>
-            </div>
-
-            {/* Imagen 3 */}
-            <div className="imagen-item">
-              <img src={imageC} alt="Servicio 3" className="imagen-cuadrada" />
-              <p className="subtitulo-imagen">Juntos como hermanos</p>
-            </div>
+            {/* Card 1 */}
+            <Card image={imageA} text="Reuniendo familias" icon="❤️" />
+            <Card image={imageB} text="Visa asegurada" icon="😊" />
+            <Card image={imageC} text="Juntos como hermanos" icon="🤝" />
           </div>
         </div>
       </div>
@@ -170,7 +157,7 @@ const Dashboard = () => {
       <div className="dashboard-unique-container" style={{ backgroundColor: "#0d1a4e", position: "relative", height: "100vh" }}>
         {/* Título sobrepuesto */}
         <div className="titulo-sobrepuesto">
-          <h2>Países <br></br> que atendemos</h2>
+          <h2>Aqui no hay pretextos<br></br>Tu familia importa mas </h2>
         </div>
 
         {/* Carrusel de banderas */}

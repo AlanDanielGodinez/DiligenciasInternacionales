@@ -164,14 +164,14 @@
 }
 
 /* Estilos para el contenedor 3 */
+/* Contenedor 3 */
 .contenedor-3 {
   background-color: var(--color-primary);
   width: 100%;
-  height: 100%;
+  padding: 60px 20px; /* Más espacio interno */
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0; /* Eliminamos el padding para que esté pegado al tope */
 }
 
 /* Título del contenedor 3 */
@@ -179,17 +179,18 @@
   font-size: 2.5rem;
   font-weight: bold;
   color: #ffffff;
-  margin: 20px 0; /* Margen solo arriba y abajo para separar del borde */
+  margin-bottom: 40px; /* Más espacio debajo del título */
   text-align: center;
+   /* Tipografía moderna */
 }
 
 /* Contenedor de imágenes */
 .imagenes-contenedor-3 {
   display: flex;
-  justify-content: space-around; /* Distribuye las imágenes de manera uniforme */
-  width: 100%;
-  max-width: 1200px; /* Ancho máximo del contenedor de imágenes */
-  margin-top: 20px; /* Espacio entre el título y las imágenes */
+  justify-content: center;
+  gap: 30px; /* Espacio entre imágenes */
+  flex-wrap: wrap; /* Ajuste para pantallas pequeñas */
+  max-width: 1200px;
 }
 
 /* Cada item de imagen */
@@ -199,29 +200,45 @@
   align-items: center;
   text-align: center;
   opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
 }
 
 .imagenes-contenedor-3 .imagen-item.visible {
   opacity: 1;
-  transform: scale(1);
+  transform: translateY(0);
+}
+
+/* Wrapper para la imagen */
+.imagen-wrapper {
+  overflow: hidden;
+  border-radius: 15px; /* Bordes redondeados */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Sombra para profundidad */
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.imagen-wrapper:hover {
+  transform: scale(1.05); /* Efecto de zoom */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); /* Sombra más pronunciada */
 }
 
 /* Imagen cuadrada */
 .imagen-cuadrada {
-  width: 350px; /* Tamaño fijo para las imágenes */
-  height: 400px; /* Tamaño fijo para las imágenes */
-  object-fit: cover; /* Ajusta la imagen sin distorsionar */
-  margin-bottom: 10px; /* Espacio entre la imagen y el subtítulo */
+  width: 350px;
+  height: 400px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease-in-out;
 }
 
 /* Subtítulo de la imagen */
 .subtitulo-imagen {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   color: var(--color-warning);
   font-weight: bold;
-  padding: 30px;
+  margin-top: 20px;
+  font-family: 'Open Sans', sans-serif; /* Tipografía legible */
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2); /* Sombra sutil */
 }
 
 /* Estilos para el contenedor 4 */
