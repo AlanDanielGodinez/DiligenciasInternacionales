@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { MdFamilyRestroom } from "react-icons/md";
 import { FaPlane, FaPassport, FaHeart, FaHandsHelping, FaUsers, FaGlobeAmericas } from "react-icons/fa";
 import backgroundImage from "../Images/PI.jpg";
 import fixedImage from "../Images/Carrucel/carrucel5.jpg";
@@ -35,7 +36,7 @@ const Dashboard = () => {
     {
       title: "Reencuentros familiares",
       description: "Te ayudamos con todo el proceso legal para reunir familias separadas por la migración",
-      icon: <FaHeart className="service-icon" />,
+      icon: <MdFamilyRestroom className="service-icon" />,
       color: "var(--color-accent)"
     },
     {
@@ -95,7 +96,7 @@ const Dashboard = () => {
       {/* Hero Section */}
       <section 
         className="hero-section animate-on-scroll" 
-        style={{ backgroundImage: `linear-gradient(rgba(13, 26, 78, 0.7), rgba(13, 26, 78, 0.7)), url(${backgroundImage})` }}
+        style={{ backgroundImage: `linear-gradient(rgba(66, 70, 88, 0.7), rgba(32, 36, 51, 0.7)), url(${backgroundImage})` }}
       >
         <div className="hero-content">
           <h1>ÚNETE AL PROGRAMA AMA</h1>
@@ -148,7 +149,6 @@ const Dashboard = () => {
       >
         <div className="section-header">
           <h2>Historias de Éxito</h2>
-          <p>Lo que dicen las familias que hemos ayudado</p>
         </div>
         
         <div className="testimonials-grid">
