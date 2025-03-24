@@ -206,7 +206,7 @@ const Dashboard = () => {
       <section className="cta-section animate-on-scroll">
         <h2>¿Listo para reunirte con tu familia?</h2>
         <p>Nuestros asesores pueden crear un plan a medida para tu caso</p>
-        <button className="cta-button">Contactar a un asesor</button>
+        <button className="cta-button">Iniciar sesión</button>
       </section>
 
       <Footer />

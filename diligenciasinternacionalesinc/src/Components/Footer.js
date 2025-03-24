@@ -16,7 +16,7 @@ const Footer = () => {
           <h3 className="footer-title">Enlaces Rápidos</h3>
           <ul className="footer-links">
             <li><a href="/">Home</a></li>
-            <li><a href="/servicios">Precios</a></li>
+            <li><a href="/servicios">Tramites y servicios</a></li>
             <li><a href="/contacto">Contacto</a></li>
           </ul>
         </div>

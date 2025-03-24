@@ -66,9 +66,7 @@ const Tramites = () => {
   return (
     <div className="page-container">
       <div className={`price-page ${theme}`} data-theme={theme}>
-        <button className="theme-toggle" onClick={toggleTheme}>
-          {theme === 'light' ? '🌙 Modo Oscuro' : '☀️ Modo Claro'}
-        </button>
+       
         
         <header className="price-header">
           <h1>Nuestros servicios y tramites</h1>
@@ -119,7 +117,7 @@ const Tramites = () => {
             <h2>¿Necesitas una solución personalizada?</h2>
             <p>Nuestros asesores pueden crear un paquete a medida para tu empresa</p>
             <button className="contact-button" style={{ backgroundColor: 'var(--color-warning)' }}>
-              Contactar a un asesor
+              Inicar sesión
             </button>
           </div>
         </div>
