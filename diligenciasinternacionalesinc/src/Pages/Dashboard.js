@@ -91,7 +91,7 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <Navbar />
+      <Navbar/>
       {/* Hero Section */}
       <section 
         className="hero-section animate-on-scroll" 

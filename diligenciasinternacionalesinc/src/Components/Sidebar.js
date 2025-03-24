@@ -1,44 +1,151 @@
-import React, { useContext } from "react";
-import { ThemeContext } from "./ThemeContext"; // Importar el contexto
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import './SidebarNavigation.css';
 
+const SidebarNavigation = () => {
+  const [activeMenu, setActiveMenu] = useState(null);
+  const location = useLocation();
 
-const Sidebar = () => {
-  const { theme, toggleTheme } = useContext(ThemeContext); // Usar el contexto
+  const toggleMenu = (menu) => {
+    setActiveMenu(activeMenu === menu ? null : menu);
+  };
+
+  const menuItems = [
+    {
+      title: "Dashboard",
+      icon: "📊",
+      items: [
+        { name: "Inicio", path: "/" },
+        { name: "Estadísticas", path: "/stats" }
+      ]
+    },
+    {
+      title: "Clientes",
+      icon: "👥",
+      items: [
+        { name: "Lista de Clientes", path: "/clientes" },
+        { name: "Antecedentes", path: "/antecedentes" },
+        { name: "Condiciones Especiales", path: "/condiciones" }
+      ]
+    },
+    {
+      title: "Trámites",
+      icon: "📋",
+      items: [
+        { name: "Tipos de Trámites", path: "/tramites" },
+        { name: "Nueva Solicitud", path: "/nueva-solicitud" },
+        { name: "Solicitudes Activas", path: "/solicitudes" },
+        { name: "Calendario de Plazos", path: "/calendario" }
+      ]
+    },
+    {
+      title: "Productos",
+      icon: "📦",
+      items: [
+        { name: "Inventario", path: "/inventario" },
+        { name: "Categorías", path: "/categorias" },
+        { name: "Movimientos", path: "/movimientos" }
+      ]
+    },
+    {
+      title: "Viajes",
+      icon: "✈️",
+      items: [
+        { name: "Itinerarios", path: "/itinerarios" },
+        { name: "Aerolíneas", path: "/aerolineas" },
+        { name: "Grupos", path: "/grupos" }
+      ]
+    },
+    {
+      title: "Pagos",
+      icon: "💳",
+      items: [
+        { name: "Registro de Pagos", path: "/pagos" },
+        { name: "Métodos de Pago", path: "/metodos-pago" },
+        { name: "Reportes", path: "/reportes" }
+      ]
+    },
+    {
+      title: "Empleados",
+      icon: "👨‍💼",
+      items: [
+        { name: "Lista de Empleados", path: "/empleados" },
+        { name: "Roles y Permisos", path: "/roles" },
+        { name: "Estado de Empleados", path: "/estado-empleados" }
+      ]
+    },
+    {
+      title: "Documentos",
+      icon: "📄",
+      items: [
+        { name: "Subir Documentos", path: "/subir-documentos" },
+        { name: "Archivo Digital", path: "/archivo" },
+        { name: "Validación", path: "/validacion" }
+      ]
+    }
+  ];
+
+  const configItems = [
+    { name: "Configuración", icon: "⚙️", path: "/configuracion" },
+    { name: "Notificaciones", icon: "🧩", path: "/notificaciones" },
+    { name: "Ayuda", icon: "❓", path: "/ayuda" },
+    { name: "Cerrar Sesión", icon: "🚪", path: "/logout" }
+  ];
 
   return (
-    <div className={`sidebar ${theme}`}>
-      {/* Logo y botón para colapsar/expandir */}
-      <div className="sidebar-header">
-        <div className="logo">LOGO</div>
+    <div className="sidebarContainer">
+      <div className="sidebarLogo">
+        <h2>TravelAdmin</h2>
       </div>
-
-      {/* Opciones del menú */}
-      <ul className="menu">
-        <li className="menu-item">
-          <a href="/" className="menu-link">
-            🏠 Home
-          </a>
-        </li>
-        <li className="menu-item">
-          <a href="/about" className="menu-link">
-            ℹ️ About Us
-          </a>
-        </li>
-        <li className="menu-item">
-          <a href="/contact" className="menu-link">
-            ✉️ Contact
-          </a>
-        </li>
-      </ul>
-
-      {/* Botón para cambiar el tema */}
-      <div className="theme-toggle">
-        <button onClick={toggleTheme} className="theme-button">
-          {theme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode"}
-        </button>
+      
+      <nav className="sidebarNav">
+        {menuItems.map((menu, index) => (
+          <div key={index} className="sidebarMenuGroup">
+            <div 
+              className={`sidebarMenuHeader ${activeMenu === menu.title ? 'active' : ''}`}
+              onClick={() => toggleMenu(menu.title)}
+            >
+              <span className="sidebarMenuIcon">{menu.icon}</span>
+              <span className="sidebarMenuTitle">{menu.title}</span>
+              <span className="sidebarMenuArrow">
+                {activeMenu === menu.title ? '▼' : '►'}
+              </span>
+            </div>
+            
+            <div 
+              className={`sidebarMenuItems ${activeMenu === menu.title ? 'open' : ''}`}
+              style={{ 
+                height: activeMenu === menu.title ? `${menu.items.length * 45}px` : '0px' 
+              }}
+            >
+              {menu.items.map((item, i) => (
+                <Link
+                  key={i}
+                  to={item.path}
+                  className={`sidebarMenuItem ${location.pathname === item.path ? 'active' : ''}`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+      </nav>
+      
+      <div className="sidebarFooter">
+        {configItems.map((item, index) => (
+          <Link
+            key={index}
+            to={item.path}
+            className={`sidebarFooterItem ${location.pathname === item.path ? 'active' : ''}`}
+          >
+            <span className="sidebarFooterIcon">{item.icon}</span>
+            <span>{item.name}</span>
+          </Link>
+        ))}
       </div>
     </div>
   );
 };
 
-export default Sidebar;
+export default SidebarNavigation;

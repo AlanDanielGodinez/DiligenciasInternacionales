@@ -1,7 +1,7 @@
 .dashboard-container {
   width: 100%;
-  overflow-x: hidden;
-  font-family: 'Inter', 'Noto Sans', sans-serif;
+  /* Elimina esta línea: overflow-x: hidden; */
+  
   color: var(--color-text);
 }
 

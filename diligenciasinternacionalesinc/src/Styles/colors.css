@@ -1,21 +1,23 @@
 :root {
-    /* Colores base */
-    --color-primary: #0d1a4e;       /* Color principal (azul oscuro) */
-    --color-secondary: #1f96b8;     /* Color secundario (verde azulado) */
-    --color-accent: #ed3b89;        /* Color de acento (rosa fuerte) */
-    --color-warning: #ff9e1c;       /* Color de advertencia (naranja) */
-    --color-background: #FEFEFF;    /* Color de fondo (blanco) */
-    --color-text: #0d1a4e;          /* Color de texto (azul oscuro) */
-    --color-text-light: #FEFEFF;    /* Color de texto claro (blanco) */
-  }
-  
-  [data-theme="dark"] {
-    /* Colores para el tema oscuro */
-    --color-primary: #010440;       /* Color principal (azul oscuro) */
-    --color-secondary: #025E73;     /* Color secundario (verde azulado) */
-    --color-accent: #D9328E;        /* Color de acento (rosa fuerte) */
-    --color-warning: #D97904;       /* Color de advertencia (naranja) */
-    --color-background: #010440;    /* Color de fondo (azul oscuro) */
-    --color-text: #FEFEFF;          /* Color de texto (blanco) */
-    --color-text-light: #FEFEFF;    /* Color de texto claro (blanco) */
-  }
+  /* Colores base - Tema claro */
+  --color-primary: #2c3e50;       /* Azul oscuro más suave */
+  --color-secondary: #9fd3f6;     /* Azul claro moderno */
+  --color-accent: #e74c3c;        /* Rojo coral más suave */
+  --color-warning: #f7d091;       /* Naranja más apagado */
+  --color-background: #f8f9fa;    /* Blanco ligeramente grisáceo */
+  --color-text: #2c3e50;          /* Texto oscuro */
+  --color-text-light: #ffffff;     /* Texto claro */
+  --color-border: #dee2e6;        /* Borde gris claro */
+}
+
+[data-theme="dark"] {
+  /* Colores para el tema oscuro */
+  --color-primary: #34495e;       /* Azul oscuro más claro */
+  --color-secondary: #91cff8;     /* Azul secundario */
+  --color-accent: #c0392b;        /* Rojo más oscuro */
+  --color-warning: #e67e22;       /* Naranja oscuro */
+  --color-background: #1a1a1a;    /* Fondo gris muy oscuro */
+  --color-text: #ecf0f1;          /* Texto claro grisáceo */
+  --color-text-light: #ffffff;    /* Texto blanco */
+  --color-border: #2c3e50;        /* Borde azul oscuro */
+}
