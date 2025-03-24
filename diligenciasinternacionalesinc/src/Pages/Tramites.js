@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import Footer from "../Components/Footer";
+import Navbar from "../Components/Navbar";
  // Asegúrate de que este import sea correcto
 
 const Tramites = () => {
   const [theme, setTheme] = useState('light');
   const [selectedPlan, setSelectedPlan] = useState(null);
 
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
+ 
 
   const plans = [
     {
@@ -65,6 +64,7 @@ const Tramites = () => {
 
   return (
     <div className="page-container">
+      <Navbar />
       <div className={`price-page ${theme}`} data-theme={theme}>
        
         
