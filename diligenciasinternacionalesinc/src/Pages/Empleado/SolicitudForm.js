@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
-
+import AñadirCliente from './AnadirCliente';
 const SolicitudForm = () => {
   // Estados principales
   const [formData, setFormData] = useState({
@@ -22,18 +21,7 @@ const SolicitudForm = () => {
   const [showClienteModal, setShowClienteModal] = useState(false);
   const [showTramiteModal, setShowTramiteModal] = useState(false);
   
-  // Estados para los formularios de creación
-  const [nuevoCliente, setNuevoCliente] = useState({
-    nombreCliente: '',
-    apellidoPaternoCliente: '',
-    apellidoMaternoCliente: '',
-    telefono: '',
-    identificacion: '',
-    tipoIdentificacion: 'CURP',
-    idPais: 1,
-    errorIdentificacion: ''
-  });
-
+  // Estado para el formulario de trámite
   const [nuevoTramite, setNuevoTramite] = useState({
     tipoTramite: '',
     descripcion: '',
@@ -44,103 +32,6 @@ const SolicitudForm = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-
-  // Funciones auxiliares para identificación
-  const obtenerTipoIdentificacionDefault = (idPais) => {
-    const paises = {
-      1: 'CURP', // México
-      2: 'ITIN', // Estados Unidos
-      3: 'DPI',  // Guatemala
-      4: 'RTN',  // Honduras
-      5: 'DUI'   // El Salvador
-    };
-    return paises[idPais] || 'OTRO';
-  };
-
-  const obtenerOpcionesIdentificacion = (idPais) => {
-    const opciones = {
-      1: [ // México
-        { value: 'CURP', label: 'CURP' },
-        { value: 'RFC', label: 'RFC' },
-        { value: 'INE', label: 'INE' },
-        { value: 'PASAPORTE', label: 'Pasaporte' }
-      ],
-      2: [ // Estados Unidos
-        { value: 'ITIN', label: 'ITIN' },
-        { value: 'SSN', label: 'SSN' },
-        { value: 'PASAPORTE', label: 'Pasaporte' }
-      ],
-      3: [ // Guatemala
-        { value: 'DPI', label: 'DPI' },
-        { value: 'PASAPORTE', label: 'Pasaporte' }
-      ],
-      4: [ // Honduras
-        { value: 'RTN', label: 'RTN' },
-        { value: 'DNI', label: 'DNI' },
-        { value: 'PASAPORTE', label: 'Pasaporte' }
-      ],
-      5: [ // El Salvador
-        { value: 'DUI', label: 'DUI' },
-        { value: 'NIT', label: 'NIT' },
-        { value: 'PASAPORTE', label: 'Pasaporte' }
-      ]
-    };
-
-    return opciones[idPais]?.map(opcion => (
-      <option key={opcion.value} value={opcion.value}>{opcion.label}</option>
-    )) || <option value="OTRO">Otro</option>;
-  };
-
-  const obtenerEjemploIdentificacion = (tipo) => {
-    const ejemplos = {
-      'CURP': 'Ejemplo: GODE920511HDFLRN01',
-      'RFC': 'Ejemplo: GODE920511ABC',
-      'INE': 'Ejemplo: 1234567890123456',
-      'ITIN': 'Ejemplo: 9XX-XX-XXXX',
-      'SSN': 'Ejemplo: XXX-XX-XXXX',
-      'DPI': 'Ejemplo: 1234567890101',
-      'RTN': 'Ejemplo: 12345678901234',
-      'DUI': 'Ejemplo: 12345678-9',
-      'NIT': 'Ejemplo: 0614-123456-123-4',
-      'PASAPORTE': 'Ejemplo: M12345678'
-    };
-    return ejemplos[tipo] || 'Ingrese el número de identificación';
-  };
-
-  const validarIdentificacion = () => {
-    const { tipoIdentificacion, identificacion } = nuevoCliente;
-    let valido = true;
-    let mensajeError = '';
-
-    // Expresiones regulares para cada tipo
-    const regexes = {
-      'CURP': /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]{2}$/,
-      'RFC': /^[A-Z]{4}\d{6}[A-Z0-9]{3}$/,
-      'INE': /^\d{13,18}$/,
-      'ITIN': /^9\d{2}-\d{2}-\d{4}$/,
-      'SSN': /^\d{3}-\d{2}-\d{4}$/,
-      'DPI': /^\d{13}$/,
-      'RTN': /^\d{14}$/,
-      'DUI': /^\d{8}-\d$/,
-      'NIT': /^\d{4}-\d{6}-\d{3}-\d$/,
-      'PASAPORTE': /^[A-Z0-9]{6,12}$/
-    };
-
-    if (regexes[tipoIdentificacion]) {
-      const regex = new RegExp(regexes[tipoIdentificacion]);
-      if (!regex.test(identificacion)) {
-        valido = false;
-        mensajeError = `Formato de ${tipoIdentificacion} inválido. ${obtenerEjemploIdentificacion(tipoIdentificacion)}`;
-      }
-    }
-
-    setNuevoCliente(prev => ({
-      ...prev,
-      errorIdentificacion: valido ? '' : mensajeError
-    }));
-
-    return valido;
-  };
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -189,53 +80,9 @@ const SolicitudForm = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleClienteChange = (e) => {
-    const { name, value } = e.target;
-    setNuevoCliente(prev => ({ ...prev, [name]: value }));
-  };
-
   const handleTramiteChange = (e) => {
     const { name, value } = e.target;
     setNuevoTramite(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Crear nuevo cliente
-  const crearCliente = async (e) => {
-    e.preventDefault();
-    
-    if (!validarIdentificacion()) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post('/api/clientes', {
-        ...nuevoCliente,
-        identificacionunicanacional: `${nuevoCliente.tipoIdentificacion}:${nuevoCliente.identificacion}`
-      }, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      // Agregar el nuevo cliente a la lista y seleccionarlo
-      const clienteCreado = response.data;
-      setClientes(prev => [...prev, clienteCreado]);
-      setFormData(prev => ({ ...prev, idCliente: clienteCreado.idCliente }));
-      setShowClienteModal(false);
-      
-      // Resetear formulario
-      setNuevoCliente({
-        nombreCliente: '',
-        apellidoPaternoCliente: '',
-        apellidoMaternoCliente: '',
-        telefono: '',
-        identificacion: '',
-        tipoIdentificacion: 'CURP',
-        idPais: 1,
-        errorIdentificacion: ''
-      });
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error al crear cliente');
-    }
   };
 
   // Crear nuevo trámite
@@ -422,121 +269,16 @@ const SolicitudForm = () => {
         </button>
       </form>
 
-      {/* Modal para nuevo Cliente */}
+      {/* Modal para nuevo Cliente (Componente separado) */}
       {showClienteModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Nuevo Cliente</h3>
-            <button 
-              className="close-modal"
-              onClick={() => setShowClienteModal(false)}
-            >
-              &times;
-            </button>
-            
-            <form onSubmit={crearCliente}>
-              <div className="form-group">
-                <label>Nombre:</label>
-                <input
-                  type="text"
-                  name="nombreCliente"
-                  value={nuevoCliente.nombreCliente}
-                  onChange={handleClienteChange}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Apellido Paterno:</label>
-                <input
-                  type="text"
-                  name="apellidoPaternoCliente"
-                  value={nuevoCliente.apellidoPaternoCliente}
-                  onChange={handleClienteChange}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Apellido Materno:</label>
-                <input
-                  type="text"
-                  name="apellidoMaternoCliente"
-                  value={nuevoCliente.apellidoMaternoCliente}
-                  onChange={handleClienteChange}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Teléfono:</label>
-                <input
-                  type="text"
-                  name="telefono"
-                  value={nuevoCliente.telefono}
-                  onChange={handleClienteChange}
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>País:</label>
-                <select
-                  name="idPais"
-                  value={nuevoCliente.idPais}
-                  onChange={(e) => {
-                    const paisId = parseInt(e.target.value);
-                    setNuevoCliente(prev => ({
-                      ...prev, 
-                      idPais: paisId,
-                      tipoIdentificacion: obtenerTipoIdentificacionDefault(paisId)
-                    }));
-                  }}
-                  required
-                >
-                  {paises.map(pais => (
-                    <option key={pais.idPais} value={pais.idPais}>
-                      {pais.nombrePais}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label>Tipo de Identificación:</label>
-                <select
-                  name="tipoIdentificacion"
-                  value={nuevoCliente.tipoIdentificacion}
-                  onChange={handleClienteChange}
-                  required
-                >
-                  {obtenerOpcionesIdentificacion(nuevoCliente.idPais)}
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label>Identificación:</label>
-                <input
-                  type="text"
-                  name="identificacion"
-                  value={nuevoCliente.identificacion}
-                  onChange={handleClienteChange}
-                  onBlur={validarIdentificacion}
-                  required
-                />
-                <small className="hint">
-                  {obtenerEjemploIdentificacion(nuevoCliente.tipoIdentificacion)}
-                </small>
-                {nuevoCliente.errorIdentificacion && (
-                  <div className="error-text">{nuevoCliente.errorIdentificacion}</div>
-                )}
-              </div>
-              
-              <button type="submit" className="submit-btn">
-                Crear Cliente
-              </button>
-            </form>
-          </div>
-        </div>
+        <AñadirCliente 
+          onClose={() => setShowClienteModal(false)}
+          onClienteCreado={(cliente) => {
+            setClientes(prev => [...prev, cliente]);
+            setFormData(prev => ({ ...prev, idCliente: cliente.idCliente }));
+          }}
+          paises={paises}
+        />
       )}
 
       {/* Modal para nuevo Trámite */}
