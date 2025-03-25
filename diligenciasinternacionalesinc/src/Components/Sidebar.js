@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaBars, FaTimes, FaChevronDown, FaChevronRight } from 'react-icons/fa';
+
 
 const SidebarNavigation = () => {
   const [activeMenu, setActiveMenu] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -11,11 +14,13 @@ const SidebarNavigation = () => {
   };
 
   const handleLogout = () => {
-    // Elimina los datos de autenticación
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-    // Redirige al login
     navigate('/login');
+  };
+
+  const toggleSidebar = () => {
+    setIsVisible(!isVisible);
   };
 
   const menuItems = [
@@ -100,66 +105,80 @@ const SidebarNavigation = () => {
   ];
 
   return (
-    <div className="sidebarContainer">
-      <div className="sidebarLogo">
-        <h2>D I I</h2>
+    <>
+      {/* Pestaña lateral para abrir */}
+      <div className="sidebar-tab" onClick={toggleSidebar}>
+        <FaBars />
       </div>
-      
-      <nav className="sidebarNav">
-        {menuItems.map((menu, index) => (
-          <div key={index} className="sidebarMenuGroup">
-            <div 
-              className={`sidebarMenuHeader ${activeMenu === menu.title ? 'active' : ''}`}
-              onClick={() => toggleMenu(menu.title)}
-            >
-              <span className="sidebarMenuIcon">{menu.icon}</span>
-              <span className="sidebarMenuTitle">{menu.title}</span>
-              <span className="sidebarMenuArrow">
-                {activeMenu === menu.title ? '▼' : '►'}
-              </span>
-            </div>
-            
-            <div 
-              className={`sidebarMenuItems ${activeMenu === menu.title ? 'open' : ''}`}
-              style={{ 
-                height: activeMenu === menu.title ? `${menu.items.length * 45}px` : '0px' 
-              }}
-            >
-              {menu.items.map((item, i) => (
-                <Link
-                  key={i}
-                  to={item.path}
-                  className={`sidebarMenuItem ${location.pathname === item.path ? 'active' : ''}`}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        ))}
-      </nav>
-      
-      <div className="sidebarFooter">
-        {configItems.map((item, index) => (
-          <Link
-            key={index}
-            to={item.path}
-            className={`sidebarFooterItem ${location.pathname === item.path ? 'active' : ''}`}
-          >
-            <span className="sidebarFooterIcon">{item.icon}</span>
-            <span>{item.name}</span>
-          </Link>
-        ))}
-        {/* Botón de cierre de sesión mejorado */}
-        <button 
-          onClick={handleLogout}
-          className="sidebarFooterItem logoutButton"
-        >
-          <span className="sidebarFooterIcon">🚪</span>
-          <span>Cerrar sesión</span>
+
+      {/* Sidebar principal */}
+      <div className={`sidebar-container ${isVisible ? 'visible' : ''}`}>
+        {/* Botón para cerrar */}
+        <button className="sidebar-close-btn" onClick={toggleSidebar}>
+          <FaTimes />
         </button>
+        
+        <div className="sidebar-logo">
+          <h2>D I I</h2>
+        </div>
+        
+        <nav className="sidebar-nav">
+          <div className="sidebar-menu-scroll-container">
+            {menuItems.map((menu, index) => (
+              <div key={index} className="sidebar-menu-group">
+                <div 
+                  className={`sidebar-menu-header ${activeMenu === menu.title ? 'active' : ''}`}
+                  onClick={() => toggleMenu(menu.title)}
+                >
+                  <span className="sidebar-menu-icon">{menu.icon}</span>
+                  <span className="sidebar-menu-title">{menu.title}</span>
+                  <span className="sidebar-menu-arrow">
+                    {activeMenu === menu.title ? <FaChevronDown /> : <FaChevronRight />}
+                  </span>
+                </div>
+                
+                <div 
+                  className={`sidebar-menu-items ${activeMenu === menu.title ? 'open' : ''}`}
+                  style={{ 
+                    height: activeMenu === menu.title ? `${menu.items.length * 45}px` : '0px' 
+                  }}
+                >
+                  {menu.items.map((item, i) => (
+                    <Link
+                      key={i}
+                      to={item.path}
+                      className={`sidebar-menu-item ${location.pathname === item.path ? 'active' : ''}`}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+            </div>
+        </nav>
+        
+        <div className="sidebar-footer">
+          {configItems.map((item, index) => (
+            <Link
+              key={index}
+              to={item.path}
+              className={`sidebar-footer-item ${location.pathname === item.path ? 'active' : ''}`}
+            >
+              <span className="sidebar-footer-icon">{item.icon}</span>
+              <span>{item.name}</span>
+            </Link>
+          ))}
+          <button 
+            onClick={handleLogout}
+            className="sidebar-footer-item logout-button"
+          >
+            <span className="sidebar-footer-icon">🚪</span>
+            <span>Cerrar sesión</span>
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
