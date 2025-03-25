@@ -1,25 +1,16 @@
+// EmpleadoLayout.js
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import Sidebar from '../Sidebar';
-
-
+import { Outlet } from 'react-router-dom';
+import SidebarNavigation from "../Sidebar";
 
 const EmpleadoLayout = () => {
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
-
   return (
-    <div className="empleado-layout">
-      <Sidebar />
+    <div className="home-empleado-container">
+      <SidebarNavigation />
       <div className="main-content">
         
-        <div className="content-area">
-          <Outlet /> {/* Esto renderizará las rutas hijas */}
+        <div className="home-empleado">
+          <Outlet />
         </div>
       </div>
     </div>

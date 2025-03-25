@@ -1,0 +1,56 @@
+/* HomeEmpleado.css */
+.home-empleado-container {
+    display: flex;
+    min-height: 100vh;
+  }
+  
+  .main-content {
+    flex: 1;
+    margin-left: 280px; /* Igual al ancho del sidebar */
+    transition: margin-left 0.3s ease;
+    padding: 20px;
+    background-color: #f5f7fa;
+    min-height: 100vh;
+  }
+  
+  /* Cuando el sidebar está colapsado */
+  .sidebar-collapsed + .main-content {
+    margin-left: 80px; /* Ancho reducido cuando está colapsado */
+  }
+  
+  /* Contenido principal */
+  .home-empleado {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+  }
+  
+  .card {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card h3 {
+    margin-top: 0;
+    color: #2c3e50;
+  }
+  
+  .card p {
+    color: #7f8c8d;
+    margin-bottom: 0;
+  }
