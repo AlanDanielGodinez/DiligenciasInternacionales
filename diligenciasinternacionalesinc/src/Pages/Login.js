@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaUser, FaLock, FaEnvelope, FaSignInAlt, FaUserPlus } from 'react-icons/fa';
+import axios from 'axios';
 
 const Login = ({ initialMode = 'login' }) => {
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
@@ -10,6 +11,7 @@ const Login = ({ initialMode = 'login' }) => {
     name: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -23,6 +25,7 @@ const Login = ({ initialMode = 'login' }) => {
     const newPath = isLogin ? '/login/register' : '/login';
     navigate(newPath);
     setIsLogin(!isLogin);
+    setError('');
   };
 
   const handleChange = (e) => {
@@ -33,18 +36,44 @@ const Login = ({ initialMode = 'login' }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulación de envío
-    setTimeout(() => {
-      setIsSubmitting(false);
-      alert(isLogin ? 'Inicio de sesión exitoso' : 'Registro completado');
-      if (!isLogin) {
-        navigate('/login'); // Redirigir a login después de registrar
+    setError('');
+
+    if (isLogin) {
+      try {
+        // Enviar credenciales al backend
+        const response = await axios.post('http://localhost:5000/api/login', {
+          email: formData.email,
+          password: formData.password
+        });
+
+        // Guardar token en localStorage
+        localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+
+        // Redirigir según el rol
+        if (response.data.user.role === 'Administrador') {
+          navigate('/home'); // Redirigir a Home para admin
+        } else {
+          navigate('/dashboard'); // Redirigir a Dashboard para otros roles
+        }
+
+      } catch (err) {
+        console.error('Error en login:', err);
+        setError(err.response?.data?.error || 'Error al iniciar sesión');
+      } finally {
+        setIsSubmitting(false);
       }
-    }, 1500);
+    } else {
+      // Lógica de registro (opcional)
+      setTimeout(() => {
+        setIsSubmitting(false);
+        alert('Registro completado');
+        navigate('/login');
+      }, 1500);
+    }
   };
 
   return (
@@ -53,6 +82,8 @@ const Login = ({ initialMode = 'login' }) => {
         {/* Formulario */}
         <form className="auth-form" onSubmit={handleSubmit}>
           <h2 className="form-title">{isLogin ? 'Iniciar Sesión' : 'Registrarse'}</h2>
+          
+          {error && <div className="error-message">{error}</div>}
           
           {!isLogin && (
             <div className="input-group">

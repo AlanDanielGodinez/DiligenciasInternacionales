@@ -5,7 +5,7 @@ import Dashboard from "./Pages/Dashboard";
 import Contacto from "./Pages/Contacto";
 import Login from "./Pages/Login";
 import Tramites from "./Pages/Tramites";
-import Navbar from "./Components/Navbar";
+import HomeEmpleado from "./Pages/Empleado/Home";
 import "./App.css";
 
 // Importaciones de estilos
@@ -32,6 +32,7 @@ function App() {
               <Route path="/contacto" element={<Contacto />} />
               <Route path="/Login" element={<Login />} />
               <Route path="/Login/register" element={<Login initialMode="register" />} />
+              <Route path="/Home" element={<HomeEmpleado />} />
               <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
             </Routes>
           </div>
