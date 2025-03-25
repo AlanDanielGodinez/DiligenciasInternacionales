@@ -1,36 +1,115 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 
-dotenv.config();
+// Configuración inicial
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Configuración de PostgreSQL
+// Configuración de la base de datos
 const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
   host: process.env.DB_HOST || 'localhost',
   database: process.env.DB_NAME || 'aplicacion_web_dii',
-  password: process.env.DB_PASSWORD || 'tu_contraseña',
+  password: process.env.DB_PASSWORD || 'postgres',
   port: process.env.DB_PORT || 5432,
 });
 
-// Middleware
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Rutas de autenticación
+// ==============================================
+// FUNCIONES DE UTILIDAD
+// ==============================================
+
+/**
+ * Verifica y repara el usuario admin en la base de datos
+ */
+async function initializeAdmin() {
+  try {
+    // 1. Verificar/Crear rol Administrador
+    let rolQuery = await pool.query("SELECT idrol FROM rol WHERE nombrerol = 'Administrador'");
+    if (rolQuery.rows.length === 0) {
+      rolQuery = await pool.query("INSERT INTO rol (nombrerol) VALUES ('Administrador') RETURNING idrol");
+      console.log('[✓] Rol Administrador creado');
+    }
+    const idRol = rolQuery.rows[0].idrol;
+
+    // 2. Verificar existencia del admin
+    const adminQuery = await pool.query(
+      "SELECT * FROM empleado WHERE correoempleado = 'admin@example.com' OR email = 'admin@example.com'"
+    );
+
+    // 3. Crear o actualizar admin
+    if (adminQuery.rows.length === 0) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await pool.query(`
+        INSERT INTO empleado (
+          nombreempleado, apellidopaternoempleado, apellidomaternoempleado,
+          correoempleado, email, password, idrol
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `, ['Admin', 'System', 'User', 'admin@example.com', 'admin@example.com', hashedPassword, idRol]);
+      console.log('[✓] Usuario admin creado');
+    } else {
+      const admin = adminQuery.rows[0];
+      const needsUpdate = !(await bcrypt.compare('admin123', admin.password));
+      
+      if (needsUpdate) {
+        const newHashedPassword = await bcrypt.hash('admin123', 10);
+        await pool.query(
+          "UPDATE empleado SET password = $1 WHERE idempleado = $2",
+          [newHashedPassword, admin.idempleado]
+        );
+        console.log('[✓] Contraseña de admin actualizada');
+      }
+    }
+  } catch (error) {
+    console.error('[!] Error inicializando admin:', error.message);
+  }
+}
+
+/**
+ * Middleware de autenticación JWT
+ */
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader?.split(' ')[1];
+
+  if (!token) return res.status(401).json({ error: 'Token no proporcionado' });
+
+  jwt.verify(token, process.env.JWT_SECRET || 'secret_key', (err, user) => {
+    if (err) return res.status(403).json({ error: 'Token inválido' });
+    req.user = user;
+    next();
+  });
+}
+
+// ==============================================
+// RUTAS DE AUTENTICACIÓN
+// ==============================================
+
+/**
+ * Login de usuario
+ */
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email y contraseña son requeridos' });
+  }
+
   try {
-    // Buscar usuario en la base de datos
+    // 1. Buscar usuario
     const userQuery = await pool.query(
-      'SELECT e.*, r.nombreRol FROM Empleado e JOIN Rol r ON e.idRol = r.idRol WHERE e.email = $1',
-      [email]
+      `SELECT e.*, r.nombrerol 
+       FROM empleado e 
+       JOIN rol r ON e.idrol = r.idrol 
+       WHERE e.correoempleado = $1 OR e.email = $1`,
+      [email.toLowerCase().trim()]
     );
 
     if (userQuery.rows.length === 0) {
@@ -39,26 +118,32 @@ app.post('/api/login', async (req, res) => {
 
     const user = userQuery.rows[0];
 
-    // Verificar contraseña
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
+    // 2. Validar contraseña
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    // Crear token JWT
+    // 3. Generar token
     const token = jwt.sign(
       {
         id: user.idempleado,
-        email: user.email,
+        email: user.correoempleado || user.email,
         role: user.nombrerol
       },
-      process.env.JWT_SECRET || 'tu_secreto_jwt',
+      process.env.JWT_SECRET || 'secret_key',
       { expiresIn: '8h' }
     );
 
-    // Responder con el token y datos del usuario (sin la contraseña)
-    delete user.password;
-    res.json({ token, user });
+    // 4. Responder sin datos sensibles
+    const userData = {
+      id: user.idempleado,
+      nombre: user.nombreempleado,
+      email: user.correoempleado || user.email,
+      rol: user.nombrerol
+    };
+
+    res.json({ token, user: userData });
 
   } catch (error) {
     console.error('Error en login:', error);
@@ -66,61 +151,55 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Ruta protegida de ejemplo
-app.get('/api/protected', authenticateToken, (req, res) => {
-  res.json({ message: 'Esta es una ruta protegida', user: req.user });
-});
-
-// Middleware de autenticación
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) return res.sendStatus(401);
-
-  jwt.verify(token, process.env.JWT_SECRET || 'tu_secreto_jwt', (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
-}
-
-// Ruta para verificar el usuario admin
-app.get('/api/check-admin', async (req, res) => {
+/**
+ * Verificar estado del admin
+ */
+app.get('/api/admin/status', async (req, res) => {
   try {
-    const adminQuery = await pool.query(
-      "SELECT * FROM Empleado WHERE email = 'admin@example.com'"
+    const admin = await pool.query(
+      `SELECT e.idempleado, e.nombreempleado, e.correoempleado, e.email, r.nombrerol
+       FROM empleado e JOIN rol r ON e.idrol = r.idrol
+       WHERE e.correoempleado = 'admin@example.com' OR e.email = 'admin@example.com'`
     );
-    
-    if (adminQuery.rows.length > 0) {
-      console.log('Usuario admin encontrado:', adminQuery.rows[0]);
-      res.json({ exists: true, admin: adminQuery.rows[0] });
-    } else {
-      console.log('Usuario admin no encontrado');
-      res.json({ exists: false });
+
+    if (admin.rows.length === 0) {
+      return res.json({ exists: false });
     }
+
+    res.json({
+      exists: true,
+      admin: {
+        ...admin.rows[0],
+        email: admin.rows[0].correoempleado || admin.rows[0].email
+      }
+    });
   } catch (error) {
     console.error('Error verificando admin:', error);
-    res.status(500).json({ error: 'Error verificando usuario admin' });
+    res.status(500).json({ error: 'Error verificando admin' });
   }
 });
 
-app.get('/', (req, res) => {
-  res.send('¡Backend funcionando!');
+// ==============================================
+// RUTAS PROTEGIDAS
+// ==============================================
+
+app.get('/api/protected', authenticateToken, (req, res) => {
+  res.json({ 
+    message: 'Ruta protegida', 
+    user: req.user 
+  });
 });
 
-app.listen(PORT, () => {
+// ==============================================
+// INICIO DEL SERVIDOR
+// ==============================================
+
+app.listen(PORT, async () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
-  // Verificar automáticamente si el admin existe al iniciar
-  pool.query("SELECT * FROM Empleado WHERE email = 'admin@example.com'")
-    .then(result => {
-      if (result.rows.length > 0) {
-        console.log('[✓] Usuario admin está configurado');
-      } else {
-        console.log('[!] Usuario admin no encontrado');
-      }
-    })
-    .catch(err => {
-      console.error('Error verificando admin:', err);
-    });
+  await initializeAdmin();
+});
+
+// Ruta básica de prueba
+app.get('/', (req, res) => {
+  res.send('Backend operativo');
 });
