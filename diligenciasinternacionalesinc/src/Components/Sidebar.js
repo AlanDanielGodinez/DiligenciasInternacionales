@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import './SidebarNavigation.css';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const SidebarNavigation = () => {
   const [activeMenu, setActiveMenu] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const toggleMenu = (menu) => {
     setActiveMenu(activeMenu === menu ? null : menu);
+  };
+
+  const handleLogout = () => {
+    // Elimina los datos de autenticación
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    // Redirige al login
+    navigate('/login');
   };
 
   const menuItems = [
@@ -15,7 +23,7 @@ const SidebarNavigation = () => {
       title: "Dashboard",
       icon: "📊",
       items: [
-        { name: "Inicio", path: "/" },
+        { name: "Inicio", path: "/home" },
         { name: "Estadísticas", path: "/stats" }
       ]
     },
@@ -88,14 +96,13 @@ const SidebarNavigation = () => {
   const configItems = [
     { name: "Configuración", icon: "⚙️", path: "/configuracion" },
     { name: "Notificaciones", icon: "🧩", path: "/notificaciones" },
-    { name: "Ayuda", icon: "❓", path: "/ayuda" },
-    { name: "Cerrar Sesión", icon: "🚪", path: "/logout" }
+    { name: "Ayuda", icon: "❓", path: "/ayuda" }
   ];
 
   return (
     <div className="sidebarContainer">
       <div className="sidebarLogo">
-        <h2>TravelAdmin</h2>
+        <h2>D I I</h2>
       </div>
       
       <nav className="sidebarNav">
@@ -143,6 +150,14 @@ const SidebarNavigation = () => {
             <span>{item.name}</span>
           </Link>
         ))}
+        {/* Botón de cierre de sesión mejorado */}
+        <button 
+          onClick={handleLogout}
+          className="sidebarFooterItem logoutButton"
+        >
+          <span className="sidebarFooterIcon">🚪</span>
+          <span>Cerrar sesión</span>
+        </button>
       </div>
     </div>
   );
