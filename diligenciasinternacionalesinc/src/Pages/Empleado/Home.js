@@ -1,30 +1,30 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Home = () => {
+
+const HomeEmpleado = () => {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Verificar autenticación al cargar
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/login');
-    }
-  }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
+  const user = JSON.parse(localStorage.getItem('user'));
 
   return (
-    <div className="home-container">
-      <h1>Bienvenido Administrador</h1>
-      <p>Panel de control principal</p>
-      <button onClick={handleLogout}>Cerrar sesión</button>
+    <div className="home-empleado">
+      <h1>Bienvenido, {user?.nombre || 'Empleado'}</h1>
+      <div className="dashboard-cards">
+        <div className="card" onClick={() => navigate('/empleado/tramites')}>
+          <h3>Trámites</h3>
+          <p>Gestión de trámites</p>
+        </div>
+        <div className="card" onClick={() => navigate('/empleado/clientes')}>
+          <h3>Clientes</h3>
+          <p>Administración de clientes</p>
+        </div>
+        <div className="card" onClick={() => navigate('/empleado/reportes')}>
+          <h3>Reportes</h3>
+          <p>Generar reportes</p>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default Home;
+export default HomeEmpleado;
