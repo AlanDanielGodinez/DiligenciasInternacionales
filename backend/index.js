@@ -190,6 +190,95 @@ app.get('/api/protected', authenticateToken, (req, res) => {
   });
 });
 
+
+// ==============================================
+// RUTAS PARA EL FORMULARIO DE SOLICITUDES
+// ==============================================
+
+// Obtener todos los clientes
+app.get('/api/clientes', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT idCliente, nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente 
+      FROM Cliente
+      ORDER BY nombreCliente
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener clientes:', error);
+    res.status(500).json({ error: 'Error al obtener clientes' });
+  }
+});
+
+// Obtener todos los trámites
+app.get('/api/tramites', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT idTramite, tipoTramite, descripcion 
+      FROM Tramite
+      ORDER BY tipoTramite
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener trámites:', error);
+    res.status(500).json({ error: 'Error al obtener trámites' });
+  }
+});
+
+// Obtener todos los empleados
+app.get('/api/empleados', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT idEmpleado, nombreEmpleado, apellidoPaternoEmpleado, correoEmpleado 
+      FROM Empleado
+      ORDER BY nombreEmpleado
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener empleados:', error);
+    res.status(500).json({ error: 'Error al obtener empleados' });
+  }
+});
+
+// Crear una nueva solicitud
+app.post('/api/solicitudes', authenticateToken, async (req, res) => {
+  const { idCliente, idTramite, idEmpleado, fechaSolicitud, estado_actual } = req.body;
+
+  if (!idCliente || !idTramite || !idEmpleado || !fechaSolicitud || !estado_actual) {
+    return res.status(400).json({ error: 'Todos los campos son requeridos' });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO Solicitud 
+       (idCliente, idTramite, idEmpleado, fechaSolicitud, estado_actual) 
+       VALUES ($1, $2, $3, $4, $5) RETURNING idSolicitud`,
+      [idCliente, idTramite, idEmpleado, fechaSolicitud, estado_actual]
+    );
+
+    res.status(201).json({
+      message: 'Solicitud creada exitosamente',
+      idSolicitud: result.rows[0].idsolicitud
+    });
+  } catch (error) {
+    console.error('Error al crear solicitud:', error);
+    res.status(500).json({ error: 'Error al crear solicitud' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ==============================================
 // INICIO DEL SERVIDOR
 // ==============================================

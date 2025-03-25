@@ -46,7 +46,7 @@ const SidebarNavigation = () => {
       icon: "📋",
       items: [
         { name: "Tipos de Trámites", path: "/tramites" },
-        { name: "Nueva Solicitud", path: "/nueva-solicitud" },
+        { name: "Nueva Solicitud", path: "/SolicitudForm" },
         { name: "Solicitudes Activas", path: "/solicitudes" },
         { name: "Calendario de Plazos", path: "/calendario" }
       ]
