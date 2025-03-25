@@ -7,6 +7,7 @@ import Login from "./Pages/Login";
 import Tramites from "./Pages/Tramites";
 import EmpleadoLayout from "./Components/Layouts/EmpleadoLayout"; // Nuevo layout
 import HomeEmpleado from "./Pages/Empleado/Home";
+import SolicitudForm from "./Pages/Empleado/SolicitudForm";
 
 import "./App.css";
 
@@ -22,6 +23,7 @@ import "../src/Styles/Tramites.css";
 import "../src/Styles/Contacto.css";
 import "../src/Styles/Login.css";
 import "../src/Styles/EmpleadoLayout.css";
+import '../src/Styles/SolicitudForm.css';
 
 
 function App() {
@@ -41,6 +43,7 @@ function App() {
             <Route element={<EmpleadoLayout />}>
               <Route path="/home" element={<HomeEmpleado />} />
               {/* Agrega aquí más rutas protegidas */}
+              <Route path="/SolicitudForm" element={<SolicitudForm />} />
               <Route path="/empleado/*" element={<HomeEmpleado />} />
             </Route>
             
