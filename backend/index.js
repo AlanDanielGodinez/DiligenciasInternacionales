@@ -191,6 +191,60 @@ app.get('/api/protected', authenticateToken, (req, res) => {
 });
 
 
+
+// Obtener usuario actual
+app.get('/api/auth/current-user', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT idEmpleado, nombreEmpleado, apellidoPaternoEmpleado 
+       FROM Empleado WHERE idEmpleado = $1`,
+      [req.user.id]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener usuario:', error);
+    res.status(500).json({ error: 'Error al obtener usuario' });
+  }
+});
+
+// Crear nuevo cliente
+app.post('/api/clientes', authenticateToken, async (req, res) => {
+  const { nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente, telefono, identificacionunicanacional } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO Cliente (
+        nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente,
+        telefono, identificacionunicanacional
+      ) VALUES ($1, $2, $3, $4, $5) RETURNING idCliente, nombreCliente, apellidoPaternoCliente`,
+      [nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente, telefono, identificacionunicanacional]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al crear cliente:', error);
+    res.status(500).json({ error: 'Error al crear cliente' });
+  }
+});
+
+// Crear nuevo trámite
+app.post('/api/tramites', authenticateToken, async (req, res) => {
+  const { tipoTramite, descripcion, requisitos } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO Tramite (
+        tipoTramite, descripcion, requisitos
+      ) VALUES ($1, $2, $3) RETURNING idTramite, tipoTramite, descripcion`,
+      [tipoTramite, descripcion, requisitos || '']
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al crear trámite:', error);
+    res.status(500).json({ error: 'Error al crear trámite' });
+  }
+});
+
+
 // ==============================================
 // RUTAS PARA EL FORMULARIO DE SOLICITUDES
 // ==============================================
