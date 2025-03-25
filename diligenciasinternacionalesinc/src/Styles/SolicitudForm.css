@@ -1,3 +1,4 @@
+/* Estilos base */
 .solicitud-form-container {
     max-width: 800px;
     margin: 2rem auto;
@@ -7,129 +8,7 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
   
-  .solicitud-form-container h2 {
-    color: var(--color-primary);
-    text-align: center;
-    margin-bottom: 1.5rem;
-  }
-  
-  .form-group {
-    margin-bottom: 1.5rem;
-  }
-  
-  .form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--color-text);
-    font-weight: 500;
-  }
-  
-  .form-group select,
-  .form-group input[type="date"] {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    background-color: var(--color-background);
-    color: var(--color-text);
-    font-size: 1rem;
-    transition: border-color 0.3s;
-  }
-  
-  .form-group select:focus,
-  .form-group input[type="date"]:focus {
-    outline: none;
-    border-color: var(--color-secondary);
-    box-shadow: 0 0 0 2px rgba(159, 211, 246, 0.3);
-  }
-  
-  .submit-btn {
-    width: 100%;
-    padding: 0.75rem;
-    background-color: var(--color-primary);
-    color: var(--color-text-light);
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .submit-btn:hover {
-    background-color: #1a252f;
-  }
-  .loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-  }
-  
-  .loading {
-    text-align: center;
-    padding: 2rem;
-    color: var(--color-primary);
-  }
-  loading-spinner {
-    border: 4px solid var(--color-border);
-    border-top: 4px solid var(--color-primary);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
-  .error {
-    color: var(--color-accent);
-    background-color: rgba(231, 76, 60, 0.1);
-    padding: 1rem;
-    border-radius: 4px;
-    margin: 1rem 0;
-    text-align: center;
-  }
-  
-  .success-message {
-    color: #27ae60;
-    background-color: rgba(39, 174, 96, 0.1);
-    padding: 1rem;
-    border-radius: 4px;
-    margin-bottom: 1.5rem;
-    text-align: center;
-  }
-  
-  /* Estilos para el tema oscuro */
-  [data-theme="dark"] .solicitud-form-container {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  }
-  
-  [data-theme="dark"] .form-group select,
-  [data-theme="dark"] .form-group input[type="date"] {
-    background-color: #2d2d2d;
-    border-color: #444;
-  }
-  
-  [data-theme="dark"] .submit-btn:hover {
-    background-color: #2c3e50;
-  }
-  /* SolicitudForm.css - Versión actualizada */
-
-.solicitud-form-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background-color: var(--color-background);
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
+  /* Loading */
   .loading-container {
     display: flex;
     flex-direction: column;
@@ -153,6 +32,7 @@
     100% { transform: rotate(360deg); }
   }
   
+  /* Mensajes */
   .error-message {
     color: var(--color-accent);
     background-color: rgba(231, 76, 60, 0.1);
@@ -164,6 +44,16 @@
     align-items: center;
   }
   
+  .success-message {
+    color: #27ae60;
+    background-color: rgba(39, 174, 96, 0.1);
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  /* Botones */
   .retry-btn {
     background-color: var(--color-accent);
     color: white;
@@ -178,4 +68,143 @@
     background-color: #c0392b;
   }
   
-  /* Resto del CSS permanece igual... */
+  .submit-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--color-primary);
+    color: var(--color-text-light);
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .submit-btn:hover {
+    background-color: #1a252f;
+  }
+  
+  /* Formulario */
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+    font-weight: 500;
+  }
+  
+  .form-group select,
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background-color: var(--color-background);
+    color: var(--color-text);
+    font-size: 1rem;
+    transition: border-color 0.3s;
+  }
+  
+  .form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+  
+  .form-group select:focus,
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 0 2px rgba(159, 211, 246, 0.3);
+  }
+  
+  /* Combo con botón */
+  .combo-with-button {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .combo-with-button select {
+    flex: 1;
+  }
+  
+  .add-button {
+    width: 40px;
+    background-color: var(--color-secondary);
+    color: var(--color-primary);
+    border: none;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .add-button:hover {
+    background-color: #7fbae8;
+  }
+  
+  /* Modales */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modal-content {
+    background-color: var(--color-background);
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  .close-modal {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--color-text);
+  }
+  
+  /* Tema oscuro */
+  [data-theme="dark"] .solicitud-form-container {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  [data-theme="dark"] .form-group select,
+  [data-theme="dark"] .form-group input,
+  [data-theme="dark"] .form-group textarea {
+    background-color: #2d2d2d;
+    border-color: #444;
+  }
+  
+  [data-theme="dark"] .submit-btn:hover {
+    background-color: #2c3e50;
+  }
+  
+  [data-theme="dark"] .add-button {
+    background-color: #5d9ce6;
+    color: white;
+  }
+  
+  [data-theme="dark"] .add-button:hover {
+    background-color: #4a89dc;
+  }
