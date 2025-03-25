@@ -24,6 +24,8 @@ import "../src/Styles/Contacto.css";
 import "../src/Styles/Login.css";
 import "../src/Styles/EmpleadoLayout.css";
 import '../src/Styles/SolicitudForm.css';
+import '../src/Styles/AñadirCliente.css';
+
 
 
 function App() {
