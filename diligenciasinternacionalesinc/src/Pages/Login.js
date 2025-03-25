@@ -15,6 +15,14 @@ const Login = ({ initialMode = 'login' }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Verificar si hay un token al cargar (para redirección automática)
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      navigate('/home');
+    }
+  }, [navigate]);
+
   // Sincronizar con la ruta actual
   useEffect(() => {
     const path = location.pathname;
@@ -54,15 +62,20 @@ const Login = ({ initialMode = 'login' }) => {
         localStorage.setItem('user', JSON.stringify(response.data.user));
 
         // Redirigir según el rol
-        if (response.data.user.role === 'Administrador') {
-          navigate('/home'); // Redirigir a Home para admin
+        if (response.data.user.nombrerol === 'Administrador') {
+          navigate('/home');
         } else {
-          navigate('/dashboard'); // Redirigir a Dashboard para otros roles
+          navigate('/dashboard');
         }
 
       } catch (err) {
         console.error('Error en login:', err);
         setError(err.response?.data?.error || 'Error al iniciar sesión');
+        
+        // Verificar si es el admin y mostrar mensaje específico
+        if (formData.email === 'admin@example.com') {
+          setError('Error en credenciales de administrador. Contacte al soporte.');
+        }
       } finally {
         setIsSubmitting(false);
       }
