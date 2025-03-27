@@ -1,7 +1,10 @@
+
+
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaSearch, FaPlus, FaEdit, FaTrash, FaUsers, FaChevronDown, FaChevronUp, FaInfoCircle } from 'react-icons/fa';
 import { MdOutlineMeetingRoom } from 'react-icons/md';
+import axios from 'axios';
 
 
 const AreasPage = () => {
@@ -13,59 +16,56 @@ const AreasPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [newArea, setNewArea] = useState({
     nombreArea: '',
-    descripcion: ''
+    descripcion: '',
+    responsableArea: null  // Añade esto para ser explícito
   });
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  // Datos de ejemplo (simulando API)
+  // Colores predefinidos para las áreas
+  const areaColors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c', '#d35400'];
+
+  // Obtener áreas del backend
   useEffect(() => {
     const fetchAreas = async () => {
-      setTimeout(() => {
-        const mockAreas = [
-          {
-            idArea: 1,
-            nombreArea: 'Finanzas',
-            descripcion: 'Área encargada de la gestión económica y contable',
-            empleados: 5,
-            responsable: 'Juan Pérez',
-            color: '#3498db'
-          },
-          {
-            idArea: 2,
-            nombreArea: 'Recursos Humanos',
-            descripcion: 'Gestión del personal, contrataciones y desarrollo',
-            empleados: 3,
-            responsable: 'María Gómez',
-            color: '#2ecc71'
-          },
-          {
-            idArea: 3,
-            nombreArea: 'Operaciones',
-            descripcion: 'Gestión de trámites y procesos principales',
-            empleados: 8,
-            responsable: 'Carlos Ruiz',
-            color: '#e74c3c'
-          },
-          {
-            idArea: 4,
-            nombreArea: 'Tecnología',
-            descripcion: 'Sistemas, desarrollo de software e infraestructura',
-            empleados: 4,
-            responsable: 'Ana Martínez',
-            color: '#f39c12'
-          },
-          {
-            idArea: 5,
-            nombreArea: 'Legal',
-            descripcion: 'Asesoría jurídica y cumplimiento normativo',
-            empleados: 2,
-            responsable: 'Laura Fernández',
-            color: '#9b59b6'
-          }
-        ];
-        setAreas(mockAreas);
-        setFilteredAreas(mockAreas);
+      try {
+        setIsLoading(true);
+        setError('');
+        
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          throw new Error('No autenticado - Redirigiendo a login');
+        }
+
+        console.log('Iniciando carga de áreas...');
+        const response = await api.get('/areas');
+        console.log('Datos recibidos:', response.data);
+
+        if (!response.data || !Array.isArray(response.data)) {
+          throw new Error('Formato de datos inválido');
+        }
+
+        const areasWithColors = response.data.map((area, index) => ({
+          idArea: area.idArea,
+          nombreArea: area.nombreArea || 'Área sin nombre',
+          descripcion: area.descripcion || 'Sin descripción',
+          responsable: area.responsable || 'Sin asignar',
+          empleados: area.empleados || 0,
+          color: areaColors[index % areaColors.length]
+        }));
+
+        setAreas(areasWithColors);
+        setFilteredAreas(areasWithColors);
+        
+      } catch (err) {
+        console.error('Error en fetchAreas:', err);
+        setError(err.message || 'Error al cargar áreas');
+        if (err.message.includes('No autenticado')) {
+          navigate('/login');
+        }
+      } finally {
         setIsLoading(false);
-      }, 1000);
+      }
     };
 
     fetchAreas();
@@ -73,10 +73,21 @@ const AreasPage = () => {
 
   // Filtrado de áreas
   useEffect(() => {
-    const results = areas.filter(area =>
-      area.nombreArea.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      area.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    if (!areas || areas.length === 0) {
+      setFilteredAreas([]);
+      return;
+    }
+  
+    const searchTermLower = searchTerm ? searchTerm.toLowerCase() : '';
+    
+    const results = areas.filter(area => {
+      const nombre = area.nombreArea ? area.nombreArea.toLowerCase() : '';
+      const descripcion = area.descripcion ? area.descripcion.toLowerCase() : '';
+      
+      return nombre.includes(searchTermLower) || 
+             descripcion.includes(searchTermLower);
+    });
+  
     setFilteredAreas(results);
   }, [searchTerm, areas]);
 
@@ -88,28 +99,100 @@ const AreasPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  // Crear nueva área
+  // 1. Crear una instancia configurada de axios (añade esto al inicio del archivo)
+  const api = axios.create({
+    baseURL: 'http://localhost:5000/api', // URL completa en desarrollo
+    timeout: 10000,
+  });
+  
+  // Interceptor para añadir automáticamente el token
+  api.interceptors.request.use(config => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  }, error => {
+    return Promise.reject(error);
+  });
+  
+  // 2. Modificar handleSubmit
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Colores predefinidos para nuevas áreas
-    const areaColors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c', '#d35400'];
-    const randomColor = areaColors[Math.floor(Math.random() * areaColors.length)];
+    setError('');
     
-    const newAreaObj = {
-      idArea: areas.length + 1,
-      nombreArea: newArea.nombreArea,
-      descripcion: newArea.descripcion,
-      empleados: 0,
-      responsable: 'Sin asignar',
-      color: randomColor
-    };
-    
-    setAreas([...areas, newAreaObj]);
-    setNewArea({ nombreArea: '', descripcion: '' });
-    setShowModal(false);
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) throw new Error('No hay token de autenticación');
+  
+      console.log('Enviando datos:', newArea);
+      
+      const response = await api.post('/areas', {
+        nombreArea: newArea.nombreArea,
+        descripcion: newArea.descripcion
+      });
+      
+      console.log('Respuesta del servidor:', response.data);
+      
+      // Obtener la lista actualizada de áreas
+      const updatedAreasResponse = await api.get('/areas');
+      
+      // Asignar colores a todas las áreas, incluyendo la nueva
+      const areasWithColors = updatedAreasResponse.data.map((area, index) => ({
+        idArea: area.idArea,
+        nombreArea: area.nombreArea,
+        descripcion: area.descripcion,
+        responsable: area.responsable || 'Sin asignar',
+        empleados: area.empleados || 0,
+        color: areaColors[index % areaColors.length]
+      }));
+      
+      setAreas(areasWithColors);
+      setFilteredAreas(areasWithColors);
+      setNewArea({ nombreArea: '', descripcion: '', responsableArea: null });
+      setShowModal(false);
+      
+    } catch (err) {
+      console.error('Error completo:', {
+        message: err.message,
+        response: err.response,
+        config: err.config
+      });
+      
+      setError(err.response?.data?.error || `Error al crear el área: ${err.message}`);
+      
+      if (err.response?.status === 401) {
+        setTimeout(() => navigate('/login'), 2000);
+      }
+    }
   };
 
-  const handleDelete = (id) => {
-    setAreas(areas.filter(area => area.idArea !== id));
+  // Eliminar área
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta área?')) return;
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      await axios.delete(`/api/areas/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setAreas(areas.filter(area => area.idArea !== id));
+    } catch (err) {
+      console.error('Error al eliminar área:', err);
+      setError(err.response?.data?.error || 'Error al eliminar el área');
+    }
+  };
+
+  // Redirigir a edición
+  const handleEdit = (id) => {
+    navigate(`/editar-area/${id}`);
+  };
+
+  // Redirigir a asignación de empleados
+  const handleAssign = (id) => {
+    navigate(`/asignar-empleados/${id}`);
   };
 
   const toggleExpand = (id) => {
@@ -124,15 +207,17 @@ const AreasPage = () => {
           Gestión de Áreas
         </h1>
         <button 
-            onClick={() => setShowModal(true)}
-            className="btn-add-area"
-            >
-            <span className="btn-icon-circle">
-                <FaPlus className="btn-icon" />
-            </span>
-            <span className="btn-text">Crear Nueva Área</span>
+          onClick={() => setShowModal(true)}
+          className="btn-add-area"
+        >
+          <span className="btn-icon-circle">
+            <FaPlus className="btn-icon" />
+          </span>
+          <span className="btn-text">Crear Nueva Área</span>
         </button>
       </div>
+
+      {error && <div className="error-message">{error}</div>}
 
       <div className="search-container">
         <div className="search-box">
@@ -168,19 +253,15 @@ const AreasPage = () => {
                 animationDelay: `${index * 0.1}s`
               }}
             >
-              <div 
-                className="card-header" 
-                onClick={() => toggleExpand(area.idArea)}
-                style={{ backgroundColor: area.color }}
-              >
-                <h3>{area.nombreArea}</h3>
+              <div className="card-header" onClick={() => toggleExpand(area.idArea)}>
+                <h3>{area.nombreArea || 'Área sin nombre'}</h3>
                 <span className="toggle-icon">
-                  {expandedArea === area.idArea ? <FaChevronUp /> : <FaChevronDown />}
+                    {expandedArea === area.idArea ? <FaChevronUp /> : <FaChevronDown />}
                 </span>
-              </div>
+                </div>
               
               <div className="card-content">
-                <p className="area-description">{area.descripcion}</p>
+                <p className="area-description">{area.descripcion || 'Sin descripción'}</p>
                 
                 <div className="area-stats">
                   <div className="stat-item">
@@ -189,31 +270,31 @@ const AreasPage = () => {
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">Responsable:</span>
-                    <span className="stat-value">{area.responsable}</span>
+                    <span className="stat-value">{area.responsable || 'Sin asignar'}</span>
                   </div>
                 </div>
 
                 {expandedArea === area.idArea && (
                   <div className="expanded-content">
                     <div className="area-actions">
-                      <Link 
-                        to={`/editar-area/${area.idArea}`} 
+                      <button
+                        onClick={() => handleEdit(area.idArea)}
                         className="btn-edit"
                       >
                         <FaEdit /> Editar
-                      </Link>
+                      </button>
                       <button 
                         onClick={() => handleDelete(area.idArea)}
                         className="btn-delete"
                       >
                         <FaTrash /> Eliminar
                       </button>
-                      <Link 
-                        to={`/asignar-empleados/${area.idArea}`}
+                      <button
+                        onClick={() => handleAssign(area.idArea)}
                         className="btn-assign"
                       >
                         <FaUsers /> Asignar
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -231,6 +312,8 @@ const AreasPage = () => {
               <MdOutlineMeetingRoom />
               Crear Nueva Área
             </h2>
+            
+            {error && <div className="modal-error">{error}</div>}
             
             <form onSubmit={handleSubmit}>
               <div className="form-group">
@@ -258,7 +341,10 @@ const AreasPage = () => {
                 <button 
                   type="button" 
                   className="btn-cancel"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    setError('');
+                  }}
                 >
                   Cancelar
                 </button>

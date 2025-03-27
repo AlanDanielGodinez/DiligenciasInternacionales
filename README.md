@@ -205,6 +205,16 @@ CREATE TABLE Antecedente (
     Domicilio VARCHAR(255),
     observaciones VARCHAR(255)
 );
+-- Tabla Area
+CREATE TABLE Area (
+    idArea SERIAL PRIMARY KEY,
+    nombreArea VARCHAR(255) NOT NULL,
+    descripcion VARCHAR(255),
+    responsableArea INT REFERENCES Empleado(idEmpleado)
+);
+-- Modificar tabla Empleado para agregar relación con Area
+ALTER TABLE Empleado ADD COLUMN idArea INT REFERENCES Area(idArea);
+ALTER TABLE Area ALTER COLUMN responsableArea DROP NOT NULL;
 
 -- Índices para mejorar el rendimiento
 CREATE INDEX idx_cliente_id ON Cliente(idCliente);
