@@ -25,7 +25,7 @@ import "../src/Styles/Login.css";
 import "../src/Styles/EmpleadoLayout.css";
 import '../src/Styles/SolicitudForm.css';
 import '../src/Styles/AñadirCliente.css';
-
+import '../src/Styles/Anadirtramite.css';
 
 
 function App() {

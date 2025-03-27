@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import AñadirCliente from './AnadirCliente';
+import AnadirClienteModal from './AnadirCliente';
+import AnadirTramiteModal from './AnadirTramite';
+
 const SolicitudForm = () => {
   // Estados principales
   const [formData, setFormData] = useState({
@@ -20,13 +22,6 @@ const SolicitudForm = () => {
   // Estados para los modales
   const [showClienteModal, setShowClienteModal] = useState(false);
   const [showTramiteModal, setShowTramiteModal] = useState(false);
-  
-  // Estado para el formulario de trámite
-  const [nuevoTramite, setNuevoTramite] = useState({
-    tipoTramite: '',
-    descripcion: '',
-    requisitos: ''
-  });
 
   // Estados de UI
   const [loading, setLoading] = useState(true);
@@ -74,41 +69,10 @@ const SolicitudForm = () => {
     fetchData();
   }, []);
 
-  // Manejadores de cambios
+  // Manejador de cambios
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleTramiteChange = (e) => {
-    const { name, value } = e.target;
-    setNuevoTramite(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Crear nuevo trámite
-  const crearTramite = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post('/api/tramites', nuevoTramite, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      // Agregar el nuevo trámite a la lista y seleccionarlo
-      const tramiteCreado = response.data;
-      setTramites(prev => [...prev, tramiteCreado]);
-      setFormData(prev => ({ ...prev, idTramite: tramiteCreado.idTramite }));
-      setShowTramiteModal(false);
-      
-      // Resetear formulario
-      setNuevoTramite({
-        tipoTramite: '',
-        descripcion: '',
-        requisitos: ''
-      });
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error al crear trámite');
-    }
   };
 
   // Enviar solicitud
@@ -269,9 +233,9 @@ const SolicitudForm = () => {
         </button>
       </form>
 
-      {/* Modal para nuevo Cliente (Componente separado) */}
+      {/* Modal para nuevo Cliente */}
       {showClienteModal && (
-        <AñadirCliente 
+        <AnadirClienteModal 
           onClose={() => setShowClienteModal(false)}
           onClienteCreado={(cliente) => {
             setClientes(prev => [...prev, cliente]);
@@ -283,53 +247,13 @@ const SolicitudForm = () => {
 
       {/* Modal para nuevo Trámite */}
       {showTramiteModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Nuevo Trámite</h3>
-            <button 
-              className="close-modal"
-              onClick={() => setShowTramiteModal(false)}
-            >
-              &times;
-            </button>
-            
-            <form onSubmit={crearTramite}>
-              <div className="form-group">
-                <label>Tipo de Trámite:</label>
-                <input
-                  type="text"
-                  name="tipoTramite"
-                  value={nuevoTramite.tipoTramite}
-                  onChange={handleTramiteChange}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Descripción:</label>
-                <textarea
-                  name="descripcion"
-                  value={nuevoTramite.descripcion}
-                  onChange={handleTramiteChange}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Requisitos:</label>
-                <textarea
-                  name="requisitos"
-                  value={nuevoTramite.requisitos}
-                  onChange={handleTramiteChange}
-                />
-              </div>
-              
-              <button type="submit" className="submit-btn">
-                Crear Trámite
-              </button>
-            </form>
-          </div>
-        </div>
+        <AnadirTramiteModal 
+          onClose={() => setShowTramiteModal(false)}
+          onTramiteCreado={(tramite) => {
+            setTramites(prev => [...prev, tramite]);
+            setFormData(prev => ({ ...prev, idTramite: tramite.idTramite }));
+          }}
+        />
       )}
     </div>
   );
