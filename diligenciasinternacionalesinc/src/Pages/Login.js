@@ -15,11 +15,31 @@ const Login = ({ initialMode = 'login' }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Verificar si hay un token al cargar (para redirección automática)
+  // Verificar token al cargar el componente
   useEffect(() => {
     const token = localStorage.getItem('authToken');
-    if (token) {
-      navigate('/home');
+    const user = localStorage.getItem('user');
+    
+    if (token && user) {
+      // Verificar token con el backend
+      axios.get('http://localhost:5000/api/protected', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(() => {
+        const userData = JSON.parse(user);
+        // Redirigir según el rol
+        if (userData.rol === 'Administrador') {
+          navigate('/home');
+        } else {
+          navigate('/dashboard');
+        }
+      })
+      .catch((error) => {
+        console.error('Token verification failed:', error);
+        // Limpiar datos inválidos
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+      });
     }
   }, [navigate]);
 
@@ -57,12 +77,12 @@ const Login = ({ initialMode = 'login' }) => {
           password: formData.password
         });
 
-        // Guardar token en localStorage
+        // Guardar token y datos de usuario
         localStorage.setItem('authToken', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
 
         // Redirigir según el rol
-        if (response.data.user.nombrerol === 'Administrador') {
+        if (response.data.user.rol === 'Administrador') {
           navigate('/home');
         } else {
           navigate('/dashboard');
@@ -70,22 +90,37 @@ const Login = ({ initialMode = 'login' }) => {
 
       } catch (err) {
         console.error('Error en login:', err);
-        setError(err.response?.data?.error || 'Error al iniciar sesión');
         
-        // Verificar si es el admin y mostrar mensaje específico
+        // Mostrar mensaje de error específico si es el admin
         if (formData.email === 'admin@example.com') {
           setError('Error en credenciales de administrador. Contacte al soporte.');
+        } else {
+          setError(err.response?.data?.error || 'Credenciales inválidas. Intente nuevamente.');
         }
+        
+        // Limpiar credenciales en caso de error
+        setFormData(prev => ({ ...prev, password: '' }));
       } finally {
         setIsSubmitting(false);
       }
     } else {
       // Lógica de registro (opcional)
-      setTimeout(() => {
+      try {
+        // Aquí iría la llamada al endpoint de registro
+        // await axios.post('http://localhost:5000/api/register', formData);
+        
+        // Simulación de registro exitoso
+        setTimeout(() => {
+          setIsSubmitting(false);
+          setError('');
+          alert('Registro completado. Por favor inicie sesión.');
+          navigate('/login');
+        }, 1500);
+      } catch (err) {
+        console.error('Error en registro:', err);
+        setError(err.response?.data?.error || 'Error en el registro');
         setIsSubmitting(false);
-        alert('Registro completado');
-        navigate('/login');
-      }, 1500);
+      }
     }
   };
 
