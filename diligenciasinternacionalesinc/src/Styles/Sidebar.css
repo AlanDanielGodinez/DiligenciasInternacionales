@@ -56,3 +56,24 @@
 .sidebarFooterItem.active {
   background-color: rgba(255, 255, 255, 0.2);
 }
+/* Estilo específico para el icono de áreas */
+.sidebar-menu-icon[data-icon="🏢"] {
+  font-size: 1.1em;
+}
+
+/* Estilo para resaltar la relación entre áreas y empleados */
+.sidebar-menu-group:nth-child(7) {
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-menu-group:nth-child(8) {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 10px;
+}
+
+/* Estilo para items activos */
+.sidebar-menu-item.active {
+  background-color: var(--color-secondary);
+  font-weight: bold;
+}

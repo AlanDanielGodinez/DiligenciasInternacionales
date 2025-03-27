@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaBars, FaTimes, FaChevronDown, FaChevronRight } from 'react-icons/fa';
 
-
 const SidebarNavigation = () => {
   const [activeMenu, setActiveMenu] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -79,10 +78,19 @@ const SidebarNavigation = () => {
       ]
     },
     {
+      title: "Áreas",
+      icon: "🏢",
+      items: [
+        { name: "Lista de Áreas", path: "/Areas" },
+        { name: "Asignar Empleados", path: "/asignar-empleados" }
+      ]
+    },
+    {
       title: "Empleados",
       icon: "👨‍💼",
       items: [
         { name: "Lista de Empleados", path: "/empleados" },
+        { name: "Por Área", path: "/empleados-por-area" },
         { name: "Roles y Permisos", path: "/roles" },
         { name: "Estado de Empleados", path: "/estado-empleados" }
       ]
