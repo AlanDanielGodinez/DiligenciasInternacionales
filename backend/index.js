@@ -367,10 +367,11 @@ app.get('/api/areas', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT 
-        a.idArea, 
-        COALESCE(NULLIF(a.nombreArea, ''), 'Área sin nombre') as nombreArea,
-        COALESCE(a.descripcion, '') as descripcion,
-        COALESCE(e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado, 'Sin asignar') as responsable
+        a.idArea as "idArea", 
+        COALESCE(a.nombreArea, '') as "nombreArea",
+        COALESCE(a.descripcion, '') as "descripcion",
+        COALESCE(e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado, 'Sin asignar') as "responsable",
+        e.idEmpleado as "idResponsable"
       FROM Area a
       LEFT JOIN Empleado e ON a.responsableArea = e.idEmpleado
       ORDER BY a.nombreArea
@@ -397,7 +398,6 @@ app.get('/api/areas', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Error al obtener áreas' });
   }
 });
-console.log('Datos recibidos:', response.data);
 
 // Crear nueva área
 app.post('/api/areas', authenticateToken, async (req, res) => {
@@ -519,4 +519,28 @@ app.get('/api/areas/:id/empleados', authenticateToken, async (req, res) => {
     console.error('Error al obtener empleados del área:', error);
     res.status(500).json({ error: 'Error al obtener empleados del área' });
   }
+});
+
+
+
+
+
+
+
+
+
+
+
+// ==============================================
+// INICIO DEL SERVIDOR
+// ==============================================
+
+app.listen(PORT, async () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  await initializeAdmin();
+});
+
+// Ruta básica de prueba
+app.get('/', (req, res) => {
+  res.send('Backend operativo');
 });
