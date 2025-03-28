@@ -227,8 +227,6 @@ app.get('/api/protected', authenticateToken, (req, res) => {
   });
 });
 
-
-
 // Obtener usuario actual
 app.get('/api/auth/current-user', authenticateToken, async (req, res) => {
   try {
@@ -437,7 +435,7 @@ app.post('/api/areas', authenticateToken, async (req, res) => {
   }
 });
 
-// Actualizar área
+// Elimina una de las rutas PUT duplicadas y deja solo esta:
 app.put('/api/areas/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { nombreArea, descripcion, responsableArea } = req.body;
@@ -447,12 +445,31 @@ app.put('/api/areas/:id', authenticateToken, async (req, res) => {
   }
 
   try {
+    // Verificar si el responsable existe si se proporciona
+    if (responsableArea) {
+      const empleadoExists = await pool.query(
+        'SELECT idEmpleado FROM Empleado WHERE idEmpleado = $1',
+        [responsableArea]
+      );
+      
+      if (empleadoExists.rows.length === 0) {
+        return res.status(400).json({ error: 'El empleado responsable no existe' });
+      }
+    }
+
     const result = await pool.query(
       `UPDATE Area 
-       SET nombreArea = $1, descripcion = $2, responsableArea = $3
+       SET nombreArea = $1, 
+           descripcion = $2, 
+           responsableArea = $3
        WHERE idArea = $4
-       RETURNING idArea, nombreArea, descripcion`,
-      [nombreArea, descripcion || '', responsableArea || null, id]
+       RETURNING idArea, nombreArea, descripcion, responsableArea`,
+      [
+        nombreArea, 
+        descripcion || '', 
+        responsableArea || null, 
+        id
+      ]
     );
     
     if (result.rows.length === 0) {
@@ -462,24 +479,30 @@ app.put('/api/areas/:id', authenticateToken, async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error al actualizar área:', error);
-    res.status(500).json({ error: 'Error al actualizar área' });
+    res.status(500).json({ 
+      error: 'Error al actualizar área',
+      details: error.message
+    });
   }
 });
 
-// Eliminar área
+// Añade esta ruta DELETE para eliminar áreas
 app.delete('/api/areas/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Verificar si hay empleados asignados al área
+    // Primero verificar si hay empleados asignados al área
     const empleadosResult = await pool.query(
       'SELECT COUNT(*) FROM Empleado WHERE idArea = $1',
       [id]
     );
     
-    if (parseInt(empleadosResult.rows[0].count) > 0) {
-      return res.status(400).json({ 
-        error: 'No se puede eliminar el área porque tiene empleados asignados' 
+    const count = parseInt(empleadosResult.rows[0].count || 0);
+    
+    if (count > 0) {
+      return res.status(400).json({
+        error: 'No se puede eliminar el área',
+        details: `Hay ${count} empleados asignados a esta área. Reasígnelos antes de eliminar.`
       });
     }
 
@@ -492,10 +515,17 @@ app.delete('/api/areas/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Área no encontrada' });
     }
     
-    res.json({ message: 'Área eliminada correctamente' });
+    res.json({ 
+      success: true,
+      message: 'Área eliminada correctamente',
+      idArea: result.rows[0].idArea
+    });
   } catch (error) {
     console.error('Error al eliminar área:', error);
-    res.status(500).json({ error: 'Error al eliminar área' });
+    res.status(500).json({ 
+      error: 'Error al eliminar área',
+      details: error.message
+    });
   }
 });
 

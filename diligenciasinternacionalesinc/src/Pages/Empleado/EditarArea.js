@@ -4,6 +4,18 @@ import axios from 'axios';
 import { FaSave, FaTimes } from 'react-icons/fa';
 import { MdOutlineMeetingRoom } from 'react-icons/md';
 
+const api = axios.create({
+  baseURL: 'http://localhost:5000/api',
+  timeout: 10000,
+});
+
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 const EditarArea = () => {
   const { id } = useParams();
@@ -11,105 +23,109 @@ const EditarArea = () => {
   const [area, setArea] = useState({
     nombreArea: '',
     descripcion: '',
-    responsableArea: ''
+    responsableArea: null
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [empleados, setEmpleados] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Obtener datos del área y empleados
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('authToken');
+        setLoading(true);
+        setError('');
         
-        // Obtener área
-        const areaResponse = await axios.get(`/api/areas/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
+        // Obtener el área y empleados en paralelo
+        const [areaResponse, empleadosResponse] = await Promise.all([
+          api.get(`/areas/${id}`),
+          api.get('/empleados')
+        ]);
+
+        if (!areaResponse.data) {
+          throw new Error('Área no encontrada');
+        }
+
+        setArea({
+          nombreArea: areaResponse.data.nombreArea || '',
+          descripcion: areaResponse.data.descripcion || '',
+          responsableArea: areaResponse.data.responsableArea || null
         });
         
-        // Obtener lista de empleados para el select
-        const empleadosResponse = await axios.get('/api/empleados', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        setEmpleados(empleadosResponse.data || []);
         
-        setArea(areaResponse.data);
-        setEmpleados(empleadosResponse.data);
-        setIsLoading(false);
       } catch (err) {
-        setError(err.response?.data?.error || 'Error al cargar los datos');
-        setIsLoading(false);
+        console.error('Error fetching data:', err);
+        setError(err.response?.data?.error || 
+                err.response?.data?.message || 
+                err.message || 
+                'Error al cargar datos');
+        
+        if (err.response?.status === 404) {
+          navigate('/areas', { state: { error: 'Área no encontrada' } });
+        }
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
-  }, [id]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setArea(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  }, [id, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
+    setError('');
     
     try {
-      const token = localStorage.getItem('authToken');
-      await axios.put(`/api/areas/${id}`, area, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await api.put(`/areas/${id}`, {
+        nombreArea: area.nombreArea,
+        descripcion: area.descripcion,
+        responsableArea: area.responsableArea || null
       });
       
-      navigate('/areas', { state: { message: 'Área actualizada correctamente' } });
+      navigate('/areas', { 
+        state: { 
+          success: 'Área actualizada correctamente',
+          updatedArea: response.data
+        } 
+      });
+      
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al actualizar el área');
+      console.error('Update error:', err);
+      setError(err.response?.data?.error || 
+              err.response?.data?.message || 
+              'Error al actualizar el área');
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="loading-animation">
+      <div className="loading-container">
         <div className="spinner"></div>
         <p>Cargando datos del área...</p>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="error-container">
-        <p className="error-message">{error}</p>
-        <button onClick={() => navigate('/areas')}>Volver a áreas</button>
-      </div>
-    );
-  }
-
   return (
-    <div className="edit-area-container">
-      <div className="edit-area-header">
-        <h1>
-          <MdOutlineMeetingRoom />
-          Editar Área: {area.nombreArea}
-        </h1>
-        <button 
-          onClick={() => navigate('/areas')}
-          className="btn-cancel"
-        >
-          <FaTimes /> Cancelar
-        </button>
-      </div>
+    <div className="container editar-area-container">
+      <h1>
+        <MdOutlineMeetingRoom /> Editar Área
+      </h1>
       
-      <form onSubmit={handleSubmit} className="edit-area-form">
+      {error && (
+        <div className="alert alert-danger">
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+      
+      <form onSubmit={handleSubmit} className="editar-area-form">
         <div className="form-group">
           <label>Nombre del Área:</label>
           <input
             type="text"
-            name="nombreArea"
+            className="form-control"
             value={area.nombreArea}
-            onChange={handleInputChange}
+            onChange={(e) => setArea({...area, nombreArea: e.target.value})}
             required
           />
         </div>
@@ -117,19 +133,22 @@ const EditarArea = () => {
         <div className="form-group">
           <label>Descripción:</label>
           <textarea
-            name="descripcion"
-            value={area.descripcion || ''}
-            onChange={handleInputChange}
-            rows="5"
+            className="form-control"
+            value={area.descripcion}
+            onChange={(e) => setArea({...area, descripcion: e.target.value})}
+            rows="3"
           />
         </div>
         
         <div className="form-group">
           <label>Responsable:</label>
           <select
-            name="responsableArea"
+            className="form-control"
             value={area.responsableArea || ''}
-            onChange={handleInputChange}
+            onChange={(e) => setArea({
+              ...area, 
+              responsableArea: e.target.value ? parseInt(e.target.value) : null
+            })}
           >
             <option value="">Seleccionar responsable...</option>
             {empleados.map(emp => (
@@ -141,7 +160,15 @@ const EditarArea = () => {
         </div>
         
         <div className="form-actions">
-          <button type="submit" className="btn-confirm">
+          <button 
+            type="button" 
+            className="btn btn-secondary"
+            onClick={() => navigate('/areas')}
+          >
+            <FaTimes /> Cancelar
+          </button>
+          
+          <button type="submit" className="btn btn-primary">
             <FaSave /> Guardar Cambios
           </button>
         </div>
