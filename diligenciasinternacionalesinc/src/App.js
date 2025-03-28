@@ -9,7 +9,8 @@ import EmpleadoLayout from "./Components/Layouts/EmpleadoLayout"; // Nuevo layou
 import HomeEmpleado from "./Pages/Empleado/Home";
 import SolicitudForm from "./Pages/Empleado/SolicitudForm";
 import Areas from "./Pages/Empleado/Areas";
-import EditaArea from "./Pages/Empleado/EditarArea";
+import Empleados from "./Pages/Empleado/Empleados";
+import Roles from "./Pages/Empleado/Roles";
 
 import "./App.css";
 
@@ -29,6 +30,8 @@ import '../src/Styles/SolicitudForm.css';
 import '../src/Styles/AñadirCliente.css';
 import '../src/Styles/Anadirtramite.css';
 import '../src/Styles/Areas.css';
+import '../src/Styles/Empleados.css';
+import '../src/Styles/Roles.css';
 import EditarArea from "./Pages/Empleado/EditarArea";
 
 
@@ -51,7 +54,9 @@ function App() {
               {/* Agrega aquí más rutas protegidas */}
               <Route path="/SolicitudForm" element={<SolicitudForm />} />
               <Route path="/editar-area/:id" element={<EditarArea />} />
+              <Route path="/Empleados" element={<Empleados />} />
               <Route path="/Areas" element={<Areas />} />
+              <Route path="/Roles" element={<Roles />} />
               <Route path="/empleado/*" element={<HomeEmpleado />} />
             </Route>
             

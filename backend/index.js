@@ -551,7 +551,163 @@ app.get('/api/areas/:id/empleados', authenticateToken, async (req, res) => {
   }
 });
 
+// ==============================================
+// RUTAS PARA ROLES
+// ==============================================
 
+/**
+ * Obtener todos los roles
+ */
+app.get('/api/roles', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT idRol, nombreRol, COALESCE(descripcion, '') as descripcion 
+      FROM Rol 
+      ORDER BY nombreRol
+    `);
+    
+    // Contar empleados por rol
+    const rolesWithCount = await Promise.all(result.rows.map(async rol => {
+      const countResult = await pool.query(
+        'SELECT COUNT(*) FROM Empleado WHERE idRol = $1',
+        [rol.idrol]
+      );
+      return {
+        ...rol,
+        empleados: parseInt(countResult.rows[0].count || 0)
+      };
+    }));
+    
+    res.json(rolesWithCount);
+  } catch (error) {
+    console.error('Error al obtener roles:', error);
+    res.status(500).json({ error: 'Error al obtener roles' });
+  }
+});
+
+/**
+ * Crear un nuevo rol
+ */
+app.post('/api/roles', authenticateToken, async (req, res) => {
+  const { nombreRol, descripcion } = req.body;
+
+  if (!nombreRol) {
+    return res.status(400).json({ error: 'El nombre del rol es requerido' });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO Rol (nombreRol, descripcion)
+       VALUES ($1, $2)
+       RETURNING idRol, nombreRol, descripcion`,
+      [nombreRol, descripcion || '']
+    );
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al crear rol:', error);
+    
+    if (error.code === '23505') { // Violación de unique constraint
+      return res.status(400).json({ 
+        error: 'Error al crear rol',
+        details: 'Ya existe un rol con ese nombre'
+      });
+    }
+    
+    res.status(500).json({ 
+      error: 'Error al crear rol',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * Actualizar un rol existente
+ */
+app.put('/api/roles/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { nombreRol, descripcion } = req.body;
+
+  if (!nombreRol) {
+    return res.status(400).json({ error: 'El nombre del rol es requerido' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE Rol 
+       SET nombreRol = $1, 
+           descripcion = $2
+       WHERE idRol = $3
+       RETURNING idRol, nombreRol, descripcion`,
+      [nombreRol, descripcion || '', id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Rol no encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al actualizar rol:', error);
+    
+    if (error.code === '23505') { // Violación de unique constraint
+      return res.status(400).json({ 
+        error: 'Error al actualizar rol',
+        details: 'Ya existe un rol con ese nombre'
+      });
+    }
+    
+    res.status(500).json({ 
+      error: 'Error al actualizar rol',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * Eliminar un rol
+ */
+app.delete('/api/roles/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Verificar si hay empleados con este rol
+    const empleadosResult = await pool.query(
+      'SELECT COUNT(*) FROM Empleado WHERE idRol = $1',
+      [id]
+    );
+    
+    const count = parseInt(empleadosResult.rows[0].count || 0);
+    
+    if (count > 0) {
+      return res.status(400).json({
+        error: 'No se puede eliminar el rol',
+        details: `Hay ${count} empleados asignados a este rol. Reasígnelos antes de eliminar.`
+      });
+    }
+
+    const result = await pool.query(
+      'DELETE FROM Rol WHERE idRol = $1 RETURNING idRol',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Rol no encontrado' });
+    }
+    
+    res.json({ 
+      success: true,
+      message: 'Rol eliminado correctamente',
+      idRol: result.rows[0].idrol
+    });
+  } catch (error) {
+    console.error('Error al eliminar rol:', error);
+    res.status(500).json({ 
+      error: 'Error al eliminar rol',
+      details: error.message
+    });
+  }
+});
 
 
 

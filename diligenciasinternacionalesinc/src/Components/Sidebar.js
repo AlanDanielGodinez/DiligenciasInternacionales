@@ -89,9 +89,9 @@ const SidebarNavigation = () => {
       title: "Empleados",
       icon: "👨‍💼",
       items: [
-        { name: "Lista de Empleados", path: "/empleados" },
+        { name: "Lista de Empleados", path: "/Empleados" },
         { name: "Por Área", path: "/empleados-por-area" },
-        { name: "Roles y Permisos", path: "/roles" },
+        { name: "Roles y Permisos", path: "/Roles" },
         { name: "Estado de Empleados", path: "/estado-empleados" }
       ]
     },
