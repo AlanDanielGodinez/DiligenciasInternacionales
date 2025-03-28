@@ -1,29 +1,36 @@
-
-
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaPlus, FaEdit, FaTrash, FaUsers, FaChevronDown, FaChevronUp, FaInfoCircle } from 'react-icons/fa';
 import { MdOutlineMeetingRoom } from 'react-icons/md';
 import axios from 'axios';
 
-
 const AreasPage = () => {
+  // Estados
+  const [editingArea, setEditingArea] = useState(null);
   const [areas, setAreas] = useState([]);
   const [filteredAreas, setFilteredAreas] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedArea, setExpandedArea] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [newArea, setNewArea] = useState({
-    nombreArea: '',
-    descripcion: '',
-    responsableArea: null  // Añade esto para ser explícito
-  });
+  const [newArea, setNewArea] = useState({ nombreArea: '', descripcion: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Colores predefinidos para las áreas
+  // Colores para las tarjetas de áreas
   const areaColors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c', '#d35400'];
+
+  // Configuración de axios
+  const api = axios.create({
+    baseURL: 'http://localhost:5000/api',
+    timeout: 10000,
+  });
+
+  api.interceptors.request.use(config => {
+    const token = localStorage.getItem('authToken');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  }, error => Promise.reject(error));
 
   // Obtener áreas del backend
   useEffect(() => {
@@ -32,21 +39,9 @@ const AreasPage = () => {
         setIsLoading(true);
         setError('');
         
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          throw new Error('No autenticado - Redirigiendo a login');
-        }
-
-        console.log('Iniciando carga de áreas...');
         const response = await api.get('/areas');
-        console.log('Datos recibidos:', response.data);
-
-        if (!response.data || !Array.isArray(response.data)) {
-          throw new Error('Formato de datos inválido');
-        }
-
         const areasWithColors = response.data.map((area, index) => ({
-          idArea: area.idArea,
+          ...area,
           nombreArea: area.nombreArea || 'Área sin nombre',
           descripcion: area.descripcion || 'Sin descripción',
           responsable: area.responsable || 'Sin asignar',
@@ -56,13 +51,9 @@ const AreasPage = () => {
 
         setAreas(areasWithColors);
         setFilteredAreas(areasWithColors);
-        
       } catch (err) {
-        console.error('Error en fetchAreas:', err);
-        setError(err.message || 'Error al cargar áreas');
-        if (err.message.includes('No autenticado')) {
-          navigate('/login');
-        }
+        setError(err.response?.data?.error || 'Error al cargar áreas');
+        if (err.response?.status === 401) navigate('/login');
       } finally {
         setIsLoading(false);
       }
@@ -73,126 +64,81 @@ const AreasPage = () => {
 
   // Filtrado de áreas
   useEffect(() => {
-    if (!areas || areas.length === 0) {
-      setFilteredAreas([]);
-      return;
-    }
-  
-    const searchTermLower = searchTerm ? searchTerm.toLowerCase() : '';
+    if (!areas.length) return;
     
-    const results = areas.filter(area => {
-      const nombre = area.nombreArea ? area.nombreArea.toLowerCase() : '';
-      const descripcion = area.descripcion ? area.descripcion.toLowerCase() : '';
-      
-      return nombre.includes(searchTermLower) || 
-             descripcion.includes(searchTermLower);
-    });
-  
+    const searchTermLower = searchTerm.toLowerCase();
+    const results = areas.filter(area => 
+      area.nombreArea.toLowerCase().includes(searchTermLower) || 
+      area.descripcion.toLowerCase().includes(searchTermLower)
+    );
+    
     setFilteredAreas(results);
   }, [searchTerm, areas]);
 
+  // Handlers
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewArea(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setNewArea(prev => ({ ...prev, [name]: value }));
   };
 
-  // Crear nueva área
-  // 1. Crear una instancia configurada de axios (añade esto al inicio del archivo)
-  const api = axios.create({
-    baseURL: 'http://localhost:5000/api', // URL completa en desarrollo
-    timeout: 10000,
-  });
-  
-  // Interceptor para añadir automáticamente el token
-  api.interceptors.request.use(config => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  }, error => {
-    return Promise.reject(error);
-  });
-  
-  // 2. Modificar handleSubmit
-  const handleSubmit = async (e) => {
+  const handleCreateArea = async (e) => {
     e.preventDefault();
     setError('');
     
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) throw new Error('No hay token de autenticación');
-  
-      console.log('Enviando datos:', newArea);
+      const response = await api.post('/areas', newArea);
+      const updatedAreas = await api.get('/areas');
       
-      const response = await api.post('/areas', {
-        nombreArea: newArea.nombreArea,
-        descripcion: newArea.descripcion
-      });
-      
-      console.log('Respuesta del servidor:', response.data);
-      
-      // Obtener la lista actualizada de áreas
-      const updatedAreasResponse = await api.get('/areas');
-      
-      // Asignar colores a todas las áreas, incluyendo la nueva
-      const areasWithColors = updatedAreasResponse.data.map((area, index) => ({
-        idArea: area.idArea,
-        nombreArea: area.nombreArea,
-        descripcion: area.descripcion,
-        responsable: area.responsable || 'Sin asignar',
-        empleados: area.empleados || 0,
+      const areasWithColors = updatedAreas.data.map((area, index) => ({
+        ...area,
         color: areaColors[index % areaColors.length]
       }));
       
       setAreas(areasWithColors);
       setFilteredAreas(areasWithColors);
-      setNewArea({ nombreArea: '', descripcion: '', responsableArea: null });
+      setNewArea({ nombreArea: '', descripcion: '' });
       setShowModal(false);
-      
     } catch (err) {
-      console.error('Error completo:', {
-        message: err.message,
-        response: err.response,
-        config: err.config
-      });
-      
-      setError(err.response?.data?.error || `Error al crear el área: ${err.message}`);
-      
-      if (err.response?.status === 401) {
-        setTimeout(() => navigate('/login'), 2000);
-      }
+      setError(err.response?.data?.error || 'Error al crear área');
     }
   };
 
-  // Eliminar área
+  const handleUpdateArea = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    try {
+      const response = await api.put(`/areas/${editingArea.idArea}`, editingArea);
+      
+      setAreas(areas.map(area => 
+        area.idArea === editingArea.idArea ? { ...response.data, color: area.color } : area
+      ));
+      
+      setFilteredAreas(filteredAreas.map(area => 
+        area.idArea === editingArea.idArea ? { ...response.data, color: area.color } : area
+      ));
+      
+      setEditingArea(null);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Error al actualizar área');
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta área?')) return;
     
     try {
-      const token = localStorage.getItem('authToken');
-      await axios.delete(`/api/areas/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/areas/${id}`);
       
       setAreas(areas.filter(area => area.idArea !== id));
+      setFilteredAreas(filteredAreas.filter(area => area.idArea !== id));
+      
+      alert('Área eliminada correctamente');
     } catch (err) {
-      console.error('Error al eliminar área:', err);
-      setError(err.response?.data?.error || 'Error al eliminar el área');
+      const errorMsg = err.response?.data?.error || 'Error al eliminar área';
+      setError(errorMsg);
+      alert(errorMsg);
     }
-  };
-
-  // Redirigir a edición
-  const handleEdit = (id) => {
-    navigate(`/editar-area/${id}`);
-  };
-
-  // Redirigir a asignación de empleados
-  const handleAssign = (id) => {
-    navigate(`/asignar-empleados/${id}`);
   };
 
   const toggleExpand = (id) => {
@@ -202,17 +148,9 @@ const AreasPage = () => {
   return (
     <div className="areas-container">
       <div className="areas-header">
-        <h1>
-          <MdOutlineMeetingRoom className="header-icon" />
-          Gestión de Áreas
-        </h1>
-        <button 
-          onClick={() => setShowModal(true)}
-          className="btn-add-area"
-        >
-          <span className="btn-icon-circle">
-            <FaPlus className="btn-icon" />
-          </span>
+        <h1><MdOutlineMeetingRoom className="header-icon" /> Gestión de Áreas</h1>
+        <button onClick={() => setShowModal(true)} className="btn-add-area">
+          <span className="btn-icon-circle"><FaPlus className="btn-icon" /></span>
           <span className="btn-text">Crear Nueva Área</span>
         </button>
       </div>
@@ -231,6 +169,56 @@ const AreasPage = () => {
         </div>
       </div>
 
+      {/* Modal de Edición */}
+      {editingArea && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2><MdOutlineMeetingRoom /> Editar Área</h2>
+            
+            <form onSubmit={handleUpdateArea}>
+              <div className="form-group">
+                <label>Nombre del Área:</label>
+                <input
+                  type="text"
+                  value={editingArea.nombreArea}
+                  onChange={(e) => setEditingArea({
+                    ...editingArea,
+                    nombreArea: e.target.value
+                  })}
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Descripción:</label>
+                <textarea
+                  value={editingArea.descripcion}
+                  onChange={(e) => setEditingArea({
+                    ...editingArea,
+                    descripcion: e.target.value
+                  })}
+                  rows="3"
+                />
+              </div>
+              
+              <div className="modal-actions">
+                <button 
+                  type="button" 
+                  className="btn-cancel"
+                  onClick={() => setEditingArea(null)}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-confirm">
+                  Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Contenido Principal */}
       {isLoading ? (
         <div className="loading-animation">
           <div className="spinner"></div>
@@ -239,7 +227,7 @@ const AreasPage = () => {
       ) : filteredAreas.length === 0 ? (
         <div className="no-results">
           <FaInfoCircle className="info-icon" />
-          <p>No se encontraron áreas que coincidan con la búsqueda.</p>
+          <p>{searchTerm ? 'No hay resultados para tu búsqueda' : 'No hay áreas registradas'}</p>
         </div>
       ) : (
         <div className="areas-grid">
@@ -254,14 +242,14 @@ const AreasPage = () => {
               }}
             >
               <div className="card-header" onClick={() => toggleExpand(area.idArea)}>
-                <h3>{area.nombreArea || 'Área sin nombre'}</h3>
+                <h3>{area.nombreArea}</h3>
                 <span className="toggle-icon">
-                    {expandedArea === area.idArea ? <FaChevronUp /> : <FaChevronDown />}
+                  {expandedArea === area.idArea ? <FaChevronUp /> : <FaChevronDown />}
                 </span>
-                </div>
+              </div>
               
               <div className="card-content">
-                <p className="area-description">{area.descripcion || 'Sin descripción'}</p>
+                <p className="area-description">{area.descripcion}</p>
                 
                 <div className="area-stats">
                   <div className="stat-item">
@@ -270,7 +258,7 @@ const AreasPage = () => {
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">Responsable:</span>
-                    <span className="stat-value">{area.responsable || 'Sin asignar'}</span>
+                    <span className="stat-value">{area.responsable}</span>
                   </div>
                 </div>
 
@@ -278,7 +266,7 @@ const AreasPage = () => {
                   <div className="expanded-content">
                     <div className="area-actions">
                       <button
-                        onClick={() => handleEdit(area.idArea)}
+                        onClick={() => setEditingArea(area)}
                         className="btn-edit"
                       >
                         <FaEdit /> Editar
@@ -290,7 +278,7 @@ const AreasPage = () => {
                         <FaTrash /> Eliminar
                       </button>
                       <button
-                        onClick={() => handleAssign(area.idArea)}
+                        onClick={() => navigate(`/asignar-empleados/${area.idArea}`)}
                         className="btn-assign"
                       >
                         <FaUsers /> Asignar
@@ -308,14 +296,9 @@ const AreasPage = () => {
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2>
-              <MdOutlineMeetingRoom />
-              Crear Nueva Área
-            </h2>
+            <h2><MdOutlineMeetingRoom /> Crear Nueva Área</h2>
             
-            {error && <div className="modal-error">{error}</div>}
-            
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleCreateArea}>
               <div className="form-group">
                 <label>Nombre del Área:</label>
                 <input
@@ -348,10 +331,7 @@ const AreasPage = () => {
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
-                  className="btn-confirm"
-                >
+                <button type="submit" className="btn-confirm">
                   Crear Área
                 </button>
               </div>

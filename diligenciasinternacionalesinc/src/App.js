@@ -9,6 +9,7 @@ import EmpleadoLayout from "./Components/Layouts/EmpleadoLayout"; // Nuevo layou
 import HomeEmpleado from "./Pages/Empleado/Home";
 import SolicitudForm from "./Pages/Empleado/SolicitudForm";
 import Areas from "./Pages/Empleado/Areas";
+import EditaArea from "./Pages/Empleado/EditarArea";
 
 import "./App.css";
 
@@ -28,6 +29,7 @@ import '../src/Styles/SolicitudForm.css';
 import '../src/Styles/AñadirCliente.css';
 import '../src/Styles/Anadirtramite.css';
 import '../src/Styles/Areas.css';
+import EditarArea from "./Pages/Empleado/EditarArea";
 
 
 function App() {
@@ -48,6 +50,7 @@ function App() {
               <Route path="/home" element={<HomeEmpleado />} />
               {/* Agrega aquí más rutas protegidas */}
               <Route path="/SolicitudForm" element={<SolicitudForm />} />
+              <Route path="/editar-area/:id" element={<EditarArea />} />
               <Route path="/Areas" element={<Areas />} />
               <Route path="/empleado/*" element={<HomeEmpleado />} />
             </Route>
