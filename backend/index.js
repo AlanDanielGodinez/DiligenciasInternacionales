@@ -555,22 +555,23 @@ app.get('/api/areas/:id/empleados', authenticateToken, async (req, res) => {
 // RUTAS PARA ROLES
 // ==============================================
 
-/**
- * Obtener todos los roles
- */
+
+// Obtener todos los roles
 app.get('/api/roles', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT idRol, nombreRol, COALESCE(descripcion, '') as descripcion 
-      FROM Rol 
-      ORDER BY nombreRol
+      SELECT 
+        idrol AS "idRol", 
+        nombrerol AS "nombreRol"
+      FROM rol 
+      ORDER BY nombrerol
     `);
     
     // Contar empleados por rol
     const rolesWithCount = await Promise.all(result.rows.map(async rol => {
       const countResult = await pool.query(
-        'SELECT COUNT(*) FROM Empleado WHERE idRol = $1',
-        [rol.idrol]
+        'SELECT COUNT(*) FROM empleado WHERE idrol = $1',
+        [rol.idRol]
       );
       return {
         ...rol,
@@ -585,11 +586,9 @@ app.get('/api/roles', authenticateToken, async (req, res) => {
   }
 });
 
-/**
- * Crear un nuevo rol
- */
+// Crear nuevo rol
 app.post('/api/roles', authenticateToken, async (req, res) => {
-  const { nombreRol, descripcion } = req.body;
+  const { nombreRol } = req.body; // Solo necesitamos el nombre
 
   if (!nombreRol) {
     return res.status(400).json({ error: 'El nombre del rol es requerido' });
@@ -597,36 +596,34 @@ app.post('/api/roles', authenticateToken, async (req, res) => {
 
   try {
     const result = await pool.query(
-      `INSERT INTO Rol (nombreRol, descripcion)
-       VALUES ($1, $2)
-       RETURNING idRol, nombreRol, descripcion`,
-      [nombreRol, descripcion || '']
+      `INSERT INTO rol (nombrerol)
+       VALUES ($1)
+       RETURNING idrol AS "idRol", nombrerol AS "nombreRol"`,
+      [nombreRol]
     );
     
-    res.status(201).json(result.rows[0]);
+    res.status(201).json({
+      ...result.rows[0],
+      empleados: 0 // Inicialmente no tiene empleados
+    });
   } catch (error) {
     console.error('Error al crear rol:', error);
     
-    if (error.code === '23505') { // Violación de unique constraint
+    if (error.code === '23505') {
       return res.status(400).json({ 
         error: 'Error al crear rol',
         details: 'Ya existe un rol con ese nombre'
       });
     }
     
-    res.status(500).json({ 
-      error: 'Error al crear rol',
-      details: error.message
-    });
+    res.status(500).json({ error: 'Error al crear rol' });
   }
 });
 
-/**
- * Actualizar un rol existente
- */
+// Actualizar rol
 app.put('/api/roles/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
-  const { nombreRol, descripcion } = req.body;
+  const { nombreRol } = req.body;
 
   if (!nombreRol) {
     return res.status(400).json({ error: 'El nombre del rol es requerido' });
@@ -634,12 +631,11 @@ app.put('/api/roles/:id', authenticateToken, async (req, res) => {
 
   try {
     const result = await pool.query(
-      `UPDATE Rol 
-       SET nombreRol = $1, 
-           descripcion = $2
-       WHERE idRol = $3
-       RETURNING idRol, nombreRol, descripcion`,
-      [nombreRol, descripcion || '', id]
+      `UPDATE rol 
+       SET nombrerol = $1
+       WHERE idrol = $2
+       RETURNING idrol AS "idRol", nombrerol AS "nombreRol"`,
+      [nombreRol, id]
     );
     
     if (result.rows.length === 0) {
@@ -649,31 +645,18 @@ app.put('/api/roles/:id', authenticateToken, async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error al actualizar rol:', error);
-    
-    if (error.code === '23505') { // Violación de unique constraint
-      return res.status(400).json({ 
-        error: 'Error al actualizar rol',
-        details: 'Ya existe un rol con ese nombre'
-      });
-    }
-    
-    res.status(500).json({ 
-      error: 'Error al actualizar rol',
-      details: error.message
-    });
+    res.status(500).json({ error: 'Error al actualizar rol' });
   }
 });
 
-/**
- * Eliminar un rol
- */
+// Eliminar rol
 app.delete('/api/roles/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
 
   try {
     // Verificar si hay empleados con este rol
     const empleadosResult = await pool.query(
-      'SELECT COUNT(*) FROM Empleado WHERE idRol = $1',
+      'SELECT COUNT(*) FROM empleado WHERE idrol = $1',
       [id]
     );
     
@@ -687,7 +670,7 @@ app.delete('/api/roles/:id', authenticateToken, async (req, res) => {
     }
 
     const result = await pool.query(
-      'DELETE FROM Rol WHERE idRol = $1 RETURNING idRol',
+      'DELETE FROM rol WHERE idrol = $1 RETURNING idrol',
       [id]
     );
     
@@ -697,19 +680,13 @@ app.delete('/api/roles/:id', authenticateToken, async (req, res) => {
     
     res.json({ 
       success: true,
-      message: 'Rol eliminado correctamente',
-      idRol: result.rows[0].idrol
+      message: 'Rol eliminado correctamente'
     });
   } catch (error) {
     console.error('Error al eliminar rol:', error);
-    res.status(500).json({ 
-      error: 'Error al eliminar rol',
-      details: error.message
-    });
+    res.status(500).json({ error: 'Error al eliminar rol' });
   }
 });
-
-
 
 
 

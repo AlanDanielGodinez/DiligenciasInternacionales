@@ -6,7 +6,6 @@ import {
   FaTimes, FaCheck, FaExclamationTriangle
 } from 'react-icons/fa';
 import axios from 'axios';
- // Asegúrate de tener este archivo CSS
 
 const RolesPage = () => {
   // Estados
@@ -18,8 +17,7 @@ const RolesPage = () => {
   const [cargando, setCargando] = useState(true);
   const [mostrarModal, setMostrarModal] = useState(false);
   const [nuevoRol, setNuevoRol] = useState({ 
-    nombreRol: '',
-    descripcion: ''
+    nombreRol: ''
   });
   const [error, setError] = useState('');
   const [exito, setExito] = useState('');
@@ -50,8 +48,7 @@ const RolesPage = () => {
     } else {
       const termino = terminoBusqueda.toLowerCase();
       const resultados = listaRoles.filter(rol => 
-        rol.nombrerol.toLowerCase().includes(termino) || 
-        (rol.descripcion && rol.descripcion.toLowerCase().includes(termino))
+        rol.nombreRol.toLowerCase().includes(termino)
       );
       setRolesFiltrados(resultados);
     }
@@ -106,10 +103,17 @@ const RolesPage = () => {
     setError('');
     
     try {
-      const respuesta = await api.post('/roles', nuevoRol);
-      setListaRoles([...listaRoles, respuesta.data]);
-      setRolesFiltrados([...rolesFiltrados, respuesta.data]);
-      setNuevoRol({ nombreRol: '', descripcion: '' });
+      const respuesta = await api.post('/roles', {
+        nombreRol: nuevoRol.nombreRol
+      });
+      
+      setListaRoles(prev => [...prev, {
+        idRol: respuesta.data.idRol,
+        nombreRol: respuesta.data.nombreRol,
+        empleados: 0
+      }]);
+      
+      setNuevoRol({ nombreRol: '' });
       setMostrarModal(false);
       manejarExito('Rol creado exitosamente');
     } catch (err) {
@@ -123,13 +127,18 @@ const RolesPage = () => {
     setError('');
     
     try {
-      const respuesta = await api.put(`/roles/${rolEditando.idrol}`, rolEditando);
+      const respuesta = await api.put(`/roles/${rolEditando.idRol}`, {
+        nombreRol: rolEditando.nombreRol
+      });
+      
       setListaRoles(listaRoles.map(rol => 
-        rol.idrol === rolEditando.idrol ? respuesta.data : rol
+        rol.idRol === rolEditando.idRol ? respuesta.data : rol
       ));
+      
       setRolesFiltrados(rolesFiltrados.map(rol => 
-        rol.idrol === rolEditando.idrol ? respuesta.data : rol
+        rol.idRol === rolEditando.idRol ? respuesta.data : rol
       ));
+      
       setRolEditando(null);
       manejarExito('Rol actualizado exitosamente');
     } catch (err) {
@@ -143,8 +152,8 @@ const RolesPage = () => {
     
     try {
       await api.delete(`/roles/${id}`);
-      setListaRoles(listaRoles.filter(rol => rol.idrol !== id));
-      setRolesFiltrados(rolesFiltrados.filter(rol => rol.idrol !== id));
+      setListaRoles(listaRoles.filter(rol => rol.idRol !== id));
+      setRolesFiltrados(rolesFiltrados.filter(rol => rol.idRol !== id));
       manejarExito('Rol eliminado correctamente');
     } catch (err) {
       manejarError(err, 'Error al eliminar rol');
@@ -188,7 +197,7 @@ const RolesPage = () => {
           <FaSearch className="icono-busqueda" />
           <input
             type="text"
-            placeholder="Buscar roles por nombre o descripción..."
+            placeholder="Buscar roles por nombre..."
             value={terminoBusqueda}
             onChange={(e) => setTerminoBusqueda(e.target.value)}
           />
@@ -215,19 +224,9 @@ const RolesPage = () => {
                 <input
                   type="text"
                   name="nombreRol"
-                  value={rolEditando.nombrerol}
+                  value={rolEditando.nombreRol}
                   onChange={manejarCambioEdicion}
                   required
-                />
-              </div>
-              
-              <div className="grupo-formulario">
-                <label>Descripción:</label>
-                <textarea
-                  name="descripcion"
-                  value={rolEditando.descripcion || ''}
-                  onChange={manejarCambioEdicion}
-                  rows="4"
                 />
               </div>
               
@@ -263,38 +262,33 @@ const RolesPage = () => {
         <div className="rejilla-roles">
           {rolesFiltrados.map((rol, index) => (
             <div 
-              key={rol.idrol} 
-              className={`tarjeta-rol ${rolExpandido === rol.idrol ? 'expandida' : ''}`}
+              key={rol.idRol} 
+              className={`tarjeta-rol ${rolExpandido === rol.idRol ? 'expandida' : ''}`}
               style={{ animationDelay: `${index * 0.1}s` }}
+              data-tipo={rol.nombreRol.toLowerCase().includes('admin') ? 'admin' : 'default'}
             >
               <div 
                 className="encabezado-tarjeta" 
-                onClick={() => alternarExpandido(rol.idrol)}
+                onClick={() => alternarExpandido(rol.idRol)}
               >
                 <div className="icono-rol">
-                  {rol.nombrerol.toLowerCase().includes('admin') ? (
+                  {rol.nombreRol.toLowerCase().includes('admin') ? (
                     <FaUserShield />
                   ) : (
                     <FaUsersCog />
                   )}
                 </div>
-                <h3>{rol.nombrerol}</h3>
+                <h3>{rol.nombreRol}</h3>
                 <div className="contador-empleados">
                   {rol.empleados} {rol.empleados === 1 ? 'empleado' : 'empleados'}
                 </div>
                 <span className="icono-expandir">
-                  {rolExpandido === rol.idrol ? <FaChevronUp /> : <FaChevronDown />}
+                  {rolExpandido === rol.idRol ? <FaChevronUp /> : <FaChevronDown />}
                 </span>
               </div>
               
               <div className="contenido-tarjeta">
-                {rol.descripcion && (
-                  <div className="descripcion-rol">
-                    <p>{rol.descripcion}</p>
-                  </div>
-                )}
-
-                {rolExpandido === rol.idrol && (
+                {rolExpandido === rol.idRol && (
                   <div className="contenido-expandido">
                     <div className="acciones-rol">
                       <button
@@ -304,7 +298,7 @@ const RolesPage = () => {
                         <FaEdit /> Editar
                       </button>
                       <button 
-                        onClick={() => eliminarRol(rol.idrol)}
+                        onClick={() => eliminarRol(rol.idRol)}
                         className="boton-eliminar"
                         disabled={rol.empleados > 0}
                         title={rol.empleados > 0 ? 'No se puede eliminar un rol con empleados asignados' : ''}
@@ -346,16 +340,6 @@ const RolesPage = () => {
                   value={nuevoRol.nombreRol}
                   onChange={manejarCambioInput}
                   required
-                />
-              </div>
-              
-              <div className="grupo-formulario">
-                <label>Descripción:</label>
-                <textarea
-                  name="descripcion"
-                  value={nuevoRol.descripcion}
-                  onChange={manejarCambioInput}
-                  rows="4"
                 />
               </div>
               
