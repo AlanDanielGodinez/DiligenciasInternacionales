@@ -444,6 +444,43 @@
     margin-bottom: 1.5rem;
     border: 1px solid #f5c6cb;
   }
+
+  /* Estilos para el botón de cerrar en el modal */
+.encabezado-modal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-borde);
+    position: relative;
+  }
+  
+  .boton-cerrar-modal {
+    background: none;
+    border: none;
+    color: var(--color-texto-oscuro);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  
+  .boton-cerrar-modal:hover {
+    background-color: var(--color-borde);
+    color: var(--color-error);
+    transform: rotate(90deg);
+  }
+  
+  .boton-cerrar-modal:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.3);
+  }
   
   /* Animaciones */
   @keyframes fadeIn {
