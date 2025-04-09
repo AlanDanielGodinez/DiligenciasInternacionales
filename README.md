@@ -215,6 +215,7 @@ CREATE TABLE Area (
 -- Modificar tabla Empleado para agregar relación con Area
 ALTER TABLE Empleado ADD COLUMN idArea INT REFERENCES Area(idArea);
 ALTER TABLE Area ALTER COLUMN responsableArea DROP NOT NULL;
+ALTER TABLE Empleado ALTER COLUMN password DROP NOT NULL;
 
 -- Índices para mejorar el rendimiento
 CREATE INDEX idx_cliente_id ON Cliente(idCliente);
