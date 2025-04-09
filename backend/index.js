@@ -284,77 +284,139 @@ app.post('/api/tramites', authenticateToken, async (req, res) => {
 // RUTAS PARA EL FORMULARIO DE SOLICITUDES
 // ==============================================
 
-// Obtener todos los clientes
-app.get('/api/clientes', authenticateToken, async (req, res) => {
+// Crear una nueva solicitud
+app.post('/api/empleados', authenticateToken, async (req, res) => {
+  const {
+    nombreEmpleado,
+    apellidoPaternoEmpleado,
+    apellidoMaternoEmpleado,  // Corregido: estaba mal escrito como apellidoMaternoEmpleado
+    correoEmpleado,
+    idRol,
+    idArea
+  } = req.body;
+
+  // Validación básica mejorada
+  if (!nombreEmpleado?.trim() || !apellidoPaternoEmpleado?.trim() || !correoEmpleado?.trim() || !idRol) {
+    return res.status(400).json({ 
+      error: 'Faltan campos requeridos',
+      details: 'Nombre, apellido paterno, correo y rol son obligatorios'
+    });
+  }
+
   try {
-    const result = await pool.query(`
-      SELECT idCliente, nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente 
-      FROM Cliente
-      ORDER BY nombreCliente
-    `);
-    res.json(result.rows);
+    // Verificar si el rol existe
+    const rolExists = await pool.query('SELECT idRol FROM Rol WHERE idRol = $1', [idRol]);
+    if (rolExists.rows.length === 0) {
+      return res.status(400).json({ error: 'El rol especificado no existe' });
+    }
+
+    // Verificar si el área existe (si se proporciona)
+    if (idArea) {
+      const areaExists = await pool.query('SELECT idArea FROM Area WHERE idArea = $1', [idArea]);
+      if (areaExists.rows.length === 0) {
+        return res.status(400).json({ error: 'El área especificada no existe' });
+      }
+    }
+
+    // Generar password temporal (requerido por la tabla)
+    const hashedPassword = await bcrypt.hash('Temp1234', 10);
+
+    // Insertar el empleado con password
+    const result = await pool.query(
+      `INSERT INTO Empleado (
+        nombreEmpleado, 
+        apellidoPaternoEmpleado, 
+        apellidoMaternoEmpleado,
+        correoEmpleado, 
+        idRol, 
+        idArea,
+        password
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING idEmpleado`,
+      [
+        nombreEmpleado.trim(),
+        apellidoPaternoEmpleado.trim(),
+        apellidoMaternoEmpleado?.trim() || null,
+        correoEmpleado.trim().toLowerCase(),
+        idRol,
+        idArea || null,
+        hashedPassword
+      ]
+    );
+
+    // Obtener el empleado completo con joins para la respuesta (con alias correctos)
+    const empleadoCompleto = await pool.query(
+      `SELECT 
+        e.idEmpleado AS "idEmpleado",
+        e.nombreEmpleado AS "nombreEmpleado",
+        e.apellidoPaternoEmpleado AS "apellidoPaternoEmpleado",
+        e.apellidoMaternoEmpleado AS "apellidoMaternoEmpleado",
+        e.correoEmpleado AS "correoEmpleado",
+        r.nombreRol AS "nombreRol",
+        a.nombreArea AS "nombreArea"
+      FROM Empleado e
+      LEFT JOIN Rol r ON e.idRol = r.idRol
+      LEFT JOIN Area a ON e.idArea = a.idArea
+      WHERE e.idEmpleado = $1`,
+      [result.rows[0].idEmpleado]
+    );
+
+    if (empleadoCompleto.rows.length === 0) {
+      throw new Error('No se pudo recuperar el empleado recién creado');
+    }
+
+    res.status(201).json(empleadoCompleto.rows[0]);
   } catch (error) {
-    console.error('Error al obtener clientes:', error);
-    res.status(500).json({ error: 'Error al obtener clientes' });
+    console.error('Error al crear empleado:', error);
+    
+    if (error.code === '23505') { // Violación de unique constraint
+      return res.status(400).json({ 
+        error: 'Error al crear empleado',
+        details: 'Ya existe un empleado con ese correo electrónico'
+      });
+    }
+    
+    res.status(500).json({ 
+      error: 'Error al crear empleado',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Error interno del servidor'
+    });
   }
 });
 
-// Obtener todos los trámites
-app.get('/api/tramites', authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT idTramite, tipoTramite, descripcion 
-      FROM Tramite
-      ORDER BY tipoTramite
-    `);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error al obtener trámites:', error);
-    res.status(500).json({ error: 'Error al obtener trámites' });
-  }
+
+// ==============================================
+// RUTAS PARA EMPLEADOS
+// ==============================================
+
+app.get('/api/prueba', (req, res) => {
+  res.json({ mensaje: 'Servidor activo y ruta existe' });
 });
 
 // Obtener todos los empleados
 app.get('/api/empleados', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT idEmpleado, nombreEmpleado, apellidoPaternoEmpleado, correoEmpleado 
-      FROM Empleado
-      ORDER BY nombreEmpleado
-    `);
+    // Modifica tu consulta SQL para usar alias con las mayúsculas correctas:
+      const result = await pool.query(`
+        SELECT 
+          e.idEmpleado AS "idEmpleado",
+          e.nombreEmpleado AS "nombreEmpleado",
+          e.apellidoPaternoEmpleado AS "apellidoPaternoEmpleado",
+          e.apellidoMaternoEmpleado AS "apellidoMaternoEmpleado",
+          e.correoEmpleado AS "correoEmpleado",
+          r.nombreRol AS "nombreRol",
+          a.nombreArea AS "nombreArea"
+        FROM Empleado e
+        LEFT JOIN Rol r ON e.idRol = r.idRol
+        LEFT JOIN Area a ON e.idArea = a.idArea
+        ORDER BY e.nombreEmpleado
+      `);
     res.json(result.rows);
+    
   } catch (error) {
     console.error('Error al obtener empleados:', error);
     res.status(500).json({ error: 'Error al obtener empleados' });
   }
 });
-
-// Crear una nueva solicitud
-app.post('/api/solicitudes', authenticateToken, async (req, res) => {
-  const { idCliente, idTramite, idEmpleado, fechaSolicitud, estado_actual } = req.body;
-
-  if (!idCliente || !idTramite || !idEmpleado || !fechaSolicitud || !estado_actual) {
-    return res.status(400).json({ error: 'Todos los campos son requeridos' });
-  }
-
-  try {
-    const result = await pool.query(
-      `INSERT INTO Solicitud 
-       (idCliente, idTramite, idEmpleado, fechaSolicitud, estado_actual) 
-       VALUES ($1, $2, $3, $4, $5) RETURNING idSolicitud`,
-      [idCliente, idTramite, idEmpleado, fechaSolicitud, estado_actual]
-    );
-
-    res.status(201).json({
-      message: 'Solicitud creada exitosamente',
-      idSolicitud: result.rows[0].idsolicitud
-    });
-  } catch (error) {
-    console.error('Error al crear solicitud:', error);
-    res.status(500).json({ error: 'Error al crear solicitud' });
-  }
-});
-
 
 // ==============================================
 // RUTAS PARA ÁREAS
@@ -363,79 +425,38 @@ app.post('/api/solicitudes', authenticateToken, async (req, res) => {
 // Obtener todas las áreas
 app.get('/api/areas', authenticateToken, async (req, res) => {
   try {
-    console.log('Iniciando consulta de áreas...');
-    
-    // Primero obtener las áreas básicas
-    const areasQuery = await pool.query(`
+    const result = await pool.query(`
       SELECT 
-        a.idArea, 
-        COALESCE(a.nombreArea, '') as "nombreArea",
-        COALESCE(a.descripcion, '') as "descripcion",
-        a.responsableArea
+        a.idarea AS "idArea", 
+        a.nombrearea AS "nombreArea",  /* Asegúrate de seleccionar esta columna */
+        a.descripcion AS "descripcion",
+        e.idempleado AS "idResponsable",
+        COALESCE(e.nombreempleado || ' ' || e.apellidopaternoempleado, 'Sin asignar') AS "responsable"
       FROM Area a
-      ORDER BY a.nombreArea
+      LEFT JOIN Empleado e ON a.responsablearea = e.idempleado
+      ORDER BY a.nombrearea
     `);
     
-    console.log(`Áreas encontradas: ${areasQuery.rows.length}`);
-    
-    // Obtener información de responsables y conteo de empleados
-    const areasWithDetails = await Promise.all(areasQuery.rows.map(async (area) => {
-      try {
-        // Obtener información del responsable
-        let responsable = 'Sin asignar';
-        let idResponsable = null;
-        
-        if (area.responsableArea) {
-          const responsableQuery = await pool.query(
-            `SELECT idEmpleado, nombreEmpleado, apellidoPaternoEmpleado 
-             FROM Empleado WHERE idEmpleado = $1`,
-            [area.responsableArea]
-          );
-          
-          if (responsableQuery.rows.length > 0) {
-            const emp = responsableQuery.rows[0];
-            responsable = `${emp.nombreempleado} ${emp.apellidopaternoempleado}`;
-            idResponsable = emp.idempleado;
-          }
-        }
-        
-        // Contar empleados en el área
-        const countQuery = await pool.query(
-          'SELECT COUNT(*) FROM Empleado WHERE idArea = $1',
-          [area.idarea]
-        );
-        
-        const empleados = parseInt(countQuery.rows[0].count) || 0;
-        
-        return {
-          idArea: area.idarea,
-          nombreArea: area.nombrearea,
-          descripcion: area.descripcion,
-          responsable,
-          idResponsable,
-          empleados
-        };
-      } catch (error) {
-        console.error(`Error procesando área ${area.idarea}:`, error);
-        return {
-          ...area,
-          responsable: 'Error al cargar',
-          empleados: 0
-        };
-      }
+    const areasWithCount = await Promise.all(result.rows.map(async area => {
+      const countResult = await pool.query(
+        'SELECT COUNT(*) FROM empleado WHERE idarea = $1',
+        [area.idArea]
+      );
+      return {
+        ...area,
+        empleados: parseInt(countResult.rows[0].count || 0)
+      };
     }));
     
-    console.log('Áreas procesadas con éxito');
-    res.json(areasWithDetails);
+    res.json(areasWithCount);
   } catch (error) {
-    console.error('Error en GET /api/areas:', error);
+    console.error('Error al obtener áreas:', error);
     res.status(500).json({ 
       error: 'Error al obtener áreas',
-      details: error.message
+      details: error.message 
     });
   }
 });
-
 // Crear nueva área
 app.post('/api/areas', authenticateToken, async (req, res) => {
   console.log('Datos recibidos para crear área:', req.body); // Log de lo que llega
@@ -762,7 +783,35 @@ app.delete('/api/roles/:id', authenticateToken, async (req, res) => {
 });
 
 
+// Obtener todos los clientes
+app.get('/api/clientes', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT idCliente, nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente 
+      FROM Cliente
+      ORDER BY nombreCliente
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener clientes:', error);
+    res.status(500).json({ error: 'Error al obtener clientes' });
+  }
+});
 
+// Obtener todos los trámites
+app.get('/api/tramites', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT idTramite, tipoTramite, descripcion 
+      FROM Tramite
+      ORDER BY tipoTramite
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener trámites:', error);
+    res.status(500).json({ error: 'Error al obtener trámites' });
+  }
+});
 
 
 
