@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { 
   FaSearch, FaPlus, FaEdit, FaTrash, FaUserShield, 
   FaChevronDown, FaChevronUp, FaInfoCircle, FaUsersCog,
-  FaTimes, FaCheck, FaExclamationTriangle
+  FaTimes, FaCheck, FaExclamationTriangle, FaLock
 } from 'react-icons/fa';
 import axios from 'axios';
+
 
 const RolesPage = () => {
   // Estados
@@ -47,9 +48,11 @@ const RolesPage = () => {
       setRolesFiltrados(listaRoles);
     } else {
       const termino = terminoBusqueda.toLowerCase();
-      const resultados = listaRoles.filter(rol => 
-        rol.nombreRol.toLowerCase().includes(termino)
-      );
+      const resultados = listaRoles.filter(rol => {
+        // Asegurar que nombreRol siempre sea un string
+        const nombreRol = rol.nombreRol ? rol.nombreRol.toString() : '';
+        return nombreRol.toLowerCase().includes(termino);
+      });
       setRolesFiltrados(resultados);
     }
   }, [terminoBusqueda, listaRoles]);
@@ -165,6 +168,11 @@ const RolesPage = () => {
     setRolExpandido(rolExpandido === id ? null : id);
   };
 
+  // Verificar si es el rol Administrador
+  const esRolAdministrador = (rol) => {
+    return rol.nombreRol.toLowerCase() === 'administrador';
+  };
+
   return (
     <div className="contenedor-roles">
       {/* Encabezado */}
@@ -227,7 +235,13 @@ const RolesPage = () => {
                   value={rolEditando.nombreRol}
                   onChange={manejarCambioEdicion}
                   required
+                  disabled={esRolAdministrador(rolEditando)}
                 />
+                {esRolAdministrador(rolEditando) && (
+                  <div className="mensaje-advertencia">
+                    <FaLock /> El rol Administrador no puede ser modificado
+                  </div>
+                )}
               </div>
               
               <div className="acciones-modal">
@@ -238,7 +252,11 @@ const RolesPage = () => {
                 >
                   Cancelar
                 </button>
-                <button type="submit" className="boton-confirmar">
+                <button 
+                  type="submit" 
+                  className="boton-confirmar"
+                  disabled={esRolAdministrador(rolEditando)}
+                >
                   Guardar Cambios
                 </button>
               </div>
@@ -265,22 +283,24 @@ const RolesPage = () => {
               key={rol.idRol} 
               className={`tarjeta-rol ${rolExpandido === rol.idRol ? 'expandida' : ''}`}
               style={{ animationDelay: `${index * 0.1}s` }}
-              data-tipo={rol.nombreRol.toLowerCase().includes('admin') ? 'admin' : 'default'}
+              data-tipo={esRolAdministrador(rol) ? 'admin' : 'default'}
             >
               <div 
                 className="encabezado-tarjeta" 
                 onClick={() => alternarExpandido(rol.idRol)}
               >
                 <div className="icono-rol">
-                  {rol.nombreRol.toLowerCase().includes('admin') ? (
+                  {esRolAdministrador(rol) ? (
                     <FaUserShield />
                   ) : (
                     <FaUsersCog />
                   )}
                 </div>
-                <h3>{rol.nombreRol}</h3>
-                <div className="contador-empleados">
-                  {rol.empleados} {rol.empleados === 1 ? 'empleado' : 'empleados'}
+                <div className="contenido-encabezado">
+                  <h3>{rol.nombreRol}</h3>
+                  <div className="contador-empleados">
+                    {rol.empleados} {rol.empleados === 1 ? 'empleado' : 'empleados'}
+                  </div>
                 </div>
                 <span className="icono-expandir">
                   {rolExpandido === rol.idRol ? <FaChevronUp /> : <FaChevronDown />}
@@ -294,18 +314,29 @@ const RolesPage = () => {
                       <button
                         onClick={() => setRolEditando(rol)}
                         className="boton-editar"
+                        disabled={esRolAdministrador(rol)}
                       >
                         <FaEdit /> Editar
                       </button>
                       <button 
                         onClick={() => eliminarRol(rol.idRol)}
                         className="boton-eliminar"
-                        disabled={rol.empleados > 0}
-                        title={rol.empleados > 0 ? 'No se puede eliminar un rol con empleados asignados' : ''}
+                        disabled={rol.empleados > 0 || esRolAdministrador(rol)}
+                        title={
+                          esRolAdministrador(rol) ? 
+                          'El rol Administrador no puede eliminarse' : 
+                          rol.empleados > 0 ? 'No se puede eliminar un rol con empleados asignados' : ''
+                        }
                       >
                         <FaTrash /> Eliminar
                       </button>
                     </div>
+                    {esRolAdministrador(rol) && (
+                      <div className="proteccion-admin">
+                        <FaLock className="icono-proteccion" />
+                        <span>Este rol está protegido y no puede ser eliminado</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
