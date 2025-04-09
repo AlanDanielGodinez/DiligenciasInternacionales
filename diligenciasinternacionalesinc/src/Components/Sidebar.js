@@ -51,15 +51,6 @@ const SidebarNavigation = () => {
       ]
     },
     {
-      title: "Productos",
-      icon: "📦",
-      items: [
-        { name: "Inventario", path: "/inventario" },
-        { name: "Categorías", path: "/categorias" },
-        { name: "Movimientos", path: "/movimientos" }
-      ]
-    },
-    {
       title: "Viajes",
       icon: "✈️",
       items: [

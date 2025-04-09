@@ -621,31 +621,65 @@ app.post('/api/roles', authenticateToken, async (req, res) => {
 });
 
 // Actualizar rol
-app.put('/api/roles/:id', authenticateToken, async (req, res) => {
+app.put('/api/areas/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
-  const { nombreRol } = req.body;
+  const { nombreArea, descripcion, responsableArea } = req.body;
 
-  if (!nombreRol) {
-    return res.status(400).json({ error: 'El nombre del rol es requerido' });
+  if (!nombreArea) {
+    return res.status(400).json({ error: 'El nombre del área es requerido' });
   }
 
   try {
+    // Verificar si el responsable existe si se proporciona
+    if (responsableArea) {
+      const empleadoExists = await pool.query(
+        'SELECT idEmpleado FROM Empleado WHERE idEmpleado = $1',
+        [responsableArea]
+      );
+      
+      if (empleadoExists.rows.length === 0) {
+        return res.status(400).json({ error: 'El empleado responsable no existe' });
+      }
+    }
+
     const result = await pool.query(
-      `UPDATE rol 
-       SET nombrerol = $1
-       WHERE idrol = $2
-       RETURNING idrol AS "idRol", nombrerol AS "nombreRol"`,
-      [nombreRol, id]
+      `UPDATE Area 
+       SET nombreArea = $1, 
+           descripcion = $2, 
+           responsableArea = $3
+       WHERE idArea = $4
+       RETURNING 
+         idArea AS "idArea", 
+         COALESCE(nombreArea, '') AS "nombreArea", 
+         COALESCE(descripcion, '') AS "descripcion", 
+         responsableArea AS "responsableArea"`,
+      [
+        nombreArea, 
+        descripcion || '', 
+        responsableArea || null, 
+        id
+      ]
     );
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Rol no encontrado' });
+      return res.status(404).json({ error: 'Área no encontrada' });
     }
     
-    res.json(result.rows[0]);
+    // Asegurar que todos los campos tengan valores
+    const areaActualizada = {
+      idArea: result.rows[0].idArea,
+      nombreArea: result.rows[0].nombreArea || '',
+      descripcion: result.rows[0].descripcion || '',
+      responsableArea: result.rows[0].responsableArea || null
+    };
+    
+    res.json(areaActualizada);
   } catch (error) {
-    console.error('Error al actualizar rol:', error);
-    res.status(500).json({ error: 'Error al actualizar rol' });
+    console.error('Error al actualizar área:', error);
+    res.status(500).json({ 
+      error: 'Error al actualizar área',
+      details: error.message
+    });
   }
 });
 
