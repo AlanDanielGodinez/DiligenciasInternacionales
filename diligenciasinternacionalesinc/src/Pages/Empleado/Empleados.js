@@ -74,10 +74,11 @@ const EmpleadosPage = () => {
     
     const termino = terminoBusqueda.toLowerCase();
     const resultados = listaEmpleados.filter(emp => 
-      emp.nombreEmpleado.toLowerCase().includes(termino) || 
-      emp.apellidoPaternoEmpleado.toLowerCase().includes(termino) ||
-      emp.correoEmpleado.toLowerCase().includes(termino)
+      (emp.nombreEmpleado?.toLowerCase() || '').includes(termino) || 
+      (emp.apellidoPaternoEmpleado?.toLowerCase() || '').includes(termino) ||
+      (emp.correoEmpleado?.toLowerCase() || '').includes(termino)
     );
+    
     
     setEmpleadosFiltrados(resultados);
   }, [terminoBusqueda, listaEmpleados]);
