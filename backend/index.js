@@ -363,37 +363,76 @@ app.post('/api/solicitudes', authenticateToken, async (req, res) => {
 // Obtener todas las áreas
 app.get('/api/areas', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query(`
+    console.log('Iniciando consulta de áreas...');
+    
+    // Primero obtener las áreas básicas
+    const areasQuery = await pool.query(`
       SELECT 
-        a.idArea as "idArea", 
+        a.idArea, 
         COALESCE(a.nombreArea, '') as "nombreArea",
         COALESCE(a.descripcion, '') as "descripcion",
-        COALESCE(e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado, 'Sin asignar') as "responsable",
-        e.idEmpleado as "idResponsable"
+        a.responsableArea
       FROM Area a
-      LEFT JOIN Empleado e ON a.responsableArea = e.idEmpleado
       ORDER BY a.nombreArea
     `);
     
-    const areasWithCount = await Promise.all(result.rows.map(async area => {
-      const countResult = await pool.query(
-        'SELECT COUNT(*) FROM Empleado WHERE idArea = $1',
-        [area.idArea]  // Usar idArea en lugar de idarea
-      );
-      return {
-        idArea: area.idArea,
-        nombreArea: area.nombreArea,
-        descripcion: area.descripcion,
-        responsable: area.responsable,
-        idResponsable: area.idResponsable,
-        empleados: parseInt(countResult.rows[0].count || 0)
-      };
+    console.log(`Áreas encontradas: ${areasQuery.rows.length}`);
+    
+    // Obtener información de responsables y conteo de empleados
+    const areasWithDetails = await Promise.all(areasQuery.rows.map(async (area) => {
+      try {
+        // Obtener información del responsable
+        let responsable = 'Sin asignar';
+        let idResponsable = null;
+        
+        if (area.responsableArea) {
+          const responsableQuery = await pool.query(
+            `SELECT idEmpleado, nombreEmpleado, apellidoPaternoEmpleado 
+             FROM Empleado WHERE idEmpleado = $1`,
+            [area.responsableArea]
+          );
+          
+          if (responsableQuery.rows.length > 0) {
+            const emp = responsableQuery.rows[0];
+            responsable = `${emp.nombreempleado} ${emp.apellidopaternoempleado}`;
+            idResponsable = emp.idempleado;
+          }
+        }
+        
+        // Contar empleados en el área
+        const countQuery = await pool.query(
+          'SELECT COUNT(*) FROM Empleado WHERE idArea = $1',
+          [area.idarea]
+        );
+        
+        const empleados = parseInt(countQuery.rows[0].count) || 0;
+        
+        return {
+          idArea: area.idarea,
+          nombreArea: area.nombrearea,
+          descripcion: area.descripcion,
+          responsable,
+          idResponsable,
+          empleados
+        };
+      } catch (error) {
+        console.error(`Error procesando área ${area.idarea}:`, error);
+        return {
+          ...area,
+          responsable: 'Error al cargar',
+          empleados: 0
+        };
+      }
     }));
     
-    res.json(areasWithCount);
+    console.log('Áreas procesadas con éxito');
+    res.json(areasWithDetails);
   } catch (error) {
-    console.error('Error al obtener áreas:', error);
-    res.status(500).json({ error: 'Error al obtener áreas' });
+    console.error('Error en GET /api/areas:', error);
+    res.status(500).json({ 
+      error: 'Error al obtener áreas',
+      details: error.message
+    });
   }
 });
 
