@@ -39,38 +39,60 @@ const AreasPage = () => {
         setIsLoading(true);
         setError('');
         
+        console.log('Iniciando carga de áreas...'); // Debug
         const response = await api.get('/areas');
+        console.log('Datos recibidos:', response.data); // Debug
+        
+        if (!response.data || !Array.isArray(response.data)) {
+          throw new Error('Formato de datos incorrecto');
+        }
+  
         const areasWithColors = response.data.map((area, index) => ({
           ...area,
-          nombreArea: area.nombreArea || 'Área sin nombre',
-          descripcion: area.descripcion || 'Sin descripción',
-          responsable: area.responsable || 'Sin asignar',
+          idArea: area.idArea || 0,
+          nombreArea: area.nombreArea ? area.nombreArea.toString() : 'Área sin nombre',
+          descripcion: area.descripcion ? area.descripcion.toString() : 'Sin descripción',
+          responsable: area.responsable ? area.responsable.toString() : 'Sin asignar',
           empleados: area.empleados || 0,
           color: areaColors[index % areaColors.length]
         }));
-
+  
+        console.log('Áreas procesadas:', areasWithColors); // Debug
         setAreas(areasWithColors);
         setFilteredAreas(areasWithColors);
       } catch (err) {
-        setError(err.response?.data?.error || 'Error al cargar áreas');
+        console.error('Error al cargar áreas:', err);
+        setError(err.response?.data?.error || err.message || 'Error al cargar áreas');
         if (err.response?.status === 401) navigate('/login');
       } finally {
         setIsLoading(false);
+        console.log('Carga de áreas completada'); // Debug
       }
     };
-
+  
     fetchAreas();
   }, []);
+  
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   // Filtrado de áreas
   useEffect(() => {
     if (!areas.length) return;
     
     const searchTermLower = searchTerm.toLowerCase();
-    const results = areas.filter(area => 
-      area.nombreArea.toLowerCase().includes(searchTermLower) || 
-      area.descripcion.toLowerCase().includes(searchTermLower)
-    );
+    const results = areas.filter(area => {
+      // Asegurar que los campos sean strings válidos
+      const nombre = area.nombreArea ? area.nombreArea.toString().toLowerCase() : '';
+      const descripcion = area.descripcion ? area.descripcion.toString().toLowerCase() : '';
+      
+      return nombre.includes(searchTermLower) || 
+             descripcion.includes(searchTermLower);
+    });
     
     setFilteredAreas(results);
   }, [searchTerm, areas]);
