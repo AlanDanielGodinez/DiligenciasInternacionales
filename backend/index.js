@@ -455,8 +455,10 @@ app.put('/api/empleados/:id', authenticateToken, async (req, res) => {
     const empleado = empleadoResult.rows[0];
 
     // 2. Verificar contraseña actual
-    if (!currentPassword || !(await bcrypt.compare(currentPassword, empleado.password))) {
-      return res.status(403).json({ error: 'Contraseña actual incorrecta' });
+    if (password?.trim()) {
+      if (!currentPassword || !(await bcrypt.compare(currentPassword, empleado.password))) {
+        return res.status(403).json({ error: 'Contraseña actual incorrecta' });
+      }
     }
 
     // 3. Verificar correo duplicado
