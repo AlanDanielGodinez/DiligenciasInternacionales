@@ -114,7 +114,7 @@
       e.preventDefault();
       setError('');
       
-      // Validación de contraseñas
+      // Validaciones
       if (nuevoEmpleado.password !== nuevoEmpleado.confirmPassword) {
         return setError('Las contraseñas no coinciden');
       }
@@ -129,16 +129,31 @@
           apellidoPaternoEmpleado: nuevoEmpleado.apellidoPaternoEmpleado,
           apellidoMaternoEmpleado: nuevoEmpleado.apellidoMaternoEmpleado,
           correoEmpleado: nuevoEmpleado.correoEmpleado,
-          password: nuevoEmpleado.password,  // Incluir la contraseña
           idRol: nuevoEmpleado.idRol,
-          idArea: nuevoEmpleado.idArea
+          idArea: nuevoEmpleado.idArea || null // Envía null si no hay área seleccionada
         };
     
         const respuesta = await api.post('/empleados', empleadoParaEnviar);
-        
-        setListaEmpleados([...listaEmpleados, respuesta.data]);
-        setEmpleadosFiltrados([...empleadosFiltrados, respuesta.data]);
-        
+    
+        // Verificación más flexible de la respuesta
+        if (!respuesta.data) {
+          throw new Error('No se recibieron datos en la respuesta');
+        }
+    
+        // Si la respuesta contiene el empleado completo
+        if (respuesta.data.idEmpleado) {
+          setListaEmpleados(prev => [...prev, respuesta.data]);
+          setEmpleadosFiltrados(prev => [...prev, respuesta.data]);
+        } 
+        // Si solo contiene el ID (caso de fallback)
+        else if (respuesta.data.message) {
+          // Recargar la lista completa
+          const { data } = await api.get('/empleados');
+          setListaEmpleados(data);
+          setEmpleadosFiltrados(data);
+        }
+    
+        // Resetear formulario
         setNuevoEmpleado({ 
           nombreEmpleado: '',
           apellidoPaternoEmpleado: '',
@@ -151,8 +166,24 @@
         });
         
         setMostrarModal(false);
+        setError('Empleado creado exitosamente!');
+        setTimeout(() => setError(''), 3000);
+        
       } catch (err) {
-        setError(err.response?.data?.error || 'Error al crear empleado');
+        console.error('Error al crear empleado:', err);
+        let mensajeError = 'Error al crear empleado';
+        
+        if (err.response) {
+          if (err.response.data?.details) {
+            mensajeError = err.response.data.details;
+          } else if (err.response.data?.error) {
+            mensajeError = err.response.data.error;
+          }
+        } else if (err.message) {
+          mensajeError = err.message;
+        }
+        
+        setError(mensajeError);
       }
     };
 
@@ -331,8 +362,8 @@
                     <label>Nombre:</label>
                     <input
                       type="text"
-                      name="nombre"
-                      value={nuevoEmpleado.nombre}
+                      name="nombreEmpleado"  // Cambiado de "nombre"
+                      value={nuevoEmpleado.nombreEmpleado}
                       onChange={manejarCambioInput}
                       required
                     />
@@ -342,8 +373,8 @@
                     <label>Apellido Paterno:</label>
                     <input
                       type="text"
-                      name="apellidoPaterno"
-                      value={nuevoEmpleado.apellidoPaterno}
+                      name="apellidoPaternoEmpleado"  // Cambiado de "apellidoPaterno"
+                      value={nuevoEmpleado.apellidoPaternoEmpleado}
                       onChange={manejarCambioInput}
                       required
                     />
@@ -355,8 +386,8 @@
                     <label>Apellido Materno:</label>
                     <input
                       type="text"
-                      name="apellidoMaterno"
-                      value={nuevoEmpleado.apellidoMaterno}
+                      name="apellidoMaternoEmpleado"  // Cambiado de "apellidoMaterno"
+                      value={nuevoEmpleado.apellidoMaternoEmpleado}
                       onChange={manejarCambioInput}
                     />
                   </div>
@@ -365,8 +396,8 @@
                     <label>Correo Electrónico:</label>
                     <input
                       type="email"
-                      name="correo"
-                      value={nuevoEmpleado.correo}
+                      name="correoEmpleado"  // Cambiado de "correo"
+                      value={nuevoEmpleado.correoEmpleado}
                       onChange={manejarCambioInput}
                       required
                     />
