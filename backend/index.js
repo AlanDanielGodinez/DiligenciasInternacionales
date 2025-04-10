@@ -285,103 +285,7 @@ app.post('/api/tramites', authenticateToken, async (req, res) => {
 // ==============================================
 
 // Crear una nueva solicitud
-app.post('/api/empleados', authenticateToken, async (req, res) => {
-  const {
-    nombreEmpleado,
-    apellidoPaternoEmpleado,
-    apellidoMaternoEmpleado,  // Corregido: estaba mal escrito como apellidoMaternoEmpleado
-    correoEmpleado,
-    idRol,
-    idArea
-  } = req.body;
 
-  // Validación básica mejorada
-  if (!nombreEmpleado?.trim() || !apellidoPaternoEmpleado?.trim() || !correoEmpleado?.trim() || !idRol) {
-    return res.status(400).json({ 
-      error: 'Faltan campos requeridos',
-      details: 'Nombre, apellido paterno, correo y rol son obligatorios'
-    });
-  }
-
-  try {
-    // Verificar si el rol existe
-    const rolExists = await pool.query('SELECT idRol FROM Rol WHERE idRol = $1', [idRol]);
-    if (rolExists.rows.length === 0) {
-      return res.status(400).json({ error: 'El rol especificado no existe' });
-    }
-
-    // Verificar si el área existe (si se proporciona)
-    if (idArea) {
-      const areaExists = await pool.query('SELECT idArea FROM Area WHERE idArea = $1', [idArea]);
-      if (areaExists.rows.length === 0) {
-        return res.status(400).json({ error: 'El área especificada no existe' });
-      }
-    }
-
-    // Generar password temporal (requerido por la tabla)
-    const hashedPassword = await bcrypt.hash('Temp1234', 10);
-
-    // Insertar el empleado con password
-    const result = await pool.query(
-      `INSERT INTO Empleado (
-        nombreEmpleado, 
-        apellidoPaternoEmpleado, 
-        apellidoMaternoEmpleado,
-        correoEmpleado, 
-        idRol, 
-        idArea,
-        password
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING idEmpleado`,
-      [
-        nombreEmpleado.trim(),
-        apellidoPaternoEmpleado.trim(),
-        apellidoMaternoEmpleado?.trim() || null,
-        correoEmpleado.trim().toLowerCase(),
-        idRol,
-        idArea || null,
-        hashedPassword
-      ]
-    );
-
-    // Obtener el empleado completo con joins para la respuesta (con alias correctos)
-    const empleadoCompleto = await pool.query(
-      `SELECT 
-        e.idEmpleado AS "idEmpleado",
-        e.nombreEmpleado AS "nombreEmpleado",
-        e.apellidoPaternoEmpleado AS "apellidoPaternoEmpleado",
-        e.apellidoMaternoEmpleado AS "apellidoMaternoEmpleado",
-        e.correoEmpleado AS "correoEmpleado",
-        r.nombreRol AS "nombreRol",
-        a.nombreArea AS "nombreArea"
-      FROM Empleado e
-      LEFT JOIN Rol r ON e.idRol = r.idRol
-      LEFT JOIN Area a ON e.idArea = a.idArea
-      WHERE e.idEmpleado = $1`,
-      [result.rows[0].idEmpleado]
-    );
-
-    if (empleadoCompleto.rows.length === 0) {
-      throw new Error('No se pudo recuperar el empleado recién creado');
-    }
-
-    res.status(201).json(empleadoCompleto.rows[0]);
-  } catch (error) {
-    console.error('Error al crear empleado:', error);
-    
-    if (error.code === '23505') { // Violación de unique constraint
-      return res.status(400).json({ 
-        error: 'Error al crear empleado',
-        details: 'Ya existe un empleado con ese correo electrónico'
-      });
-    }
-    
-    res.status(500).json({ 
-      error: 'Error al crear empleado',
-      details: process.env.NODE_ENV === 'development' ? error.message : 'Error interno del servidor'
-    });
-  }
-});
 
 
 // ==============================================
@@ -418,6 +322,110 @@ app.get('/api/empleados', authenticateToken, async (req, res) => {
   }
 });
 
+app.post('/api/empleados', authenticateToken, async (req, res) => {
+  const {
+    nombreEmpleado,
+    apellidoPaternoEmpleado,
+    apellidoMaternoEmpleado,
+    correoEmpleado,
+    idRol,
+    idArea
+  } = req.body;
+
+  // Validación básica
+  if (!nombreEmpleado?.trim() || !apellidoPaternoEmpleado?.trim() || !correoEmpleado?.trim() || !idRol) {
+    return res.status(400).json({ 
+      error: 'Faltan campos requeridos',
+      details: 'Nombre, apellido paterno, correo y rol son obligatorios'
+    });
+  }
+
+  try {
+    // Verificar rol
+    const rolExists = await pool.query('SELECT idRol FROM Rol WHERE idRol = $1', [idRol]);
+    if (rolExists.rows.length === 0) {
+      return res.status(400).json({ error: 'El rol especificado no existe' });
+    }
+
+    // Verificar área si se proporcionó
+    if (idArea) {
+      const areaExists = await pool.query('SELECT idArea FROM Area WHERE idArea = $1', [idArea]);
+      if (areaExists.rows.length === 0) {
+        return res.status(400).json({ error: 'El área especificada no existe' });
+      }
+    }
+
+    // Contraseña temporal
+    const hashedPassword = await bcrypt.hash('Temp1234', 10);
+
+    // Insertar empleado
+    const result = await pool.query(
+      `INSERT INTO Empleado (
+        nombreEmpleado, 
+        apellidoPaternoEmpleado, 
+        apellidoMaternoEmpleado,
+        correoEmpleado, 
+        idRol, 
+        idArea,
+        password
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING idempleado
+`,
+      [
+        nombreEmpleado.trim(),
+        apellidoPaternoEmpleado.trim(),
+        apellidoMaternoEmpleado?.trim() || null,
+        correoEmpleado.trim().toLowerCase(),
+        idRol,
+        idArea || null,
+        hashedPassword
+      ]
+    );
+
+    const nuevoId = result.rows[0].idEmpleado;
+
+    console.log('[✓] Empleado insertado con ID:', nuevoId);
+
+    // Obtener info del empleado (intenta con LEFT JOIN)
+    const empleadoCompleto = await pool.query(
+      `SELECT 
+        e.idEmpleado AS "idEmpleado",
+        e.nombreEmpleado AS "nombreEmpleado",
+        e.apellidoPaternoEmpleado AS "apellidoPaternoEmpleado",
+        e.apellidoMaternoEmpleado AS "apellidoMaternoEmpleado",
+        e.correoEmpleado AS "correoEmpleado",
+        r.nombreRol AS "nombreRol",
+        a.nombreArea AS "nombreArea"
+      FROM Empleado e
+      LEFT JOIN Rol r ON r.idRol = e.idRol
+      LEFT JOIN Area a ON a.idArea = e.idArea
+      WHERE e.idEmpleado = $1`,
+      [nuevoId]
+    );
+
+    if (empleadoCompleto.rows.length === 0) {
+      console.warn('⚠ No se pudo obtener el empleado con JOIN. Enviando solo ID.');
+      return res.status(201).json({ idEmpleado: nuevoId });
+    }
+
+    res.status(201).json(empleadoCompleto.rows[0]);
+
+  } catch (error) {
+    console.error('Error al crear empleado:', error);
+
+    if (error.code === '23505') {
+      return res.status(400).json({ 
+        error: 'Error al crear empleado',
+        details: 'Ya existe un empleado con ese correo electrónico'
+      });
+    }
+
+    res.status(500).json({ 
+      error: 'Error al crear empleado',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
 // ==============================================
 // RUTAS PARA ÁREAS
 // ==============================================
