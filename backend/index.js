@@ -67,7 +67,9 @@ async function initializeAdmin() {
         await pool.query(
           "UPDATE empleado SET password = $1 WHERE idempleado = $2",
           [newHashedPassword, admin.idempleado]
+          
         );
+
         console.log('[✓] Contraseña de admin actualizada');
       }
     }
@@ -319,112 +321,6 @@ app.get('/api/empleados', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/empleados', authenticateToken, async (req, res) => {
-  const {
-    nombreEmpleado,
-    apellidoPaternoEmpleado,
-    apellidoMaternoEmpleado,
-    correoEmpleado,
-    idRol,
-    idArea
-  } = req.body;
-
-  // Validación básica
-  if (!nombreEmpleado?.trim() || !apellidoPaternoEmpleado?.trim() || !correoEmpleado?.trim() || !idRol) {
-    return res.status(400).json({ 
-      error: 'Faltan campos requeridos',
-      details: 'Nombre, apellido paterno, correo y rol son obligatorios'
-    });
-  }
-
-  try {
-    // Verificar rol
-    const rolExists = await pool.query('SELECT idRol FROM Rol WHERE idRol = $1', [idRol]);
-    if (rolExists.rows.length === 0) {
-      return res.status(400).json({ error: 'El rol especificado no existe' });
-    }
-
-    // Verificar área si se proporcionó
-    if (idArea) {
-      const areaExists = await pool.query('SELECT idArea FROM Area WHERE idArea = $1', [idArea]);
-      if (areaExists.rows.length === 0) {
-        return res.status(400).json({ error: 'El área especificada no existe' });
-      }
-    }
-
-    // Contraseña temporal
-    const hashedPassword = await bcrypt.hash('Temp1234', 10);
-
-    // Insertar empleado
-    const result = await pool.query(
-      `INSERT INTO Empleado (
-        nombreEmpleado, 
-        apellidoPaternoEmpleado, 
-        apellidoMaternoEmpleado,
-        correoEmpleado, 
-        idRol, 
-        idArea,
-        password
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING idempleado
-`,
-      [
-        nombreEmpleado.trim(),
-        apellidoPaternoEmpleado.trim(),
-        apellidoMaternoEmpleado?.trim() || null,
-        correoEmpleado.trim().toLowerCase(),
-        idRol,
-        idArea || null,
-        hashedPassword
-      ]
-    );
-
-    const nuevoId = result.rows[0].idEmpleado;
-
-    console.log('[✓] Empleado insertado con ID:', nuevoId);
-
-    // Obtener info del empleado (intenta con LEFT JOIN)
-    const empleadoCompleto = await pool.query(
-      `SELECT 
-        e.idEmpleado AS "idEmpleado",
-        e.nombreEmpleado AS "nombreEmpleado",
-        e.apellidoPaternoEmpleado AS "apellidoPaternoEmpleado",
-        e.apellidoMaternoEmpleado AS "apellidoMaternoEmpleado",
-        e.correoEmpleado AS "correoEmpleado",
-        r.nombreRol AS "nombreRol",
-        a.nombreArea AS "nombreArea"
-      FROM Empleado e
-      LEFT JOIN Rol r ON r.idRol = e.idRol
-      LEFT JOIN Area a ON a.idArea = e.idArea
-      WHERE e.idEmpleado = $1`,
-      [nuevoId]
-    );
-
-    if (empleadoCompleto.rows.length === 0) {
-      console.warn('⚠ No se pudo obtener el empleado con JOIN. Enviando solo ID.');
-      return res.status(201).json({ idEmpleado: nuevoId });
-    }
-
-    res.status(201).json(empleadoCompleto.rows[0]);
-
-  } catch (error) {
-    console.error('Error al crear empleado:', error);
-
-    if (error.code === '23505') {
-      return res.status(400).json({ 
-        error: 'Error al crear empleado',
-        details: 'Ya existe un empleado con ese correo electrónico'
-      });
-    }
-
-    res.status(500).json({ 
-      error: 'Error al crear empleado',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
-
-// Actualizar empleado
 app.put('/api/empleados/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const {
@@ -434,8 +330,7 @@ app.put('/api/empleados/:id', authenticateToken, async (req, res) => {
     correoEmpleado,
     idRol,
     idArea,
-    password, // Nueva contraseña (opcional)
-    currentPassword // Contraseña actual (requerida para validar)
+    password // Nueva contraseña (opcional)
   } = req.body;
 
   if (!nombreEmpleado?.trim() || !apellidoPaternoEmpleado?.trim() || !correoEmpleado?.trim() || !idRol) {
@@ -452,25 +347,17 @@ app.put('/api/empleados/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Empleado no encontrado' });
     }
 
-    const empleado = empleadoResult.rows[0];
-
-    // 2. Verificar contraseña actual
-    if (password?.trim()) {
-      if (!currentPassword || !(await bcrypt.compare(currentPassword, empleado.password))) {
-        return res.status(403).json({ error: 'Contraseña actual incorrecta' });
-      }
-    }
-
-    // 3. Verificar correo duplicado
+    // 2. Verificar correo duplicado
     const correoRepetido = await pool.query(
-      'SELECT idEmpleado FROM Empleado WHERE correoEmpleado = $1 AND idEmpleado <> $2',
-      [correoEmpleado.trim().toLowerCase(), id]
+      `SELECT idEmpleado FROM Empleado 
+       WHERE LOWER(correoEmpleado) = LOWER($1) AND idEmpleado <> $2`,
+      [correoEmpleado.trim(), id]
     );
     if (correoRepetido.rows.length > 0) {
       return res.status(400).json({ error: 'Ya existe otro empleado con este correo' });
     }
 
-    // 4. Hashear nueva contraseña si se proporciona
+    // 3. Hashear nueva contraseña si se proporciona
     let hashedPassword = null;
     if (password?.trim()) {
       if (password.trim().length < 6) {
@@ -479,7 +366,7 @@ app.put('/api/empleados/:id', authenticateToken, async (req, res) => {
       hashedPassword = await bcrypt.hash(password.trim(), 10);
     }
 
-    // 5. Actualizar en base de datos
+    // 4. Actualizar en base de datos
     const result = await pool.query(`
       UPDATE Empleado SET
         nombreEmpleado = $1,
@@ -513,6 +400,7 @@ app.put('/api/empleados/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar empleado', details: error.message });
   }
 });
+
 
 
 
