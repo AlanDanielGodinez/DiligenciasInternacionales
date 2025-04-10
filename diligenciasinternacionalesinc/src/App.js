@@ -32,6 +32,7 @@ import '../src/Styles/Anadirtramite.css';
 import '../src/Styles/Areas.css';
 import '../src/Styles/Empleados.css';
 import '../src/Styles/Roles.css';
+import '../src/Styles/AsignarResponsableModal.css';
 import EditarArea from "./Pages/Empleado/EditarArea";
 
 

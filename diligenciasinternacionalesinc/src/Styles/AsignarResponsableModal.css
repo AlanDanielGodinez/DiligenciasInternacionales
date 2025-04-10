@@ -1,0 +1,57 @@
+
+.asignar-modal {
+  max-width: 400px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.asignar-modal h2 {
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+.asignar-modal .form-group {
+  margin-bottom: 15px;
+}
+
+.asignar-modal select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.asignar-modal .modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.asignar-modal .btn-cancel,
+.asignar-modal .btn-confirm {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.asignar-modal .btn-cancel {
+  background-color: #ccc;
+  color: #333;
+}
+
+.asignar-modal .btn-confirm {
+  background-color: #3498db;
+  color: white;
+}
+
+.asignar-modal .error-message {
+  background-color: #ffe5e5;
+  color: #b70000;
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  text-align: center;
+}
