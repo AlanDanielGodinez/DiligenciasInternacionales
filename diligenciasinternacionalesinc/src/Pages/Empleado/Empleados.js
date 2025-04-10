@@ -31,7 +31,7 @@
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const [mostrarCambioPassword, setMostrarCambioPassword] = useState(false);
+    
 
 
     // Configuración de axios
@@ -216,18 +216,13 @@
           datosActualizados.password = empleadoEditando.password.trim();
         }
     
-        const { confirmPassword, currentPassword, ...datosActualizacion } = empleadoEditando;
-        if (mostrarCambioPassword) {
-          if (!empleadoEditando.currentPassword) return setError('Debes ingresar tu contraseña actual');
-          if (empleadoEditando.password !== empleadoEditando.confirmPassword) {
-            return setError('Las contraseñas no coinciden');
-          }
-        }
-    
+        
+        
         const payload = {
-          ...datosActualizados,
-          currentPassword: empleadoEditando.currentPassword?.trim() || ''
+          ...datosActualizados
         };
+        
+        
     
         const { data } = await api.put(`/empleados/${empleadoEditando.idEmpleado}`, payload);
     
@@ -392,68 +387,45 @@
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  className="boton-cambio-pass"
-                  onClick={() => setMostrarCambioPassword(prev => !prev)}
-                >
-                  {mostrarCambioPassword ? 'Cancelar cambio de contraseña' : 'Cambiar contraseña'}
-                </button>
+                <div className="fila-formulario">
+                  <div className="grupo-formulario">
+                    <label>Nueva Contraseña:</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={empleadoEditando.password || ''}
+                      onChange={manejarCambioEdicion}
+                      placeholder="Dejar en blanco si no deseas cambiarla"
+                    />
+                  </div>
 
-                {mostrarCambioPassword && (
-                  <>
-                    <div className="grupo-formulario">
-                      <label>Contraseña actual:</label>
-                      <input
-                        type="password"
-                        name="currentPassword"
-                        value={empleadoEditando.currentPassword || ''}
-                        onChange={manejarCambioEdicion}
-                        required
-                      />
-                    </div>
-
-                    <div className="fila-formulario">
-                      <div className="grupo-formulario">
-                        <label>Nueva Contraseña:</label>
-                        <input
-                          type="password"
-                          name="password"
-                          value={empleadoEditando.password || ''}
-                          onChange={manejarCambioEdicion}
-                          placeholder="Dejar en blanco si no deseas cambiarla"
-                        />
-                      </div>
-
-                      <div className="grupo-formulario">
-                        <label>Confirmar Contraseña:</label>
-                        <input
-                          type="password"
-                          name="confirmPassword"
-                          value={empleadoEditando.confirmPassword || ''}
-                          onChange={manejarCambioEdicion}
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <div className="acciones-modal">
-                  <button 
-                    type="button" 
-                    className="boton-cancelar"
-                    onClick={() => setEmpleadoEditando(null)}
-                  >
-                    Cancelar
-                  </button>
-                  <button type="submit" className="boton-confirmar">
-                    Actualizar Empleado
-                  </button>
+                  <div className="grupo-formulario">
+                    <label>Confirmar Contraseña:</label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={empleadoEditando.confirmPassword || ''}
+                      onChange={manejarCambioEdicion}
+                    />
+                  </div>
                 </div>
-              </form>
-            </div>
-          </div>
-        )}
+
+                                <div className="acciones-modal">
+                                  <button 
+                                    type="button" 
+                                    className="boton-cancelar"
+                                    onClick={() => setEmpleadoEditando(null)}
+                                  >
+                                    Cancelar
+                                  </button>
+                                  <button type="submit" className="boton-confirmar">
+                                    Actualizar Empleado
+                                  </button>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        )}
 
 
 
@@ -501,7 +473,7 @@
                               ...empleado,
                               idRol: roles.find(r => r.nombreRol === empleado.nombreRol)?.idRol || '',
                               idArea: areas.find(a => a.nombreArea === empleado.nombreArea)?.idArea || '',
-                              currentPassword: '',
+                            
                               password: '',
                               confirmPassword: ''
 
