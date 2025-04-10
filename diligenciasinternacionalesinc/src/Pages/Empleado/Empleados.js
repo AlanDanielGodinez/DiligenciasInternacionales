@@ -213,25 +213,30 @@
     };
 
     const eliminarEmpleado = async (id) => {
-      if (!window.confirm('¿Estás seguro de que deseas eliminar este empleado?')) return;
-      
+      setError('');
+    
+      const confirmacion = window.confirm('¿Seguro que deseas eliminar este empleado? Esta acción no se puede deshacer.');
+    
+      if (!confirmacion) return;
+    
       try {
-        await api.delete(`/empleados/${id}`);
-        
-        setListaEmpleados(listaEmpleados.filter(emp => emp.idEmpleado !== id));
-        setEmpleadosFiltrados(empleadosFiltrados.filter(emp => emp.idEmpleado !== id));
-        
-        alert('Empleado eliminado correctamente');
+        const { data } = await api.delete(`/empleados/${id}`);
+    
+        setListaEmpleados(prev => prev.filter(emp => emp.idEmpleado !== id));
+        setEmpleadosFiltrados(prev => prev.filter(emp => emp.idEmpleado !== id));
+    
+        setError('Empleado eliminado correctamente ✅');
+        setTimeout(() => setError(''), 3000);
       } catch (err) {
-        const mensajeError = err.response?.data?.error || 'Error al eliminar empleado';
+        const mensajeError = err.response?.data?.error || 'Error al eliminar empleado ❌';
         setError(mensajeError);
-        alert(mensajeError);
+        setTimeout(() => setError(''), 4000);
       }
     };
-
     const alternarExpandido = (id) => {
-      setEmpleadoExpandido(empleadoExpandido === id ? null : id);
+      setEmpleadoExpandido(prev => prev === id ? null : id);
     };
+    
 
     return (
       <div className="contenedor-empleados">
@@ -243,7 +248,12 @@
           </button>
         </div>
 
-        {error && <div className="mensaje-error">{error}</div>}
+        {error && (
+          <div className={`mensaje-feedback ${error.includes('✅') ? 'exito' : 'error'}`}>
+            {error}
+          </div>
+        )}
+
 
         <div className="contenedor-busqueda">
           <div className="caja-busqueda">

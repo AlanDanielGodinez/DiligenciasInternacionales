@@ -292,9 +292,6 @@ app.post('/api/tramites', authenticateToken, async (req, res) => {
 // RUTAS PARA EMPLEADOS
 // ==============================================
 
-app.get('/api/prueba', (req, res) => {
-  res.json({ mensaje: 'Servidor activo y ruta existe' });
-});
 
 // Obtener todos los empleados
 app.get('/api/empleados', authenticateToken, async (req, res) => {
@@ -426,6 +423,42 @@ app.post('/api/empleados', authenticateToken, async (req, res) => {
     });
   }
 });
+
+//Eliminar empleado
+
+// Ruta DELETE para eliminar empleado
+app.delete('/api/empleados/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Verifica si el empleado existe primero
+    const existe = await pool.query('SELECT idEmpleado FROM empleado WHERE idEmpleado = $1', [id]);
+
+    if (existe.rows.length === 0) {
+      return res.status(404).json({ error: 'Empleado no encontrado' });
+    }
+
+    // Eliminar empleado
+    const result = await pool.query(
+      'DELETE FROM empleado WHERE idEmpleado = $1 RETURNING idEmpleado',
+      [id]
+    );
+
+    res.json({ 
+      success: true, 
+      message: 'Empleado eliminado correctamente',
+      idEmpleado: result.rows[0].idEmpleado
+    });
+
+  } catch (error) {
+    console.error('Error al eliminar empleado:', error);
+    res.status(500).json({ 
+      error: 'Error al eliminar empleado',
+      details: error.message
+    });
+  }
+});
+
 // ==============================================
 // RUTAS PARA ÁREAS
 // ==============================================
