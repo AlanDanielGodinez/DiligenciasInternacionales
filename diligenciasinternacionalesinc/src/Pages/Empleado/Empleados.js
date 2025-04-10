@@ -31,6 +31,9 @@
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
+    const [mostrarCambioPassword, setMostrarCambioPassword] = useState(false);
+
+
     // Configuración de axios
     const api = axios.create({
       baseURL: 'http://localhost:5000/api',
@@ -212,23 +215,30 @@
         if (empleadoEditando.password?.trim()) {
           datosActualizados.password = empleadoEditando.password.trim();
         }
+    
         const { confirmPassword, currentPassword, ...datosActualizacion } = empleadoEditando;
-        if (!currentPassword) return setError('Debes ingresar tu contraseña actual');
-
+        if (mostrarCambioPassword) {
+          if (!empleadoEditando.currentPassword) return setError('Debes ingresar tu contraseña actual');
+          if (empleadoEditando.password !== empleadoEditando.confirmPassword) {
+            return setError('Las contraseñas no coinciden');
+          }
+        }
     
-        const { data } = await api.put(`/empleados/${empleadoEditando.idEmpleado}`, {
+        const payload = {
           ...datosActualizados,
-          currentPassword: empleadoEditando.currentPassword
-        });
-        
+          currentPassword: empleadoEditando.currentPassword?.trim() || ''
+        };
     
-        // Recargar lista completa o actualizar local
-        const listaActualizada = listaEmpleados.map(emp =>
-          emp.idEmpleado === data.idEmpleado ? { ...emp, ...datosActualizados } : emp
-        );
-        setListaEmpleados(listaActualizada);
-        setEmpleadosFiltrados(listaActualizada);
+        const { data } = await api.put(`/empleados/${empleadoEditando.idEmpleado}`, payload);
+    
+        // Oculta el modal de edición
         setEmpleadoEditando(null);
+    
+        // ✅ Refrescar desde el backend
+        const empleadosActualizados = await api.get('/empleados');
+        setListaEmpleados(empleadosActualizados.data);
+        setEmpleadosFiltrados(empleadosActualizados.data);
+    
         setError('Empleado actualizado correctamente ✅');
         setTimeout(() => setError(''), 3000);
       } catch (err) {
@@ -294,7 +304,6 @@
           </div>
         </div>
 
-        {/* Modal de Edición */}
         {empleadoEditando && (
           <div className="fondo-modal">
             <div className="contenido-modal">
@@ -346,7 +355,6 @@
                       required
                     />
                   </div>
-                  
                 </div>
 
                 <div className="fila-formulario">
@@ -383,39 +391,52 @@
                     </select>
                   </div>
                 </div>
-                <div className="grupo-formulario">
-                  <label>Contraseña actual (requerida para editar):</label>
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    value={empleadoEditando.currentPassword || ''}
-                    onChange={manejarCambioEdicion}
-                    required
-                  />
-                </div>
 
-                <div className="fila-formulario">
-                  <div className="grupo-formulario">
-                    <label>Nueva Contraseña (opcional):</label>
-                    <input
-                      type="password"
-                      name="password"
-                      value={empleadoEditando.password || ''}
-                      onChange={manejarCambioEdicion}
-                      placeholder="Dejar en blanco para no cambiar"
-                    />
-                  </div>
+                <button
+                  type="button"
+                  className="boton-cambio-pass"
+                  onClick={() => setMostrarCambioPassword(prev => !prev)}
+                >
+                  {mostrarCambioPassword ? 'Cancelar cambio de contraseña' : 'Cambiar contraseña'}
+                </button>
 
-                  <div className="grupo-formulario">
-                    <label>Confirmar Contraseña:</label>
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      value={empleadoEditando.confirmPassword || ''}
-                      onChange={manejarCambioEdicion}
-                    />
-                  </div>
-                </div>
+                {mostrarCambioPassword && (
+                  <>
+                    <div className="grupo-formulario">
+                      <label>Contraseña actual:</label>
+                      <input
+                        type="password"
+                        name="currentPassword"
+                        value={empleadoEditando.currentPassword || ''}
+                        onChange={manejarCambioEdicion}
+                        required
+                      />
+                    </div>
+
+                    <div className="fila-formulario">
+                      <div className="grupo-formulario">
+                        <label>Nueva Contraseña:</label>
+                        <input
+                          type="password"
+                          name="password"
+                          value={empleadoEditando.password || ''}
+                          onChange={manejarCambioEdicion}
+                          placeholder="Dejar en blanco si no deseas cambiarla"
+                        />
+                      </div>
+
+                      <div className="grupo-formulario">
+                        <label>Confirmar Contraseña:</label>
+                        <input
+                          type="password"
+                          name="confirmPassword"
+                          value={empleadoEditando.confirmPassword || ''}
+                          onChange={manejarCambioEdicion}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="acciones-modal">
                   <button 
@@ -433,6 +454,7 @@
             </div>
           </div>
         )}
+
 
 
         {/* Contenido Principal */}
