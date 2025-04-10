@@ -424,7 +424,87 @@ app.post('/api/empleados', authenticateToken, async (req, res) => {
   }
 });
 
-//Eliminar empleado
+// Actualizar empleado
+app.put('/api/empleados/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const {
+    nombreEmpleado,
+    apellidoPaternoEmpleado,
+    apellidoMaternoEmpleado,
+    correoEmpleado,
+    idRol,
+    idArea,
+    password
+  } = req.body;
+
+  // Validación básica
+  if (!nombreEmpleado?.trim() || !apellidoPaternoEmpleado?.trim() || !correoEmpleado?.trim() || !idRol) {
+    return res.status(400).json({
+      error: 'Faltan campos requeridos',
+      details: 'Nombre, apellido paterno, correo y rol son obligatorios'
+    });
+  }
+
+  try {
+    // Verificar existencia del empleado
+    const empleadoExistente = await pool.query('SELECT * FROM Empleado WHERE idEmpleado = $1', [id]);
+    if (empleadoExistente.rows.length === 0) {
+      return res.status(404).json({ error: 'Empleado no encontrado' });
+    }
+
+    // Verificar que el nuevo correo no esté repetido por otro empleado
+    const correoRepetido = await pool.query(
+      'SELECT idEmpleado FROM Empleado WHERE correoEmpleado = $1 AND idEmpleado <> $2',
+      [correoEmpleado.trim().toLowerCase(), id]
+    );
+    if (correoRepetido.rows.length > 0) {
+      return res.status(400).json({ error: 'Ya existe otro empleado con este correo' });
+    }
+
+    // Si hay contraseña nueva, hashearla
+    let hashedPassword = null;
+    if (password?.trim()) {
+      if (password.trim().length < 6) {
+        return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+      }
+      hashedPassword = await bcrypt.hash(password.trim(), 10);
+    }
+
+    // Actualizar empleado
+    const result = await pool.query(`
+      UPDATE Empleado SET
+        nombreEmpleado = $1,
+        apellidoPaternoEmpleado = $2,
+        apellidoMaternoEmpleado = $3,
+        correoEmpleado = $4,
+        idRol = $5,
+        idArea = $6,
+        password = COALESCE($7, password)
+      WHERE idEmpleado = $8
+      RETURNING idEmpleado
+    `, [
+      nombreEmpleado.trim(),
+      apellidoPaternoEmpleado.trim(),
+      apellidoMaternoEmpleado?.trim() || null,
+      correoEmpleado.trim().toLowerCase(),
+      idRol,
+      idArea || null,
+      hashedPassword,
+      id
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Empleado actualizado correctamente',
+      idEmpleado: result.rows[0].idEmpleado
+    });
+
+  } catch (error) {
+    console.error('Error al actualizar empleado:', error);
+    res.status(500).json({ error: 'Error al actualizar empleado', details: error.message });
+  }
+});
+
 
 // Ruta DELETE para eliminar empleado
 app.delete('/api/empleados/:id', authenticateToken, async (req, res) => {
