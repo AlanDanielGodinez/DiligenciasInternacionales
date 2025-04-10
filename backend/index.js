@@ -434,10 +434,10 @@ app.put('/api/empleados/:id', authenticateToken, async (req, res) => {
     correoEmpleado,
     idRol,
     idArea,
-    password
+    password, // Nueva contraseña (opcional)
+    currentPassword // Contraseña actual (requerida para validar)
   } = req.body;
 
-  // Validación básica
   if (!nombreEmpleado?.trim() || !apellidoPaternoEmpleado?.trim() || !correoEmpleado?.trim() || !idRol) {
     return res.status(400).json({
       error: 'Faltan campos requeridos',
@@ -446,13 +446,20 @@ app.put('/api/empleados/:id', authenticateToken, async (req, res) => {
   }
 
   try {
-    // Verificar existencia del empleado
-    const empleadoExistente = await pool.query('SELECT * FROM Empleado WHERE idEmpleado = $1', [id]);
-    if (empleadoExistente.rows.length === 0) {
+    // 1. Verificar existencia del empleado
+    const empleadoResult = await pool.query('SELECT * FROM Empleado WHERE idEmpleado = $1', [id]);
+    if (empleadoResult.rows.length === 0) {
       return res.status(404).json({ error: 'Empleado no encontrado' });
     }
 
-    // Verificar que el nuevo correo no esté repetido por otro empleado
+    const empleado = empleadoResult.rows[0];
+
+    // 2. Verificar contraseña actual
+    if (!currentPassword || !(await bcrypt.compare(currentPassword, empleado.password))) {
+      return res.status(403).json({ error: 'Contraseña actual incorrecta' });
+    }
+
+    // 3. Verificar correo duplicado
     const correoRepetido = await pool.query(
       'SELECT idEmpleado FROM Empleado WHERE correoEmpleado = $1 AND idEmpleado <> $2',
       [correoEmpleado.trim().toLowerCase(), id]
@@ -461,16 +468,16 @@ app.put('/api/empleados/:id', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Ya existe otro empleado con este correo' });
     }
 
-    // Si hay contraseña nueva, hashearla
+    // 4. Hashear nueva contraseña si se proporciona
     let hashedPassword = null;
     if (password?.trim()) {
       if (password.trim().length < 6) {
-        return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+        return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
       }
       hashedPassword = await bcrypt.hash(password.trim(), 10);
     }
 
-    // Actualizar empleado
+    // 5. Actualizar en base de datos
     const result = await pool.query(`
       UPDATE Empleado SET
         nombreEmpleado = $1,
@@ -504,6 +511,7 @@ app.put('/api/empleados/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar empleado', details: error.message });
   }
 });
+
 
 
 // Ruta DELETE para eliminar empleado

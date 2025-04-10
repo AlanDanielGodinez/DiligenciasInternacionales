@@ -212,8 +212,15 @@
         if (empleadoEditando.password?.trim()) {
           datosActualizados.password = empleadoEditando.password.trim();
         }
+        const { confirmPassword, currentPassword, ...datosActualizacion } = empleadoEditando;
+        if (!currentPassword) return setError('Debes ingresar tu contraseña actual');
+
     
-        const { data } = await api.put(`/empleados/${empleadoEditando.idEmpleado}`, datosActualizados);
+        const { data } = await api.put(`/empleados/${empleadoEditando.idEmpleado}`, {
+          ...datosActualizados,
+          currentPassword: empleadoEditando.currentPassword
+        });
+        
     
         // Recargar lista completa o actualizar local
         const listaActualizada = listaEmpleados.map(emp =>
@@ -339,6 +346,7 @@
                       required
                     />
                   </div>
+                  
                 </div>
 
                 <div className="fila-formulario">
@@ -374,6 +382,16 @@
                       ))}
                     </select>
                   </div>
+                </div>
+                <div className="grupo-formulario">
+                  <label>Contraseña actual (requerida para editar):</label>
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    value={empleadoEditando.currentPassword || ''}
+                    onChange={manejarCambioEdicion}
+                    required
+                  />
                 </div>
 
                 <div className="fila-formulario">
@@ -460,7 +478,11 @@
                             setEmpleadoEditando({
                               ...empleado,
                               idRol: roles.find(r => r.nombreRol === empleado.nombreRol)?.idRol || '',
-                              idArea: areas.find(a => a.nombreArea === empleado.nombreArea)?.idArea || ''
+                              idArea: areas.find(a => a.nombreArea === empleado.nombreArea)?.idArea || '',
+                              currentPassword: '',
+                              password: '',
+                              confirmPassword: ''
+
                             })
                           }
                           
@@ -535,19 +557,20 @@
                       required
                     />
                   </div>
+                  
                 </div>
                 <div className="fila-formulario">
-                <div className="grupo-formulario">
-                  <label>Contraseña:</label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={nuevoEmpleado.password}
-                    onChange={manejarCambioInput}
-                    required
-                    minLength="6"
-                  />
-                </div>
+                  <div className="grupo-formulario">
+                    <label>Contraseña:</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={nuevoEmpleado.password}
+                      onChange={manejarCambioInput}
+                      required
+                      minLength="6"
+                    />
+                  </div>
                 
                 <div className="grupo-formulario">
                   <label>Confirmar Contraseña:</label>
