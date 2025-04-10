@@ -456,7 +456,14 @@
                     <div className="contenido-expandido">
                       <div className="acciones-empleado">
                         <button
-                          onClick={() => setEmpleadoEditando(empleado)}
+                          onClick={() =>
+                            setEmpleadoEditando({
+                              ...empleado,
+                              idRol: roles.find(r => r.nombreRol === empleado.nombreRol)?.idRol || '',
+                              idArea: areas.find(a => a.nombreArea === empleado.nombreArea)?.idArea || ''
+                            })
+                          }
+                          
                           className="boton-editar"
                         >
                           <FaEdit /> Editar
