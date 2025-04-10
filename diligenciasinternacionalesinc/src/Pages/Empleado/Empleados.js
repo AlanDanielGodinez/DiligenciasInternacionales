@@ -190,27 +190,47 @@
     const actualizarEmpleado = async (e) => {
       e.preventDefault();
       setError('');
-      
-      // Validación si se está cambiando la contraseña
+    
+      if (!empleadoEditando) return;
+    
+      // Validación de contraseña si se desea cambiar
       if (empleadoEditando.password && empleadoEditando.password !== empleadoEditando.confirmPassword) {
         return setError('Las contraseñas no coinciden');
       }
     
       try {
-        // Preparar datos para enviar (sin confirmPassword)
-        const { confirmPassword, ...datosActualizacion } = empleadoEditando;
-        // Si no se cambió la contraseña, no la enviamos
-        if (!datosActualizacion.password) {
-          delete datosActualizacion.password;
+        const datosActualizados = {
+          nombreEmpleado: empleadoEditando.nombreEmpleado,
+          apellidoPaternoEmpleado: empleadoEditando.apellidoPaternoEmpleado,
+          apellidoMaternoEmpleado: empleadoEditando.apellidoMaternoEmpleado,
+          correoEmpleado: empleadoEditando.correoEmpleado,
+          idRol: empleadoEditando.idRol,
+          idArea: empleadoEditando.idArea || null
+        };
+    
+        // Solo si se quiere cambiar la contraseña
+        if (empleadoEditando.password?.trim()) {
+          datosActualizados.password = empleadoEditando.password.trim();
         }
     
-        const respuesta = await api.put(`/empleados/${empleadoEditando.idEmpleado}`, datosActualizacion);
-        
-        // ... resto de la lógica ...
+        const { data } = await api.put(`/empleados/${empleadoEditando.idEmpleado}`, datosActualizados);
+    
+        // Recargar lista completa o actualizar local
+        const listaActualizada = listaEmpleados.map(emp =>
+          emp.idEmpleado === data.idEmpleado ? { ...emp, ...datosActualizados } : emp
+        );
+        setListaEmpleados(listaActualizada);
+        setEmpleadosFiltrados(listaActualizada);
+        setEmpleadoEditando(null);
+        setError('Empleado actualizado correctamente ✅');
+        setTimeout(() => setError(''), 3000);
       } catch (err) {
-        setError(err.response?.data?.error || 'Error al actualizar empleado');
+        const mensajeError = err.response?.data?.error || 'Error al actualizar empleado ❌';
+        setError(mensajeError);
+        setTimeout(() => setError(''), 4000);
       }
     };
+    
 
     const eliminarEmpleado = async (id) => {
       setError('');
@@ -271,35 +291,131 @@
         {empleadoEditando && (
           <div className="fondo-modal">
             <div className="contenido-modal">
-              {/* ... otros campos ... */}
-              
-              <div className="fila-formulario">
-                <div className="grupo-formulario">
-                  <label>Nueva Contraseña (opcional):</label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={empleadoEditando.password || ''}
-                    onChange={manejarCambioEdicion}
-                    placeholder="Dejar en blanco para no cambiar"
-                  />
+              <h2><FaEdit /> Editar Empleado</h2>
+
+              <form onSubmit={actualizarEmpleado}>
+                <div className="fila-formulario">
+                  <div className="grupo-formulario">
+                    <label>Nombre:</label>
+                    <input
+                      type="text"
+                      name="nombreEmpleado"
+                      value={empleadoEditando.nombreEmpleado}
+                      onChange={manejarCambioEdicion}
+                      required
+                    />
+                  </div>
+
+                  <div className="grupo-formulario">
+                    <label>Apellido Paterno:</label>
+                    <input
+                      type="text"
+                      name="apellidoPaternoEmpleado"
+                      value={empleadoEditando.apellidoPaternoEmpleado}
+                      onChange={manejarCambioEdicion}
+                      required
+                    />
+                  </div>
                 </div>
-                
-                <div className="grupo-formulario">
-                  <label>Confirmar Contraseña:</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={empleadoEditando.confirmPassword || ''}
-                    onChange={manejarCambioEdicion}
-                  />
+
+                <div className="fila-formulario">
+                  <div className="grupo-formulario">
+                    <label>Apellido Materno:</label>
+                    <input
+                      type="text"
+                      name="apellidoMaternoEmpleado"
+                      value={empleadoEditando.apellidoMaternoEmpleado || ''}
+                      onChange={manejarCambioEdicion}
+                    />
+                  </div>
+
+                  <div className="grupo-formulario">
+                    <label>Correo Electrónico:</label>
+                    <input
+                      type="email"
+                      name="correoEmpleado"
+                      value={empleadoEditando.correoEmpleado}
+                      onChange={manejarCambioEdicion}
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
-              
-              {/* ... resto del formulario ... */}
+
+                <div className="fila-formulario">
+                  <div className="grupo-formulario">
+                    <label>Rol:</label>
+                    <select
+                      name="idRol"
+                      value={empleadoEditando.idRol}
+                      onChange={manejarCambioEdicion}
+                      required
+                    >
+                      <option value="">Seleccionar rol...</option>
+                      {roles.map(rol => (
+                        <option key={rol.idRol} value={rol.idRol}>
+                          {rol.nombreRol}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grupo-formulario">
+                    <label>Área:</label>
+                    <select
+                      name="idArea"
+                      value={empleadoEditando.idArea || ''}
+                      onChange={manejarCambioEdicion}
+                    >
+                      <option value="">Sin área asignada</option>
+                      {areas.map(area => (
+                        <option key={area.idArea} value={area.idArea}>
+                          {area.nombreArea}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="fila-formulario">
+                  <div className="grupo-formulario">
+                    <label>Nueva Contraseña (opcional):</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={empleadoEditando.password || ''}
+                      onChange={manejarCambioEdicion}
+                      placeholder="Dejar en blanco para no cambiar"
+                    />
+                  </div>
+
+                  <div className="grupo-formulario">
+                    <label>Confirmar Contraseña:</label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={empleadoEditando.confirmPassword || ''}
+                      onChange={manejarCambioEdicion}
+                    />
+                  </div>
+                </div>
+
+                <div className="acciones-modal">
+                  <button 
+                    type="button" 
+                    className="boton-cancelar"
+                    onClick={() => setEmpleadoEditando(null)}
+                  >
+                    Cancelar
+                  </button>
+                  <button type="submit" className="boton-confirmar">
+                    Actualizar Empleado
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
+
 
         {/* Contenido Principal */}
         {cargando ? (
@@ -489,9 +605,11 @@
                   </button>
                 </div>
               </form>
+              
             </div>
           </div>
         )}
+        
       </div>
     );
   };
