@@ -4,6 +4,8 @@ import { FaSearch, FaPlus, FaEdit, FaTrash, FaUsers, FaChevronDown, FaChevronUp,
 import { MdOutlineMeetingRoom } from 'react-icons/md';
 import axios from 'axios';
 
+import AsignarResponsableModal from '../Empleado/AsignarResponsable';
+
 const AreasPage = () => {
   // Estados
   const [editingArea, setEditingArea] = useState(null);
@@ -16,6 +18,8 @@ const AreasPage = () => {
   const [newArea, setNewArea] = useState({ nombreArea: '', descripcion: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [mostrarModalAsignar, setMostrarModalAsignar] = useState(null); // Guarda el id del área
+
 
   // Colores para las tarjetas de áreas
   const areaColors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c', '#d35400'];
@@ -300,11 +304,12 @@ const AreasPage = () => {
                         <FaTrash /> Eliminar
                       </button>
                       <button
-                        onClick={() => navigate(`/asignar-empleados/${area.idArea}`)}
+                        onClick={() => setMostrarModalAsignar(area.idArea)}
                         className="btn-assign"
                       >
                         <FaUsers /> Asignar
                       </button>
+
                     </div>
                   </div>
                 )}
@@ -361,6 +366,22 @@ const AreasPage = () => {
           </div>
         </div>
       )}
+      {mostrarModalAsignar && (
+          <AsignarResponsableModal 
+            areaId={mostrarModalAsignar}
+            onClose={() => setMostrarModalAsignar(null)}
+            onAsignado={async () => {
+              const response = await api.get('/areas');
+              const areasWithColors = response.data.map((area, index) => ({
+                ...area,
+                color: areaColors[index % areaColors.length]
+              }));
+              setAreas(areasWithColors);
+              setFilteredAreas(areasWithColors);
+            }}
+          />
+        )}
+
     </div>
   );
 };
