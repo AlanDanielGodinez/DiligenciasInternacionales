@@ -52,13 +52,11 @@ function App() {
             {/* Rutas protegidas con layout de empleado */}
             <Route element={<EmpleadoLayout />}>
               <Route path="/home" element={<HomeEmpleado />} />
-              {/* Agrega aquí más rutas protegidas */}
-              <Route path="/SolicitudForm" element={<SolicitudForm />} />
-              <Route path="/editar-area/:id" element={<EditarArea />} />
-              <Route path="/Empleados" element={<Empleados />} />
-              <Route path="/Areas" element={<Areas />} />
-              <Route path="/Roles" element={<Roles />} />
-              <Route path="/empleado/*" element={<HomeEmpleado />} />
+              <Route path="/empleado/solicitudform" element={<SolicitudForm />} />
+              <Route path="/empleado/areas" element={<Areas />} />
+              <Route path="/empleado/areas/editar/:id" element={<EditarArea />} />
+              <Route path="/empleado/empleados" element={<Empleados />} />
+              <Route path="/empleado/roles" element={<Roles />} />
             </Route>
             
             <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
