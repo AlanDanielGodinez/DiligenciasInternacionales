@@ -68,37 +68,57 @@ const Login = ({ initialMode = 'login' }) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
-
+  
     if (isLogin) {
       try {
-        // Enviar credenciales al backend
+        console.log('Intentando login con:', { email: formData.email }); // Log de depuración
+        
         const response = await axios.post('http://localhost:5000/api/login', {
           email: formData.email,
           password: formData.password
         });
-
-        // Guardar token y datos de usuario
+  
+        console.log('Respuesta del servidor:', response.data); // Log completo de la respuesta
+        
+        // Verificación detallada de los datos recibidos
+        if (!response.data.token || !response.data.user) {
+          console.error('Error: Respuesta del servidor incompleta');
+          throw new Error('Datos de autenticación incompletos');
+        }
+  
+        console.log('Login exitoso. Datos del usuario:', {
+          id: response.data.user.id,
+          nombre: response.data.user.nombre,
+          email: response.data.user.email,
+          rol: response.data.user.rol
+        });
+  
         localStorage.setItem('authToken', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
-
+  
+        // Verifica qué se guardó en localStorage
+        console.log('Datos guardados en localStorage:', {
+          token: localStorage.getItem('authToken'),
+          user: localStorage.getItem('user')
+        });
+  
         // Redirigir según el rol
         if (response.data.user.rol === 'Administrador') {
+          console.log('Redirigiendo a /home (Administrador)');
           navigate('/home');
         } else {
-          navigate('/dashboard');
+          console.log('Redirigiendo a /home (Empleado)');
+          navigate('/home'); // Todos van a /home ahora
         }
-
+  
       } catch (err) {
-        console.error('Error en login:', err);
+        console.error('Error en login:', {
+          error: err,
+          response: err.response,
+          message: err.message
+        });
         
-        // Mostrar mensaje de error específico si es el admin
-        if (formData.email === 'admin@example.com') {
-          setError('Error en credenciales de administrador. Contacte al soporte.');
-        } else {
-          setError(err.response?.data?.error || 'Credenciales inválidas. Intente nuevamente.');
-        }
-        
-        // Limpiar credenciales en caso de error
+        setError(err.response?.data?.error || 'Credenciales inválidas. Intente nuevamente.');
         setFormData(prev => ({ ...prev, password: '' }));
       } finally {
         setIsSubmitting(false);

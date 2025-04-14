@@ -82,38 +82,35 @@ async function initializeAdmin() {
  * Middleware de autenticación JWT
  */
 function authenticateToken(req, res, next) {
-  // 1. Buscar token en múltiples ubicaciones posibles
   const token = req.headers['authorization']?.split(' ')[1] || 
-                req.headers['x-access-token'] || 
+                req.cookies?.token || 
                 req.query.token;
-  
-  // 2. Mejor logging para depuración
-  console.log('Middleware de autenticación - Token recibido:', token ? '*****' + token.slice(-5) : 'Ninguno');
-  console.log('Headers recibidos:', req.headers);
 
-  if (!token) {
-    console.error('Error: Intento de acceso sin token a:', req.path);
-    return res.status(401).json({ 
-      error: 'Token no proporcionado',
-      details: 'Debes incluir el token en el header Authorization: Bearer <token>'
-    });
+  // Solo muestra logs para rutas importantes (opcional)
+  const shouldLog = !req.path.includes('/api/protected') && 
+                   !req.path.includes('/favicon.ico');
+  
+  if (shouldLog) {
+    console.log(`[Auth] Verificando token para ruta: ${req.path}`);
   }
 
-  // 3. Verificación más robusta
+  if (!token) {
+    console.error(`[Auth Error] Intento de acceso sin token a: ${req.path}`);
+    return res.status(401).json({ error: 'Token no proporcionado' });
+  }
+
   jwt.verify(token, process.env.JWT_SECRET || 'secret_key', (err, user) => {
     if (err) {
-      console.error('Error verificando token:', err.message);
-      return res.status(403).json({ 
-        error: 'Token inválido',
-        details: err.message.includes('expired') ? 'Token expirado' : 'Token mal formado'
-      });
+      console.error(`[Auth Error] Token inválido: ${err.message}`);
+      return res.status(403).json({ error: 'Token inválido' });
     }
     
-    // 4. Añadir información de usuario a la request
-    req.user = {
-      ...user,
-      token // Opcional: guardar el token completo en la request
-    };
+    req.user = user;
+    
+    if (shouldLog) {
+      console.log(`[Auth] Usuario autenticado: ${user.email} (ID: ${user.id})`);
+    }
+    
     next();
   });
 }
@@ -137,12 +134,14 @@ app.get('/api/verify-token', authenticateToken, (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
+  console.log('Intento de login recibido para email:', email); // Log de depuración
+
   if (!email || !password) {
+    console.log('Error: Email o contraseña faltantes');
     return res.status(400).json({ error: 'Email y contraseña son requeridos' });
   }
 
   try {
-    // 1. Buscar usuario
     const userQuery = await pool.query(
       `SELECT e.*, r.nombrerol 
        FROM empleado e 
@@ -151,19 +150,21 @@ app.post('/api/login', async (req, res) => {
       [email.toLowerCase().trim()]
     );
 
+    console.log('Resultado de la consulta a la BD:', userQuery.rows[0]); // Log de depuración
+
     if (userQuery.rows.length === 0) {
+      console.log('Error: Usuario no encontrado');
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
     const user = userQuery.rows[0];
-
-    // 2. Validar contraseña
     const validPassword = await bcrypt.compare(password, user.password);
+
     if (!validPassword) {
+      console.log('Error: Contraseña incorrecta');
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    // 3. Generar token
     const token = jwt.sign(
       {
         id: user.idempleado,
@@ -174,18 +175,25 @@ app.post('/api/login', async (req, res) => {
       { expiresIn: '8h' }
     );
 
-    // 4. Responder sin datos sensibles
     const userData = {
       id: user.idempleado,
-      nombre: user.nombreempleado,
+      nombre: user.nombreempleado, // Asegúrate que este campo existe
       email: user.correoempleado || user.email,
       rol: user.nombrerol
     };
 
+    console.log('Login exitoso. Datos enviados al frontend:', {
+      user: userData,
+      token: token.substring(0, 10) + '...' // Muestra solo parte del token por seguridad
+    });
+
     res.json({ token, user: userData });
 
   } catch (error) {
-    console.error('Error en login:', error);
+    console.error('Error en login:', {
+      message: error.message,
+      stack: error.stack
+    });
     res.status(500).json({ error: 'Error en el servidor' });
   }
 });
