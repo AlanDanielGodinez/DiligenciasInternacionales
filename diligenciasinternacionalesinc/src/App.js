@@ -11,6 +11,7 @@ import SolicitudForm from "./Pages/Empleado/SolicitudForm";
 import Areas from "./Pages/Empleado/Areas";
 import Empleados from "./Pages/Empleado/Empleados";
 import Roles from "./Pages/Empleado/Roles";
+import AsignarRoles from "./Pages/Empleado/AsigancionRoles";
 
 import "./App.css";
 
@@ -32,6 +33,7 @@ import '../src/Styles/Anadirtramite.css';
 import '../src/Styles/Areas.css';
 import '../src/Styles/Empleados.css';
 import '../src/Styles/Roles.css';
+import '../src/Styles/AsignarRoles.css';
 import '../src/Styles/AsignarResponsableModal.css';
 import EditarArea from "./Pages/Empleado/EditarArea";
 
@@ -56,6 +58,7 @@ function App() {
               <Route path="/empleado/areas" element={<Areas />} />
               <Route path="/empleado/areas/editar/:id" element={<EditarArea />} />
               <Route path="/empleado/empleados" element={<Empleados />} />
+              <Route path="/empleado/asignarroles" element={<AsignarRoles />} />
               <Route path="/empleado/roles" element={<Roles />} />
             </Route>
             
