@@ -1189,6 +1189,54 @@ app.post('/api/ciudades', authenticateToken, async (req, res) => {
   }
 });
 
+// ========================
+// RUTA: Eliminar País
+// ========================
+app.delete('/api/paises/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query('DELETE FROM Pais WHERE idPais = $1 RETURNING *', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'País no encontrado' });
+    }
+
+    res.json({ success: true, message: 'País eliminado' });
+  } catch (error) {
+    console.error('Error al eliminar país:', error);
+    res.status(500).json({ error: 'Error al eliminar país' });
+  }
+});
+
+
+// ========================
+// RUTA: Eliminar Ciudad
+// ========================
+app.delete('/api/ciudades/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  // Validar que sea número
+  if (!id || isNaN(parseInt(id))) {
+    return res.status(400).json({ error: 'ID inválido para ciudad' });
+  }
+
+  try {
+    const result = await pool.query('DELETE FROM Ciudad WHERE idCiudad = $1 RETURNING *', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Ciudad no encontrada' });
+    }
+
+    res.json({ success: true, message: 'Ciudad eliminada' });
+  } catch (error) {
+    console.error('Error al eliminar ciudad:', error);
+    res.status(500).json({ error: 'Error al eliminar ciudad' });
+  }
+});
+
+
+
 
 
 // ==============================================

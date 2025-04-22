@@ -13,6 +13,7 @@ import Empleados from "./Pages/Empleado/Empleados";
 import Roles from "./Pages/Empleado/Roles";
 import AsignarRoles from "./Pages/Empleado/AsigancionRoles";
 import Clientes from "./Pages/Empleado/Clientes";
+import PaisesCiudades from "./Pages/Empleado/PaisesCiudades";
 
 import "./App.css";
 
@@ -38,6 +39,7 @@ import '../src/Styles/Roles.css';
 import '../src/Styles/AsignarRoles.css';
 import '../src/Styles/AsignarResponsableModal.css';
 import '../src/Styles/Clientes.css';
+import '../src/Styles/PaisesCiudades.css';
 import EditarArea from "./Pages/Empleado/EditarArea";
 
 
@@ -64,6 +66,7 @@ function App() {
               <Route path="/empleado/asignarroles" element={<AsignarRoles />} />
               <Route path="/empleado/roles" element={<Roles />} />
               <Route path="/empleado/clientes" element={<Clientes />} />
+              <Route path="/empleado/paisesciudades" element={<PaisesCiudades />} />
               {/* Aquí puedes agregar más rutas protegidas */}
             </Route>
             

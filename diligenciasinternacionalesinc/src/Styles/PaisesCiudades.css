@@ -1,0 +1,93 @@
+.gestion-container {
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.titulo-gestion {
+  text-align: center;
+  font-size: 2rem;
+  color: #2c3e50;
+  margin-bottom: 2rem;
+}
+
+.seccion-doble {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.gestion-card {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  flex: 1;
+  min-width: 350px;
+  max-width: 500px;
+}
+
+.gestion-card h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.form-nuevo {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.form-nuevo input {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.form-nuevo button {
+  background: linear-gradient(to right, #4a90e2, #007bff);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.form-nuevo button:hover {
+  background: linear-gradient(to right, #3b78d2, #006ae6);
+}
+
+.tabla-gestion {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.tabla-gestion thead {
+  background-color: #dee2e6;
+}
+
+.tabla-gestion th,
+.tabla-gestion td {
+  text-align: left;
+  padding: 0.8rem;
+  border-bottom: 1px solid #ccc;
+}
+
+.btn-eliminar {
+  background: none;
+  border: none;
+  color: #ff0019;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.btn-eliminar:hover {
+  transform: scale(1.1);
+  color: #a71d2a;
+}

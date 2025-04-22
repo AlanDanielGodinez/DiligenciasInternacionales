@@ -37,7 +37,8 @@ const SidebarNavigation = () => {
       items: [
         { name: "Lista de Clientes", path: "/empleado/clientes" },
         { name: "Antecedentes", path: "/antecedentes" },
-        { name: "Condiciones Especiales", path: "/condiciones" }
+        { name: "Condiciones Especiales", path: "/condiciones" },
+        { name: "Paises y Ciudades", path: "/empleado/paisesciudades" }
       ]
     },
     {
@@ -47,7 +48,7 @@ const SidebarNavigation = () => {
         { name: "Tipos de Trámites", path: "/tramites" },
         { name: "Nueva Solicitud", path: "/empleado/solicitudform" },
         { name: "Solicitudes Activas", path: "/solicitudes" },
-        { name: "Calendario de Plazos", path: "/calendario" }
+        { name: "Calendario de Plazos", path: "/calendario" },
       ]
     },
     {
