@@ -174,61 +174,62 @@ const RolesPage = () => {
   };
 
   return (
-    <div className="contenedor-roles">
+    <div className="roles-container">
       {/* Encabezado */}
-      <div className="encabezado-roles">
-        <h1><FaUserShield className="icono-encabezado" /> Gestión de Roles</h1>
+      <div className="roles-header">
+        <h1><FaUserShield className="roles-header__icon" /> Gestión de Roles</h1>
         <button 
           onClick={() => setMostrarModal(true)} 
-          className="boton-agregar-rol"
+          className="roles-add-button"
         >
-          <span className="circulo-icono"><FaPlus className="icono-mas" /></span>
-          <span className="texto-boton">Crear Nuevo Rol</span>
+          <span className="roles-add-button__circle"><FaPlus className="roles-add-button__plus" /></span>
+          <span className="roles-add-button__text">Crear Nuevo Rol</span>
         </button>
       </div>
 
       {/* Mensajes de estado */}
       {error && (
-        <div className="mensaje-error">
+        <div className="roles-alert roles-alert--error">
           <FaExclamationTriangle /> {error}
         </div>
       )}
       {exito && (
-        <div className="mensaje-exito">
+        <div className="roles-alert roles-alert--success">
           <FaCheck /> {exito}
         </div>
       )}
 
       {/* Barra de búsqueda */}
-      <div className="contenedor-busqueda">
-        <div className="caja-busqueda">
-          <FaSearch className="icono-busqueda" />
+      <div className="roles-search-container">
+        <div className="roles-search-box">
+          <FaSearch className="roles-search-box__icon" />
           <input
             type="text"
             placeholder="Buscar roles por nombre..."
             value={terminoBusqueda}
             onChange={(e) => setTerminoBusqueda(e.target.value)}
+            className="roles-search-box__input"
           />
         </div>
       </div>
 
       {/* Modal de Edición */}
       {rolEditando && (
-        <div className="fondo-modal">
-          <div className="contenido-modal">
-            <div className="encabezado-modal">
+        <div className="roles-modal-backdrop">
+          <div className="roles-modal">
+            <div className="roles-modal__header">
               <h2><FaUserShield /> Editar Rol</h2>
               <button 
-                className="boton-cerrar-modal"
+                className="roles-modal__close-button"
                 onClick={() => setRolEditando(null)}
               >
                 <FaTimes />
               </button>
             </div>
             
-            <form onSubmit={actualizarRol}>
-              <div className="grupo-formulario">
-                <label>Nombre del Rol:</label>
+            <form onSubmit={actualizarRol} className="roles-form">
+              <div className="roles-form__group">
+                <label className="roles-form__label">Nombre del Rol:</label>
                 <input
                   type="text"
                   name="nombreRol"
@@ -236,25 +237,26 @@ const RolesPage = () => {
                   onChange={manejarCambioEdicion}
                   required
                   disabled={esRolAdministrador(rolEditando)}
+                  className="roles-form__input"
                 />
                 {esRolAdministrador(rolEditando) && (
-                  <div className="mensaje-advertencia">
+                  <div className="roles-form__warning">
                     <FaLock /> El rol Administrador no puede ser modificado
                   </div>
                 )}
               </div>
               
-              <div className="acciones-modal">
+              <div className="roles-modal__actions">
                 <button 
                   type="button" 
-                  className="boton-cancelar"
+                  className="roles-button roles-button--cancel"
                   onClick={() => setRolEditando(null)}
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit" 
-                  className="boton-confirmar"
+                  className="roles-button roles-button--confirm"
                   disabled={esRolAdministrador(rolEditando)}
                 >
                   Guardar Cambios
@@ -267,60 +269,62 @@ const RolesPage = () => {
 
       {/* Contenido Principal */}
       {cargando ? (
-        <div className="contenedor-carga">
-          <div className="animacion-carga"></div>
-          <p>Cargando roles...</p>
+        <div className="roles-loading">
+          <div className="roles-loading__spinner"></div>
+          <p className="roles-loading__text">Cargando roles...</p>
         </div>
       ) : rolesFiltrados.length === 0 ? (
-        <div className="sin-resultados">
-          <FaInfoCircle className="icono-info" />
-          <p>{terminoBusqueda ? 'No hay resultados para tu búsqueda' : 'No hay roles registrados'}</p>
+        <div className="roles-empty">
+          <FaInfoCircle className="roles-empty__icon" />
+          <p className="roles-empty__text">
+            {terminoBusqueda ? 'No hay resultados para tu búsqueda' : 'No hay roles registrados'}
+          </p>
         </div>
       ) : (
-        <div className="rejilla-roles">
+        <div className="roles-grid">
           {rolesFiltrados.map((rol, index) => (
             <div 
               key={rol.idRol} 
-              className={`tarjeta-rol ${rolExpandido === rol.idRol ? 'expandida' : ''}`}
+              className={`roles-card ${rolExpandido === rol.idRol ? 'roles-card--expanded' : ''}`}
               style={{ animationDelay: `${index * 0.1}s` }}
-              data-tipo={esRolAdministrador(rol) ? 'admin' : 'default'}
+              data-type={esRolAdministrador(rol) ? 'admin' : 'default'}
             >
               <div 
-                className="encabezado-tarjeta" 
+                className="roles-card__header" 
                 onClick={() => alternarExpandido(rol.idRol)}
               >
-                <div className="icono-rol">
+                <div className="roles-card__icon">
                   {esRolAdministrador(rol) ? (
                     <FaUserShield />
                   ) : (
                     <FaUsersCog />
                   )}
                 </div>
-                <div className="contenido-encabezado">
-                  <h3>{rol.nombreRol}</h3>
-                  <div className="contador-empleados">
+                <div className="roles-card__content">
+                  <h3 className="roles-card__title">{rol.nombreRol}</h3>
+                  <div className="roles-card__count">
                     {rol.empleados} {rol.empleados === 1 ? 'empleado' : 'empleados'}
                   </div>
                 </div>
-                <span className="icono-expandir">
+                <span className="roles-card__expand-icon">
                   {rolExpandido === rol.idRol ? <FaChevronUp /> : <FaChevronDown />}
                 </span>
               </div>
               
-              <div className="contenido-tarjeta">
+              <div className="roles-card__body">
                 {rolExpandido === rol.idRol && (
-                  <div className="contenido-expandido">
-                    <div className="acciones-rol">
+                  <div className="roles-card__expanded-content">
+                    <div className="roles-card__actions">
                       <button
                         onClick={() => setRolEditando(rol)}
-                        className="boton-editar"
+                        className="roles-button roles-button--edit"
                         disabled={esRolAdministrador(rol)}
                       >
                         <FaEdit /> Editar
                       </button>
                       <button 
                         onClick={() => eliminarRol(rol.idRol)}
-                        className="boton-eliminar"
+                        className="roles-button roles-button--delete"
                         disabled={rol.empleados > 0 || esRolAdministrador(rol)}
                         title={
                           esRolAdministrador(rol) ? 
@@ -332,8 +336,8 @@ const RolesPage = () => {
                       </button>
                     </div>
                     {esRolAdministrador(rol) && (
-                      <div className="proteccion-admin">
-                        <FaLock className="icono-proteccion" />
+                      <div className="roles-card__admin-protection">
+                        <FaLock className="roles-card__lock-icon" />
                         <span>Este rol está protegido y no puede ser eliminado</span>
                       </div>
                     )}
@@ -347,12 +351,12 @@ const RolesPage = () => {
 
       {/* Modal para nuevo rol */}
       {mostrarModal && (
-        <div className="fondo-modal">
-          <div className="contenido-modal">
-            <div className="encabezado-modal">
+        <div className="roles-modal-backdrop">
+          <div className="roles-modal">
+            <div className="roles-modal__header">
               <h2><FaUserShield /> Crear Nuevo Rol</h2>
               <button 
-                className="boton-cerrar-modal"
+                className="roles-modal__close-button"
                 onClick={() => {
                   setMostrarModal(false);
                   setError('');
@@ -362,22 +366,23 @@ const RolesPage = () => {
               </button>
             </div>
             
-            <form onSubmit={crearRol}>
-              <div className="grupo-formulario">
-                <label>Nombre del Rol: <span className="requerido">*</span></label>
+            <form onSubmit={crearRol} className="roles-form">
+              <div className="roles-form__group">
+                <label className="roles-form__label">Nombre del Rol: <span className="roles-form__required">*</span></label>
                 <input
                   type="text"
                   name="nombreRol"
                   value={nuevoRol.nombreRol}
                   onChange={manejarCambioInput}
                   required
+                  className="roles-form__input"
                 />
               </div>
               
-              <div className="acciones-modal">
+              <div className="roles-modal__actions">
                 <button 
                   type="button" 
-                  className="boton-cancelar"
+                  className="roles-button roles-button--cancel"
                   onClick={() => {
                     setMostrarModal(false);
                     setError('');
@@ -385,7 +390,7 @@ const RolesPage = () => {
                 >
                   Cancelar
                 </button>
-                <button type="submit" className="boton-confirmar">
+                <button type="submit" className="roles-button roles-button--confirm">
                   Crear Rol
                 </button>
               </div>
