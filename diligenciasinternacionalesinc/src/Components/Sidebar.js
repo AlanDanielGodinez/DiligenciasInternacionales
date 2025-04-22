@@ -35,7 +35,7 @@ const SidebarNavigation = () => {
       title: "Clientes",
       icon: "👥",
       items: [
-        { name: "Lista de Clientes", path: "/clientes" },
+        { name: "Lista de Clientes", path: "/empleado/clientes" },
         { name: "Antecedentes", path: "/antecedentes" },
         { name: "Condiciones Especiales", path: "/condiciones" }
       ]
