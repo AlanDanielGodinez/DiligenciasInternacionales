@@ -1,80 +1,125 @@
-.modal-cliente-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
-  }
-  
-  .modal-cliente {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    width: 400px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-  }
-  
-  .modal-cliente h2 {
-    margin-bottom: 1rem;
-    text-align: center;
-  }
-  
-  .grupo-formulario {
-    margin-bottom: 1rem;
-  }
-  
-  .grupo-formulario label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 0.3rem;
-  }
-  
-  .grupo-formulario input {
-    width: 100%;
-    padding: 0.5rem;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-  }
-  
-  .acciones-modal {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-top: 1.5rem;
-  }
-  
-  .btn-guardar {
-    background-color: #28a745;
-    color: white;
-    padding: 0.6rem 1.2rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  
-  .btn-cancelar {
-    background-color: #dc3545;
-    color: white;
-    padding: 0.6rem 1.2rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  
-  .btn-guardar:hover {
-    background-color: #218838;
-  }
-  
-  .btn-cancelar:hover {
-    background-color: #c82333;
-  }
-  
+.cliente-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.cliente-modal {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 95%;
+  max-width: 860px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  animation: modalFade 0.3s ease;
+}
+
+@keyframes modalFade {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+h2 {
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  color: #1c1c1c;
+  text-align: center;
+}
+
+.grid-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.grid-form input,
+.grid-form select {
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.grid-form input:focus,
+.grid-form select:focus {
+  outline: none;
+  border-color: #1c87c9;
+  box-shadow: 0 0 0 2px rgba(28, 135, 201, 0.15);
+}
+
+.combo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.combo-container button {
+  padding: 0.4rem 0.7rem;
+  font-size: 1rem;
+  background: #1c87c9;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.combo-container button:hover {
+  background: #156ea8;
+}
+
+.mini-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.mini-form input {
+  flex-grow: 1;
+}
+
+.acciones-modal {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.btn-guardar {
+  background-color: #1c87c9;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-guardar:hover {
+  background-color: #156ea8;
+}
+
+.btn-cancelar {
+  background-color: #f0f0f0;
+  color: #333;
+  padding: 0.7rem 1.5rem;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-cancelar:hover {
+  background-color: #e0e0e0;
+}
