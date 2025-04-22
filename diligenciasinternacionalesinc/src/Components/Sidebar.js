@@ -73,7 +73,7 @@ const SidebarNavigation = () => {
       icon: "🏢",
       items: [
         { name: "Lista de Áreas", path: "/empleado/areas" },
-        { name: "Asignar Empleados", path: "/asignar-empleados" }
+        { name: "Asignar Empleados", path: "/empleado/asignarroles" }
       ]
     },
     {
