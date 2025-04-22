@@ -515,8 +515,6 @@ app.post('/api/empleados', authenticateToken, async (req, res) => {
 });
 
 
-
-
 // Ruta DELETE para eliminar empleado
 app.delete('/api/empleados/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
@@ -627,16 +625,22 @@ app.post('/api/areas', authenticateToken, async (req, res) => {
   }
 });
 
-// Elimina una de las rutas PUT duplicadas y deja solo esta:
+//versión mejorada:
 app.put('/api/areas/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { nombreArea, descripcion, responsableArea } = req.body;
 
-  if (!nombreArea) {
+  if (!nombreArea?.trim()) {
     return res.status(400).json({ error: 'El nombre del área es requerido' });
   }
 
   try {
+    // Verificar si el área existe
+    const areaExists = await pool.query('SELECT idArea FROM Area WHERE idArea = $1', [id]);
+    if (areaExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Área no encontrada' });
+    }
+
     // Verificar si el responsable existe si se proporciona
     if (responsableArea) {
       const empleadoExists = await pool.query(
@@ -652,31 +656,62 @@ app.put('/api/areas/:id', authenticateToken, async (req, res) => {
     const result = await pool.query(
       `UPDATE Area 
        SET nombreArea = $1, 
-           descripcion = $2, 
+           descripcion = COALESCE($2, descripcion), 
            responsableArea = $3
        WHERE idArea = $4
-       RETURNING idArea, nombreArea, descripcion, responsableArea`,
+       RETURNING *`,
       [
-        nombreArea, 
-        descripcion || '', 
+        nombreArea.trim(), 
+        descripcion?.trim(), 
         responsableArea || null, 
         id
       ]
     );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Área no encontrada' });
-    }
     
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error al actualizar área:', error);
     res.status(500).json({ 
       error: 'Error al actualizar área',
-      details: error.message
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
+
+// Ruta solo para asignar responsable sin pedir nombreArea
+app.put('/api/areas/:id/responsable', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { responsableArea } = req.body;
+
+  if (!responsableArea) {
+    return res.status(400).json({ error: 'Debe seleccionar un responsable' });
+  }
+
+  try {
+    const empleadoExists = await pool.query(
+      'SELECT idEmpleado FROM Empleado WHERE idEmpleado = $1',
+      [responsableArea]
+    );
+
+    if (empleadoExists.rows.length === 0) {
+      return res.status(400).json({ error: 'El empleado responsable no existe' });
+    }
+
+    const result = await pool.query(
+      `UPDATE Area 
+       SET responsableArea = $1
+       WHERE idArea = $2
+       RETURNING idArea, responsableArea`,
+      [responsableArea, id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al asignar responsable:', error);
+    res.status(500).json({ error: 'Error al asignar responsable' });
+  }
+});
+
 
 // Añade esta ruta DELETE para eliminar áreas
 app.delete('/api/areas/:id', authenticateToken, async (req, res) => {
@@ -835,68 +870,6 @@ app.post('/api/roles', authenticateToken, async (req, res) => {
   }
 });
 
-// Actualizar rol
-app.put('/api/areas/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  const { nombreArea, descripcion, responsableArea } = req.body;
-
-  if (!nombreArea) {
-    return res.status(400).json({ error: 'El nombre del área es requerido' });
-  }
-
-  try {
-    // Verificar si el responsable existe si se proporciona
-    if (responsableArea) {
-      const empleadoExists = await pool.query(
-        'SELECT idEmpleado FROM Empleado WHERE idEmpleado = $1',
-        [responsableArea]
-      );
-      
-      if (empleadoExists.rows.length === 0) {
-        return res.status(400).json({ error: 'El empleado responsable no existe' });
-      }
-    }
-
-    const result = await pool.query(
-      `UPDATE Area 
-       SET nombreArea = $1, 
-           descripcion = $2, 
-           responsableArea = $3
-       WHERE idArea = $4
-       RETURNING 
-         idArea AS "idArea", 
-         COALESCE(nombreArea, '') AS "nombreArea", 
-         COALESCE(descripcion, '') AS "descripcion", 
-         responsableArea AS "responsableArea"`,
-      [
-        nombreArea, 
-        descripcion || '', 
-        responsableArea || null, 
-        id
-      ]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Área no encontrada' });
-    }
-    
-    // Asegurar que todos los campos tengan valores
-    const areaActualizada = {
-      idArea: result.rows[0].idArea,
-      nombreArea: result.rows[0].nombreArea || '',
-      descripcion: result.rows[0].descripcion || '',
-      responsableArea: result.rows[0].responsableArea || null
-    };
-    
-    res.json(areaActualizada);
-  } catch (error) {
-    console.error('Error al actualizar área:', error);
-    res.status(500).json({ 
-      error: 'Error al actualizar área',
-      details: error.message
-    });
-  }
-});
 
 // Eliminar rol
 app.delete('/api/roles/:id', authenticateToken, async (req, res) => {
