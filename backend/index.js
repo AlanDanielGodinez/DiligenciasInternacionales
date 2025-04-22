@@ -1119,6 +1119,77 @@ app.delete('/api/clientes/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// ==============================================
+// RUTAS PARA CIUDADES Y PAISES
+// ==============================================
+
+// Obtener todos los países
+app.get('/api/paises', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT idPais, nombrePais FROM Pais ORDER BY nombrePais');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener países:', error);
+    res.status(500).json({ error: 'Error al obtener países' });
+  }
+});
+
+// Crear nuevo país
+app.post('/api/paises', authenticateToken, async (req, res) => {
+  const { nombrePais } = req.body;
+
+  if (!nombrePais?.trim()) {
+    return res.status(400).json({ error: 'El nombre del país es requerido' });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO Pais (nombrePais)
+       VALUES ($1)
+       RETURNING idPais, nombrePais`,
+      [nombrePais.trim()]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al crear país:', error);
+    res.status(500).json({ error: 'Error al crear país' });
+  }
+});
+
+// Obtener todas las ciudades
+app.get('/api/ciudades', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT idCiudad, nombreCiudad FROM Ciudad ORDER BY nombreCiudad');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener ciudades:', error);
+    res.status(500).json({ error: 'Error al obtener ciudades' });
+  }
+});
+
+// Crear nueva ciudad
+app.post('/api/ciudades', authenticateToken, async (req, res) => {
+  const { nombreCiudad } = req.body;
+
+  if (!nombreCiudad?.trim()) {
+    return res.status(400).json({ error: 'El nombre de la ciudad es requerido' });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO Ciudad (nombreCiudad)
+       VALUES ($1)
+       RETURNING idCiudad, nombreCiudad`,
+      [nombreCiudad.trim()]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al crear ciudad:', error);
+    res.status(500).json({ error: 'Error al crear ciudad' });
+  }
+});
+
+
 
 // ==============================================
 // INICIO DEL SERVIDOR

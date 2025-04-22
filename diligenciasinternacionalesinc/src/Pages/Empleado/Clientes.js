@@ -154,15 +154,12 @@ const ClientesTable = () => {
       <ModalCliente 
         mostrar={mostrarModal}
         cerrar={() => {
-          setMostrarModal(false);
-          setClienteActual({});
+            setMostrarModal(false);      // 🔹 Oculta el modal
+            setClienteActual({});        // 🔹 Limpia el formulario
         }}
         cliente={clienteActual}
-        manejarCambio={(e) =>
-          setClienteActual(prev => ({ ...prev, [e.target.name]: e.target.value }))
-        }
-        guardarCliente={guardarCliente}
-      />
+        onGuardar={guardarCliente}
+        />
     </div>
   );
 };
