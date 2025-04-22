@@ -73,7 +73,7 @@ const SidebarNavigation = () => {
       icon: "🏢",
       items: [
         { name: "Lista de Áreas", path: "/empleado/areas" },
-        { name: "Asignar Empleados", path: "/empleado/asignarroles" }
+        
       ]
     },
     {
@@ -81,7 +81,6 @@ const SidebarNavigation = () => {
       icon: "👨‍💼",
       items: [
         { name: "Lista de Empleados", path: "/empleado/empleados" },
-        { name: "Por Área", path: "/empleados-por-area" },
         { name: "Roles y Permisos", path: "/empleado/roles" },
       ]
     },
