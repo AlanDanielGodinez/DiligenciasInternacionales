@@ -90,17 +90,19 @@
     // Filtrado de empleados
     useEffect(() => {
       if (!listaEmpleados.length) return;
-      
+    
       const termino = terminoBusqueda.toLowerCase();
+    
       const resultados = listaEmpleados.filter(emp => 
         (emp.nombreEmpleado?.toLowerCase() || '').includes(termino) || 
         (emp.apellidoPaternoEmpleado?.toLowerCase() || '').includes(termino) ||
-        (emp.correoEmpleado?.toLowerCase() || '').includes(termino)
+        (emp.correoEmpleado?.toLowerCase() || '').includes(termino) ||
+        (emp.nombreArea?.toLowerCase() || '').includes(termino) // 👉 AÑADIR ESTO
       );
-      
-      
+    
       setEmpleadosFiltrados(resultados);
     }, [terminoBusqueda, listaEmpleados]);
+    
 
     // Manejadores de eventos
     const manejarCambioInput = (e) => {
