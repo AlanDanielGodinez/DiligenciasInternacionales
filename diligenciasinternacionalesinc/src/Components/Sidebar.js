@@ -45,7 +45,7 @@ const SidebarNavigation = () => {
       icon: "📋",
       items: [
         { name: "Tipos de Trámites", path: "/tramites" },
-        { name: "Nueva Solicitud", path: "/SolicitudForm" },
+        { name: "Nueva Solicitud", path: "/empleado/solicitudform" },
         { name: "Solicitudes Activas", path: "/solicitudes" },
         { name: "Calendario de Plazos", path: "/calendario" }
       ]
@@ -72,7 +72,7 @@ const SidebarNavigation = () => {
       title: "Áreas",
       icon: "🏢",
       items: [
-        { name: "Lista de Áreas", path: "/Areas" },
+        { name: "Lista de Áreas", path: "/empleado/areas" },
         { name: "Asignar Empleados", path: "/asignar-empleados" }
       ]
     },
@@ -80,9 +80,9 @@ const SidebarNavigation = () => {
       title: "Empleados",
       icon: "👨‍💼",
       items: [
-        { name: "Lista de Empleados", path: "/Empleados" },
+        { name: "Lista de Empleados", path: "/empleado/empleados" },
         { name: "Por Área", path: "/empleados-por-area" },
-        { name: "Roles y Permisos", path: "/Roles" },
+        { name: "Roles y Permisos", path: "/empleado/roles" },
       ]
     },
     {
