@@ -12,6 +12,7 @@ import Areas from "./Pages/Empleado/Areas";
 import Empleados from "./Pages/Empleado/Empleados";
 import Roles from "./Pages/Empleado/Roles";
 import AsignarRoles from "./Pages/Empleado/AsigancionRoles";
+import Clientes from "./Pages/Empleado/Clientes";
 
 import "./App.css";
 
@@ -35,6 +36,7 @@ import '../src/Styles/Empleados.css';
 import '../src/Styles/Roles.css';
 import '../src/Styles/AsignarRoles.css';
 import '../src/Styles/AsignarResponsableModal.css';
+import '../src/Styles/Clientes.css';
 import EditarArea from "./Pages/Empleado/EditarArea";
 
 
@@ -60,6 +62,8 @@ function App() {
               <Route path="/empleado/empleados" element={<Empleados />} />
               <Route path="/empleado/asignarroles" element={<AsignarRoles />} />
               <Route path="/empleado/roles" element={<Roles />} />
+              <Route path="/empleado/clientes" element={<Clientes />} />
+              {/* Aquí puedes agregar más rutas protegidas */}
             </Route>
             
             <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
