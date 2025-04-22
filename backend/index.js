@@ -942,6 +942,182 @@ app.get('/api/tramites', authenticateToken, async (req, res) => {
 });
 
 
+// ==============================================
+// RUTAS PARA CLIENTES
+// ==============================================
+
+
+// ==============================================
+// RUTAS PARA CLIENTES
+// ==============================================
+
+// Obtener todos los clientes
+app.get('/api/clientes', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT idCliente, nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente, telefono, identificacionunicanacional 
+      FROM Cliente
+      ORDER BY nombreCliente
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener clientes:', error);
+    res.status(500).json({ error: 'Error al obtener clientes' });
+  }
+});
+
+// Crear nuevo cliente
+app.post('/api/clientes', authenticateToken, async (req, res) => {
+  const {
+    nombreCliente,
+    apellidoPaternoCliente,
+    apellidoMaternoCliente,
+    sexo,
+    edad,
+    telefono,
+    estado_civil,
+    identificacionunicanacional,
+    Domicilio,
+    condicionesEspeciales,
+    fechaNacimiento,
+    municipioNacimiento,
+    EstadoNacimiento,
+    PaisNacimiento,
+    idCiudad,
+    idPais
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO Cliente (
+        nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente,
+        sexo, edad, telefono, estado_civil, identificacionunicanacional,
+        Domicilio, condicionesEspeciales, fechaNacimiento, municipioNacimiento,
+        EstadoNacimiento, PaisNacimiento, idCiudad, idPais
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+                $9, $10, $11, $12, $13, $14, $15, $16)
+       RETURNING idCliente, nombreCliente`,
+      [
+        nombreCliente,
+        apellidoPaternoCliente,
+        apellidoMaternoCliente,
+        sexo,
+        edad,
+        telefono,
+        estado_civil,
+        identificacionunicanacional,
+        Domicilio,
+        condicionesEspeciales,
+        fechaNacimiento,
+        municipioNacimiento,
+        EstadoNacimiento,
+        PaisNacimiento,
+        idCiudad,
+        idPais
+      ]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al crear cliente:', error);
+    res.status(500).json({ error: 'Error al crear cliente' });
+  }
+});
+
+// Actualizar cliente
+app.put('/api/clientes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const {
+    nombreCliente,
+    apellidoPaternoCliente,
+    apellidoMaternoCliente,
+    sexo,
+    edad,
+    telefono,
+    estado_civil,
+    identificacionunicanacional,
+    Domicilio,
+    condicionesEspeciales,
+    fechaNacimiento,
+    municipioNacimiento,
+    EstadoNacimiento,
+    PaisNacimiento,
+    idCiudad,
+    idPais
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE Cliente SET
+        nombreCliente = $1,
+        apellidoPaternoCliente = $2,
+        apellidoMaternoCliente = $3,
+        sexo = $4,
+        edad = $5,
+        telefono = $6,
+        estado_civil = $7,
+        identificacionunicanacional = $8,
+        Domicilio = $9,
+        condicionesEspeciales = $10,
+        fechaNacimiento = $11,
+        municipioNacimiento = $12,
+        EstadoNacimiento = $13,
+        PaisNacimiento = $14,
+        idCiudad = $15,
+        idPais = $16
+      WHERE idCliente = $17
+      RETURNING idCliente`,
+      [
+        nombreCliente,
+        apellidoPaternoCliente,
+        apellidoMaternoCliente,
+        sexo,
+        edad,
+        telefono,
+        estado_civil,
+        identificacionunicanacional,
+        Domicilio,
+        condicionesEspeciales,
+        fechaNacimiento,
+        municipioNacimiento,
+        EstadoNacimiento,
+        PaisNacimiento,
+        idCiudad,
+        idPais,
+        id
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente no encontrado' });
+    }
+
+    res.json({ success: true, message: 'Cliente actualizado', idCliente: result.rows[0].idCliente });
+  } catch (error) {
+    console.error('Error al actualizar cliente:', error);
+    res.status(500).json({ error: 'Error al actualizar cliente' });
+  }
+});
+
+// Eliminar cliente
+app.delete('/api/clientes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      'DELETE FROM Cliente WHERE idCliente = $1 RETURNING idCliente',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente no encontrado' });
+    }
+
+    res.json({ success: true, message: 'Cliente eliminado', idCliente: result.rows[0].idCliente });
+  } catch (error) {
+    console.error('Error al eliminar cliente:', error);
+    res.status(500).json({ error: 'Error al eliminar cliente' });
+  }
+});
 
 
 // ==============================================

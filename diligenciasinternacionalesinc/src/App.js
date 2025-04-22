@@ -18,6 +18,7 @@ import "./App.css";
 
 // Importaciones de estilos
 import "../src/Styles/Navbar.css";
+import "../src/Styles/ModalCliente.css";
 import "../src/Styles/Sidebar.css";
 import "../src/Styles/Sidebarempleado.css";
 import "../src/Styles/Dashboard.css";
