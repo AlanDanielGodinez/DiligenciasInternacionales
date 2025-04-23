@@ -442,8 +442,13 @@ app.post('/api/empleados', authenticateToken, async (req, res) => {
       }
     }
 
-    // Contraseña temporal
-    const hashedPassword = await bcrypt.hash('Temp1234', 10);
+    // Validar contraseña
+  if (!req.body.password || req.body.password.trim().length < 6) {
+    return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+  }
+
+  const hashedPassword = await bcrypt.hash(req.body.password.trim(), 10);
+
 
     // Insertar empleado
     const result = await pool.query(
@@ -452,21 +457,23 @@ app.post('/api/empleados', authenticateToken, async (req, res) => {
         apellidoPaternoEmpleado, 
         apellidoMaternoEmpleado,
         correoEmpleado, 
+        email,
         idRol, 
         idArea,
         password
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING idempleado
-`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING idempleado`,
       [
         nombreEmpleado.trim(),
         apellidoPaternoEmpleado.trim(),
         apellidoMaternoEmpleado?.trim() || null,
         correoEmpleado.trim().toLowerCase(),
+        correoEmpleado.trim().toLowerCase(), // para campo email
         idRol,
         idArea || null,
         hashedPassword
       ]
+
     );
 
     const nuevoId = result.rows[0].idEmpleado;
