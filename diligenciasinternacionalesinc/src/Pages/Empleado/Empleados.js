@@ -134,9 +134,11 @@
           apellidoPaternoEmpleado: nuevoEmpleado.apellidoPaternoEmpleado,
           apellidoMaternoEmpleado: nuevoEmpleado.apellidoMaternoEmpleado,
           correoEmpleado: nuevoEmpleado.correoEmpleado,
+          password: nuevoEmpleado.password, // <== Agrega esto
           idRol: nuevoEmpleado.idRol,
-          idArea: nuevoEmpleado.idArea || null // Envía null si no hay área seleccionada
+          idArea: nuevoEmpleado.idArea || null
         };
+        
     
         const respuesta = await api.post('/empleados', empleadoParaEnviar);
     
@@ -170,9 +172,8 @@
           idArea: ''
         });
         
-        setMostrarModal(false);
-        setError('Empleado creado exitosamente!');
-        setTimeout(() => setError(''), 3000);
+        setTimeout(() => window.location.reload(), 1000);
+
         
       } catch (err) {
         console.error('Error al crear empleado:', err);
@@ -621,6 +622,7 @@
                     className="boton-cancelar"
                     onClick={() => {
                       setMostrarModal(false);
+                      window.location.reload();
                       setError('');
                     }}
                   >

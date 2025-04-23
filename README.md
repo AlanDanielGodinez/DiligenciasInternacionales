@@ -216,6 +216,12 @@ CREATE TABLE Area (
 ALTER TABLE Empleado ADD COLUMN idArea INT REFERENCES Area(idArea);
 ALTER TABLE Area ALTER COLUMN responsableArea DROP NOT NULL;
 ALTER TABLE Empleado ALTER COLUMN password DROP NOT NULL;
+ALTER TABLE Empleado
+ADD COLUMN email VARCHAR(255); 
+UPDATE Empleado
+SET email = correoEmpleado
+WHERE email IS NULL;
+
 
 -- Índices para mejorar el rendimiento
 CREATE INDEX idx_cliente_id ON Cliente(idCliente);
