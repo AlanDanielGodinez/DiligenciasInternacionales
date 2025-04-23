@@ -71,54 +71,44 @@ const Login = ({ initialMode = 'login' }) => {
   
     if (isLogin) {
       try {
-        console.log('Intentando login con:', { email: formData.email }); // Log de depuración
-        
         const response = await axios.post('http://localhost:5000/api/login', {
           email: formData.email,
           password: formData.password
         });
   
-        console.log('Respuesta del servidor:', response.data); // Log completo de la respuesta
-        
-        // Verificación detallada de los datos recibidos
-        if (!response.data.token || !response.data.user) {
-          console.error('Error: Respuesta del servidor incompleta');
-          throw new Error('Datos de autenticación incompletos');
+        // Manejar contraseña temporal
+        if (response.data.tempPassword) {
+          return navigate('/change-password', { 
+            state: { 
+              email: formData.email,
+              requiresPasswordChange: true 
+            } 
+          });
         }
-  
-        console.log('Login exitoso. Datos del usuario:', {
-          id: response.data.user.id,
-          nombre: response.data.user.nombre,
-          email: response.data.user.email,
-          rol: response.data.user.rol
-        });
   
         localStorage.setItem('authToken', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
   
-        // Verifica qué se guardó en localStorage
-        console.log('Datos guardados en localStorage:', {
-          token: localStorage.getItem('authToken'),
-          user: localStorage.getItem('user')
-        });
-  
-        // Redirigir según el rol
-        if (response.data.user.rol === 'Administrador') {
-          console.log('Redirigiendo a /home (Administrador)');
-          navigate('/home');
-        } else {
-          console.log('Redirigiendo a /home (Empleado)');
-          navigate('/home'); // Todos van a /home ahora
-        }
+        // Redirigir a /home para todos los usuarios
+        navigate('/home');
   
       } catch (err) {
-        console.error('Error en login:', {
-          error: err,
-          response: err.response,
-          message: err.message
-        });
+        let errorMessage = 'Credenciales inválidas. Intente nuevamente.';
         
-        setError(err.response?.data?.error || 'Credenciales inválidas. Intente nuevamente.');
+        if (err.response) {
+          if (err.response.status === 403 && err.response.data.tempPassword) {
+            // Manejar redirección para cambio de contraseña
+            return navigate('/change-password', { 
+              state: { 
+                email: formData.email,
+                requiresPasswordChange: true 
+              } 
+            });
+          }
+          errorMessage = err.response.data.error || errorMessage;
+        }
+        
+        setError(errorMessage);
         setFormData(prev => ({ ...prev, password: '' }));
       } finally {
         setIsSubmitting(false);

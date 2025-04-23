@@ -8,6 +8,7 @@ const { Pool } = require('pg');
 // Configuración inicial
 const app = express();
 const PORT = process.env.PORT || 5000;
+const SERVER_TOKEN_VERSION = Date.now(); // Cambia cada vez que el servidor se reinicia
 
 // Configuración de la base de datos
 const pool = new Pool({
@@ -101,16 +102,15 @@ function authenticateToken(req, res, next) {
 
   jwt.verify(token, process.env.JWT_SECRET || 'secret_key', (err, user) => {
     if (err) {
-      console.error(`[Auth Error] Token inválido: ${err.message}`);
       return res.status(403).json({ error: 'Token inválido' });
     }
     
-    req.user = user;
-    
-    if (shouldLog) {
-      console.log(`[Auth] Usuario autenticado: ${user.email} (ID: ${user.id})`);
+    // Verificar versión del token
+    if (user.version !== SERVER_TOKEN_VERSION) {
+      return res.status(403).json({ error: 'Sesión inválida. Por favor inicie sesión nuevamente.' });
     }
     
+    req.user = user;
     next();
   });
 }
@@ -134,10 +134,9 @@ app.get('/api/verify-token', authenticateToken, (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
-  console.log('Intento de login recibido para email:', email); // Log de depuración
+  console.log('Intento de login recibido para email:', email);
 
   if (!email || !password) {
-    console.log('Error: Email o contraseña faltantes');
     return res.status(400).json({ error: 'Email y contraseña son requeridos' });
   }
 
@@ -146,22 +145,28 @@ app.post('/api/login', async (req, res) => {
       `SELECT e.*, r.nombrerol 
        FROM empleado e 
        JOIN rol r ON e.idrol = r.idrol 
-       WHERE e.correoempleado = $1 OR e.email = $1`,
+       WHERE (e.correoempleado = $1 OR e.email = $1) 
+       AND e.password IS NOT NULL`,  // Asegurar que tenga contraseña
       [email.toLowerCase().trim()]
     );
 
-    console.log('Resultado de la consulta a la BD:', userQuery.rows[0]); // Log de depuración
-
     if (userQuery.rows.length === 0) {
-      console.log('Error: Usuario no encontrado');
-      return res.status(401).json({ error: 'Credenciales inválidas' });
+      return res.status(401).json({ error: 'Credenciales inválidas o usuario no tiene contraseña establecida' });
     }
 
     const user = userQuery.rows[0];
-    const validPassword = await bcrypt.compare(password, user.password);
+    
+    // Verificar si la contraseña es la temporal
+    const isTempPassword = await bcrypt.compare('Temp1234', user.password);
+    if (isTempPassword) {
+      return res.status(403).json({ 
+        error: 'Debe cambiar su contraseña temporal',
+        tempPassword: true
+      });
+    }
 
+    const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      console.log('Error: Contraseña incorrecta');
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
@@ -169,7 +174,8 @@ app.post('/api/login', async (req, res) => {
       {
         id: user.idempleado,
         email: user.correoempleado || user.email,
-        role: user.nombrerol
+        role: user.nombrerol,
+        version: SERVER_TOKEN_VERSION // Agrega esta línea
       },
       process.env.JWT_SECRET || 'secret_key',
       { expiresIn: '8h' }
@@ -177,23 +183,15 @@ app.post('/api/login', async (req, res) => {
 
     const userData = {
       id: user.idempleado,
-      nombre: user.nombreempleado, // Asegúrate que este campo existe
+      nombre: user.nombreempleado,
       email: user.correoempleado || user.email,
       rol: user.nombrerol
     };
 
-    console.log('Login exitoso. Datos enviados al frontend:', {
-      user: userData,
-      token: token.substring(0, 10) + '...' // Muestra solo parte del token por seguridad
-    });
-
     res.json({ token, user: userData });
 
   } catch (error) {
-    console.error('Error en login:', {
-      message: error.message,
-      stack: error.stack
-    });
+    console.error('Error en login:', error);
     res.status(500).json({ error: 'Error en el servidor' });
   }
 });
