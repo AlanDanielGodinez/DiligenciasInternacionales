@@ -6,10 +6,7 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
   const [errores, setErrores] = useState({});
   const [paises, setPaises] = useState([]);
   const [ciudades, setCiudades] = useState([]);
-  const [mostrarNuevoPais, setMostrarNuevoPais] = useState(false);
-  const [mostrarNuevaCiudad, setMostrarNuevaCiudad] = useState(false);
-  const [nuevoPais, setNuevoPais] = useState('');
-  const [nuevaCiudad, setNuevaCiudad] = useState('');
+  const [paisSeleccionado, setPaisSeleccionado] = useState('');
 
   useEffect(() => {
     if (mostrar) {
@@ -22,7 +19,13 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
 
   const cargarPaises = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/paises');
+      const res = await axios.get('http://localhost:5000/api/paises', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+
+        }
+      });
+      
       setPaises(res.data);
     } catch (err) {
       console.error('Error cargando países:', err);
@@ -31,7 +34,12 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
 
   const cargarCiudades = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/ciudades');
+      const res = await axios.get('http://localhost:5000/api/ciudades', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      
       setCiudades(res.data);
     } catch (err) {
       console.error('Error cargando ciudades:', err);
@@ -41,35 +49,12 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
   const handleChange = e => {
     const { name, value } = e.target;
     setFormulario(prev => ({ ...prev, [name]: value }));
-  };
-
-  const agregarPais = async () => {
-    if (!nuevoPais.trim()) return;
-    try {
-      const res = await axios.post('http://localhost:5000/api/paises', { nombrePais: nuevoPais });
-      setPaises(prev => [...prev, res.data]);
-      setFormulario(prev => ({ ...prev, idPais: res.data.idPais }));
-      setNuevoPais('');
-      setMostrarNuevoPais(false);
-    } catch (err) {
-      console.error('Error al agregar país:', err);
+    if (name === 'idPais') {
+      const paisNombre = paises.find(p => p.idPais.toString() === value)?.nombrePais;
+      setPaisSeleccionado(paisNombre);
     }
   };
 
-  const agregarCiudad = async () => {
-    if (!nuevaCiudad.trim()) return;
-    try {
-      const res = await axios.post('http://localhost:5000/api/ciudades', { nombreCiudad: nuevaCiudad });
-      setCiudades(prev => [...prev, res.data]);
-      setFormulario(prev => ({ ...prev, idCiudad: res.data.idCiudad }));
-      setNuevaCiudad('');
-      setMostrarNuevaCiudad(false);
-    } catch (err) {
-      console.error('Error al agregar ciudad:', err);
-    }
-  };
-
-  // 👀 VALIDACIÓN GENERAL
   const validarFormulario = () => {
     const nuevosErrores = {};
 
@@ -79,10 +64,7 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
     if (!formulario.apellidoPaternoCliente?.trim() || formulario.apellidoPaternoCliente.length < 2) {
       nuevosErrores.apellidoPaternoCliente = 'El apellido paterno es obligatorio';
     }
-    if (!formulario.identificacionunicanacional?.trim() || formulario.identificacionunicanacional.length < 6) {
-      nuevosErrores.identificacionunicanacional = 'La identificación debe tener al menos 6 caracteres';
-    }
-    if (!formulario.telefono?.match(/^\d{10,}$/)) {
+    if (!formulario.telefono?.match(/^[0-9]{10,}$/)) {
       nuevosErrores.telefono = 'El teléfono debe tener al menos 10 dígitos numéricos';
     }
     if (formulario.edad && (formulario.edad < 0 || formulario.edad > 120)) {
@@ -96,6 +78,29 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
     }
     if (!formulario.idCiudad) {
       nuevosErrores.idCiudad = 'Debes seleccionar una ciudad';
+    }
+
+    const identificacion = formulario.identificacionunicanacional?.trim() || '';
+    if (!identificacion) {
+      nuevosErrores.identificacionunicanacional = 'La identificación es obligatoria';
+    } else {
+      const len = identificacion.length;
+      switch (paisSeleccionado?.toLowerCase()) {
+        case 'mexico':
+          if (len < 13 || len > 13) nuevosErrores.identificacionunicanacional = 'La CURP debe tener 13 caracteres';
+          break;
+        case 'el salvador':
+        case 'guatemala':
+        case 'honduras':
+          if (len < 6) nuevosErrores.identificacionunicanacional = 'La identificación debe tener mínimo 6 caracteres';
+          break;
+        case 'estados unidos':
+          if (len < 9) nuevosErrores.identificacionunicanacional = 'El SSN debe tener mínimo 9 caracteres';
+          break;
+        default:
+          if (len < 6) nuevosErrores.identificacionunicanacional = 'Identificación demasiado corta';
+          break;
+      }
     }
 
     setErrores(nuevosErrores);
@@ -132,6 +137,14 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
             {errores.telefono && <span className="error">{errores.telefono}</span>}
 
             <input type="text" name="estado_civil" placeholder="Estado Civil" value={formulario.estado_civil || ''} onChange={handleChange} />
+
+            {/* Combo País antes de la identificación */}
+            <select name="idPais" value={formulario.idPais || ''} onChange={handleChange}>
+              <option value="">Seleccionar País</option>
+              {paises.map(p => <option key={p.idPais} value={p.idPais}>{p.nombrepais}</option>)}
+            </select>
+            {errores.idPais && <span className="error">{errores.idPais}</span>}
+
             <input type="text" name="identificacionunicanacional" placeholder="Identificación Nacional" value={formulario.identificacionunicanacional || ''} onChange={handleChange} />
             {errores.identificacionunicanacional && <span className="error">{errores.identificacionunicanacional}</span>}
 
@@ -144,35 +157,11 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
             <input type="text" name="EstadoNacimiento" placeholder="Estado de Nacimiento" value={formulario.EstadoNacimiento || ''} onChange={handleChange} />
             <input type="text" name="PaisNacimiento" placeholder="País de Nacimiento" value={formulario.PaisNacimiento || ''} onChange={handleChange} />
 
-            <div className="combo-container">
-              <select name="idPais" value={formulario.idPais || ''} onChange={handleChange}>
-                <option value="">Seleccionar País</option>
-                {paises.map(p => <option key={p.idPais} value={p.idPais}>{p.nombrePais}</option>)}
-              </select>
-              <button type="button" onClick={() => setMostrarNuevoPais(!mostrarNuevoPais)}>+</button>
-            </div>
-            {errores.idPais && <span className="error">{errores.idPais}</span>}
-            {mostrarNuevoPais && (
-              <div className="mini-form">
-                <input type="text" value={nuevoPais} onChange={e => setNuevoPais(e.target.value)} placeholder="Nuevo país" />
-                <button type="button" onClick={agregarPais}>Guardar</button>
-              </div>
-            )}
-
-            <div className="combo-container">
-              <select name="idCiudad" value={formulario.idCiudad || ''} onChange={handleChange}>
-                <option value="">Seleccionar Ciudad</option>
-                {ciudades.map(c => <option key={c.idCiudad} value={c.idCiudad}>{c.nombreCiudad}</option>)}
-              </select>
-              <button type="button" onClick={() => setMostrarNuevaCiudad(!mostrarNuevaCiudad)}>+</button>
-            </div>
+            <select name="idCiudad" value={formulario.idCiudad || ''} onChange={handleChange}>
+              <option value="">Seleccionar Ciudad</option>
+              {ciudades.map(c => <option key={c.idCiudad} value={c.idCiudad}>{c.nombreciudad}</option>)}
+            </select>
             {errores.idCiudad && <span className="error">{errores.idCiudad}</span>}
-            {mostrarNuevaCiudad && (
-              <div className="mini-form">
-                <input type="text" value={nuevaCiudad} onChange={e => setNuevaCiudad(e.target.value)} placeholder="Nueva ciudad" />
-                <button type="button" onClick={agregarCiudad}>Guardar</button>
-              </div>
-            )}
           </div>
 
           <div className="acciones-modal">
