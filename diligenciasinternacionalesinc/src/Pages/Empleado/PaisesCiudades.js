@@ -1,4 +1,4 @@
-// GestionPaisesCiudades.js
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FaTrash } from 'react-icons/fa';
@@ -13,20 +13,32 @@ const GestionPaisesCiudades = () => {
   const token = localStorage.getItem('authToken');
   const headers = { Authorization: `Bearer ${token}` };
 
-  const cargarDatos = async () => {
+  const cargarPaises = async () => {
     try {
       const resPaises = await axios.get('http://localhost:5000/api/paises', { headers });
       setPaises(resPaises.data);
-      const resCiudades = await axios.get('http://localhost:5000/api/ciudades', { headers });
+    } catch (err) {
+      console.error('Error al cargar países:', err);
+    }
+  };
+
+  const cargarCiudadesPorPais = async (idPais) => {
+    if (!idPais) return setCiudades([]);
+    try {
+      const resCiudades = await axios.get(`http://localhost:5000/api/paises/${idPais}/ciudades`, { headers });
       setCiudades(resCiudades.data);
     } catch (err) {
-      console.error('Error al cargar datos:', err);
+      console.error('Error al cargar ciudades:', err);
     }
   };
 
   useEffect(() => {
-    cargarDatos();
+    cargarPaises();
   }, []);
+
+  useEffect(() => {
+    cargarCiudadesPorPais(paisParaCiudad);
+  }, [paisParaCiudad]);
 
   const agregarPais = async () => {
     if (!nuevoPais.trim()) return;
