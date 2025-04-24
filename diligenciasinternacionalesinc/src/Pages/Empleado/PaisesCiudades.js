@@ -1,26 +1,26 @@
+// GestionPaisesCiudades.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FaTrash } from 'react-icons/fa';
 
-const PaisesCiudadesPage = () => {
+const GestionPaisesCiudades = () => {
   const [paises, setPaises] = useState([]);
   const [ciudades, setCiudades] = useState([]);
   const [nuevoPais, setNuevoPais] = useState('');
   const [nuevaCiudad, setNuevaCiudad] = useState('');
+  const [paisParaCiudad, setPaisParaCiudad] = useState('');
+
+  const token = localStorage.getItem('authToken');
+  const headers = { Authorization: `Bearer ${token}` };
 
   const cargarDatos = async () => {
     try {
-      const paisesRes = await axios.get('http://localhost:5000/api/paises', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-      });
-      setPaises(paisesRes.data);
-
-      const ciudadesRes = await axios.get('http://localhost:5000/api/ciudades', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-      });
-      setCiudades(ciudadesRes.data);
+      const resPaises = await axios.get('http://localhost:5000/api/paises', { headers });
+      setPaises(resPaises.data);
+      const resCiudades = await axios.get('http://localhost:5000/api/ciudades', { headers });
+      setCiudades(resCiudades.data);
     } catch (err) {
-      console.error('Error cargando datos:', err);
+      console.error('Error al cargar datos:', err);
     }
   };
 
@@ -31,9 +31,7 @@ const PaisesCiudadesPage = () => {
   const agregarPais = async () => {
     if (!nuevoPais.trim()) return;
     try {
-      const res = await axios.post('http://localhost:5000/api/paises', { nombrePais: nuevoPais }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-      });
+      const res = await axios.post('http://localhost:5000/api/paises', { nombrePais: nuevoPais }, { headers });
       setPaises([...paises, res.data]);
       setNuevoPais('');
     } catch (err) {
@@ -42,11 +40,12 @@ const PaisesCiudadesPage = () => {
   };
 
   const agregarCiudad = async () => {
-    if (!nuevaCiudad.trim()) return;
+    if (!nuevaCiudad.trim() || !paisParaCiudad) return;
     try {
-      const res = await axios.post('http://localhost:5000/api/ciudades', { nombreCiudad: nuevaCiudad }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-      });
+      const res = await axios.post('http://localhost:5000/api/ciudades', {
+        nombreCiudad: nuevaCiudad,
+        idPais: paisParaCiudad
+      }, { headers });
       setCiudades([...ciudades, res.data]);
       setNuevaCiudad('');
     } catch (err) {
@@ -55,120 +54,90 @@ const PaisesCiudadesPage = () => {
   };
 
   const eliminarPais = async (id) => {
-    if (!id || isNaN(id)) return console.error('ID de país inválido:', id);
-    if (!window.confirm('¿Estás seguro de eliminar este país?')) return;
-
-    try {
-      await axios.delete(`http://localhost:5000/api/paises/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-      });
-      setPaises(paises.filter(p => (p.idPais || p.idpais) !== id));
-    } catch (err) {
-      console.error('Error al eliminar país:', err);
+    if (window.confirm('¿Eliminar este país?')) {
+      try {
+        await axios.delete(`http://localhost:5000/api/paises/${id}`, { headers });
+        setPaises(paises.filter(p => (p.idPais || p.idpais) !== id));
+      } catch (err) {
+        console.error('Error al eliminar país:', err);
+      }
     }
   };
 
   const eliminarCiudad = async (id) => {
-    if (!id || isNaN(id)) return console.error('ID de ciudad inválido:', id);
-    if (!window.confirm('¿Estás seguro de eliminar esta ciudad?')) return;
-
-    try {
-      await axios.delete(`http://localhost:5000/api/ciudades/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-      });
-      setCiudades(ciudades.filter(c => (c.idCiudad || c.idciudad) !== id));
-    } catch (err) {
-      console.error('Error al eliminar ciudad:', err);
+    if (window.confirm('¿Eliminar esta ciudad?')) {
+      try {
+        await axios.delete(`http://localhost:5000/api/ciudades/${id}`, { headers });
+        setCiudades(ciudades.filter(c => (c.idCiudad || c.idciudad) !== id));
+      } catch (err) {
+        console.error('Error al eliminar ciudad:', err);
+      }
     }
   };
 
   return (
-    <div className="gestion-container">
-      <h1 className="titulo-gestion">Gestión de Países y Ciudades</h1>
+    <div className="gestion-paisesciudades-container">
+      <h1 className="gestion-paisesciudades-titulo">Gestión de Países y Ciudades</h1>
 
-      <div className="seccion-doble">
+      <div className="gestion-paisesciudades-panel">
         {/* Países */}
-        <div className="gestion-card">
+        <div className="gestion-paisesciudades-card">
           <h2>Países</h2>
-          <div className="form-nuevo">
+          <div className="gestion-paisesciudades-form">
             <input
               type="text"
-              placeholder="Nuevo país"
               value={nuevoPais}
               onChange={(e) => setNuevoPais(e.target.value)}
+              placeholder="Nombre del país"
             />
             <button onClick={agregarPais}>Agregar</button>
           </div>
-
-          <table className="tabla-gestion">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Nombre del País</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {paises.map((pais, idx) => {
-                const id = pais.idPais || pais.idpais;
-                return (
-                  <tr key={id}>
-                    <td>{idx + 1}</td>
-                    <td>{pais.nombrePais || pais.nombrepais}</td>
-                    <td>
-                      <button className="btn-eliminar" onClick={() => eliminarPais(id)}>
-                        <FaTrash />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <ul>
+            {paises.map((p) => (
+              <li key={p.idPais || p.idpais}>
+                {p.nombrePais || p.nombrepais}
+                <button className="btn-eliminar" onClick={() => eliminarPais(p.idPais || p.idpais)}>
+                  <FaTrash />
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* Ciudades */}
-        <div className="gestion-card">
+        <div className="gestion-paisesciudades-card">
           <h2>Ciudades</h2>
-          <div className="form-nuevo">
+          <div className="gestion-paisesciudades-form">
             <input
               type="text"
-              placeholder="Nueva ciudad"
               value={nuevaCiudad}
               onChange={(e) => setNuevaCiudad(e.target.value)}
+              placeholder="Nombre de la ciudad"
             />
+            <select value={paisParaCiudad} onChange={(e) => setPaisParaCiudad(e.target.value)}>
+              <option value="">Selecciona un país</option>
+              {paises.map((p) => (
+                <option key={p.idPais || p.idpais} value={p.idPais || p.idpais}>
+                  {p.nombrePais || p.nombrepais}
+                </option>
+              ))}
+            </select>
             <button onClick={agregarCiudad}>Agregar</button>
           </div>
-
-          <table className="tabla-gestion">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Nombre de la Ciudad</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {ciudades.map((ciudad, idx) => {
-                const id = ciudad.idCiudad || ciudad.idciudad;
-                return (
-                  <tr key={id}>
-                    <td>{idx + 1}</td>
-                    <td>{ciudad.nombreCiudad || ciudad.nombreciudad}</td>
-                    <td>
-                      <button className="btn-eliminar" onClick={() => eliminarCiudad(id)}>
-                        <FaTrash />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <ul>
+            {ciudades.map((c) => (
+              <li key={c.idCiudad || c.idciudad}>
+                {c.nombreCiudad || c.nombreciudad}
+                <button className="btn-eliminar" onClick={() => eliminarCiudad(c.idCiudad || c.idciudad)}>
+                  <FaTrash />
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>
   );
 };
 
-export default PaisesCiudadesPage;
+export default GestionPaisesCiudades;
