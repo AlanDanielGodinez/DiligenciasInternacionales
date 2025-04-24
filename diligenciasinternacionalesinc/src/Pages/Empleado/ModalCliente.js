@@ -6,14 +6,12 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
   const [errores, setErrores] = useState({});
   const [paises, setPaises] = useState([]);
   const [ciudades, setCiudades] = useState([]);
-  const [paisSeleccionado, setPaisSeleccionado] = useState('');
 
   useEffect(() => {
     if (mostrar) {
       setFormulario(cliente || {});
       setErrores({});
       cargarPaises();
-      cargarCiudades();
     }
   }, [mostrar, cliente]);
 
@@ -22,42 +20,42 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
       const res = await axios.get('http://localhost:5000/api/paises', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
-
         }
       });
-      
       setPaises(res.data);
     } catch (err) {
       console.error('Error cargando países:', err);
     }
   };
 
-  const cargarCiudades = async () => {
+  const cargarCiudadesPorPais = async (idPais) => {
     try {
-      const res = await axios.get('http://localhost:5000/api/ciudades', {
+      const res = await axios.get(`http://localhost:5000/api/paises/${idPais}/ciudades`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }
       });
-      
       setCiudades(res.data);
     } catch (err) {
       console.error('Error cargando ciudades:', err);
+      setCiudades([]);
     }
   };
 
   const handleChange = e => {
     const { name, value } = e.target;
     setFormulario(prev => ({ ...prev, [name]: value }));
+
     if (name === 'idPais') {
-      const paisNombre = paises.find(p => p.idPais.toString() === value)?.nombrePais;
-      setPaisSeleccionado(paisNombre);
+      cargarCiudadesPorPais(value);
+      setFormulario(prev => ({ ...prev, idCiudad: '' }));
     }
   };
 
   const validarFormulario = () => {
     const nuevosErrores = {};
 
+    // Validaciones básicas
     if (!formulario.nombreCliente?.trim() || formulario.nombreCliente.length < 2) {
       nuevosErrores.nombreCliente = 'El nombre es obligatorio (mínimo 2 letras)';
     }
@@ -80,26 +78,24 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
       nuevosErrores.idCiudad = 'Debes seleccionar una ciudad';
     }
 
+    // Validar identificación según el país de nacimiento
     const identificacion = formulario.identificacionunicanacional?.trim() || '';
+    const paisNacimiento = formulario.PaisNacimiento?.toLowerCase() || '';
     if (!identificacion) {
       nuevosErrores.identificacionunicanacional = 'La identificación es obligatoria';
     } else {
       const len = identificacion.length;
-      switch (paisSeleccionado?.toLowerCase()) {
-        case 'mexico':
-          if (len < 13 || len > 13) nuevosErrores.identificacionunicanacional = 'La CURP debe tener 13 caracteres';
-          break;
-        case 'el salvador':
-        case 'guatemala':
-        case 'honduras':
-          if (len < 6) nuevosErrores.identificacionunicanacional = 'La identificación debe tener mínimo 6 caracteres';
-          break;
-        case 'estados unidos':
-          if (len < 9) nuevosErrores.identificacionunicanacional = 'El SSN debe tener mínimo 9 caracteres';
-          break;
-        default:
-          if (len < 6) nuevosErrores.identificacionunicanacional = 'Identificación demasiado corta';
-          break;
+      if (paisNacimiento.includes('mexico') && len !== 13) {
+        nuevosErrores.identificacionunicanacional = 'La CURP debe tener 13 caracteres';
+      } else if (
+        ['el salvador', 'guatemala', 'honduras'].some(p => paisNacimiento.includes(p)) &&
+        len < 6
+      ) {
+        nuevosErrores.identificacionunicanacional = 'La identificación debe tener mínimo 6 caracteres';
+      } else if (paisNacimiento.includes('estados unidos') && len < 9) {
+        nuevosErrores.identificacionunicanacional = 'El SSN debe tener mínimo 9 caracteres';
+      } else if (len < 6) {
+        nuevosErrores.identificacionunicanacional = 'Identificación demasiado corta';
       }
     }
 
@@ -122,6 +118,8 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
         <h2>Agregar / Editar Cliente</h2>
         <form onSubmit={handleSubmit}>
           <div className="grid-form">
+            {/* Sección: Datos Personales */}
+            <h3>Datos Personales</h3>
             <input type="text" name="nombreCliente" placeholder="Nombre" value={formulario.nombreCliente || ''} onChange={handleChange} />
             {errores.nombreCliente && <span className="error">{errores.nombreCliente}</span>}
 
@@ -129,27 +127,16 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
             {errores.apellidoPaternoCliente && <span className="error">{errores.apellidoPaternoCliente}</span>}
 
             <input type="text" name="apellidoMaternoCliente" placeholder="Apellido Materno" value={formulario.apellidoMaternoCliente || ''} onChange={handleChange} />
-            <input type="text" name="sexo" placeholder="Sexo" value={formulario.sexo || ''} onChange={handleChange} />
+
             <input type="number" name="edad" placeholder="Edad" value={formulario.edad || ''} onChange={handleChange} />
             {errores.edad && <span className="error">{errores.edad}</span>}
 
-            <input type="text" name="telefono" placeholder="Teléfono" value={formulario.telefono || ''} onChange={handleChange} />
-            {errores.telefono && <span className="error">{errores.telefono}</span>}
-
+            <input type="text" name="sexo" placeholder="Sexo" value={formulario.sexo || ''} onChange={handleChange} />
             <input type="text" name="estado_civil" placeholder="Estado Civil" value={formulario.estado_civil || ''} onChange={handleChange} />
-
-            {/* Combo País antes de la identificación */}
-            <select name="idPais" value={formulario.idPais || ''} onChange={handleChange}>
-              <option value="">Seleccionar País</option>
-              {paises.map(p => <option key={p.idPais} value={p.idPais}>{p.nombrepais}</option>)}
-            </select>
-            {errores.idPais && <span className="error">{errores.idPais}</span>}
-
-            <input type="text" name="identificacionunicanacional" placeholder="Identificación Nacional" value={formulario.identificacionunicanacional || ''} onChange={handleChange} />
-            {errores.identificacionunicanacional && <span className="error">{errores.identificacionunicanacional}</span>}
-
-            <input type="text" name="Domicilio" placeholder="Domicilio" value={formulario.Domicilio || ''} onChange={handleChange} />
             <input type="text" name="condicionesEspeciales" placeholder="Condiciones Especiales" value={formulario.condicionesEspeciales || ''} onChange={handleChange} />
+
+            {/* Sección: Datos de Nacimiento */}
+            <h3>Datos de Nacimiento</h3>
             <input type="date" name="fechaNacimiento" value={formulario.fechaNacimiento || ''} onChange={handleChange} />
             {errores.fechaNacimiento && <span className="error">{errores.fechaNacimiento}</span>}
 
@@ -157,11 +144,32 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
             <input type="text" name="EstadoNacimiento" placeholder="Estado de Nacimiento" value={formulario.EstadoNacimiento || ''} onChange={handleChange} />
             <input type="text" name="PaisNacimiento" placeholder="País de Nacimiento" value={formulario.PaisNacimiento || ''} onChange={handleChange} />
 
+            {/* Sección: Ubicación Actual */}
+            <h3>Ubicación Actual</h3>
+            <select name="idPais" value={formulario.idPais || ''} onChange={handleChange}>
+              <option value="">Seleccionar País</option>
+              {paises.map(p => (
+                <option key={p.idPais || p.idpais} value={p.idPais || p.idpais}>
+                  {p.nombrePais || p.nombrepais}
+                </option>
+              ))}
+            </select>
+            {errores.idPais && <span className="error">{errores.idPais}</span>}
+
             <select name="idCiudad" value={formulario.idCiudad || ''} onChange={handleChange}>
               <option value="">Seleccionar Ciudad</option>
-              {ciudades.map(c => <option key={c.idCiudad} value={c.idCiudad}>{c.nombreciudad}</option>)}
+              {ciudades.map(c => (
+                <option key={c.idCiudad || c.idciudad} value={c.idCiudad || c.idciudad}>
+                  {c.nombreCiudad || c.nombreciudad}
+                </option>
+              ))}
             </select>
             {errores.idCiudad && <span className="error">{errores.idCiudad}</span>}
+
+            <input type="text" name="Domicilio" placeholder="Domicilio" value={formulario.Domicilio || ''} onChange={handleChange} />
+
+            <input type="text" name="identificacionunicanacional" placeholder="Identificación Nacional" value={formulario.identificacionunicanacional || ''} onChange={handleChange} />
+            {errores.identificacionunicanacional && <span className="error">{errores.identificacionunicanacional}</span>}
           </div>
 
           <div className="acciones-modal">
