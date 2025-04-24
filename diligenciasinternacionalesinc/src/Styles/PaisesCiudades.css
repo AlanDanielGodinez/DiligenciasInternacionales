@@ -1,86 +1,211 @@
+/* Estilos base */
 .gestion-paisesciudades-container {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 2rem;
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--color-text);
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .gestion-paisesciudades-titulo {
-  font-size: 2rem;
   text-align: center;
+  color: var(--color-primary);
   margin-bottom: 2rem;
-  color: #2c3e50;
+  font-size: 2.2rem;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.gestion-paisesciudades-titulo::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background: var(--color-secondary);
+  border-radius: 3px;
 }
 
 .gestion-paisesciudades-panel {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 2rem;
-  justify-content: center;
-  flex-wrap: wrap;
 }
 
 .gestion-paisesciudades-card {
-  background: #f4f4f4;
+  background: var(--color-background);
+  border-radius: 10px;
   padding: 1.5rem;
-  border-radius: 8px;
-  width: 300px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid var(--color-border);
+}
+
+.gestion-paisesciudades-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .gestion-paisesciudades-card h2 {
-  margin-bottom: 1rem;
-  color: #3498db;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  border-bottom: 2px solid var(--color-secondary);
+  padding-bottom: 0.5rem;
+  display: inline-block;
 }
 
 .gestion-paisesciudades-form {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
 }
 
 .gestion-paisesciudades-form input,
 .gestion-paisesciudades-form select {
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  flex: 1;
+  min-width: 200px;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.gestion-paisesciudades-form input:focus,
+.gestion-paisesciudades-form select:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(159, 211, 246, 0.3);
 }
 
 .gestion-paisesciudades-form button {
-  background-color: #2ecc71;
-  color: white;
+  padding: 0.8rem 1.5rem;
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
   border: none;
-  padding: 0.6rem;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: 0.2s;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
 }
 
 .gestion-paisesciudades-form button:hover {
-  background-color: #27ae60;
+  background-color: var(--color-secondary);
+  color: var(--color-primary);
+  transform: translateY(-2px);
 }
 
-ul {
+.gestion-paisesciudades-card ul {
   list-style: none;
-  padding-left: 0;
+  padding: 0;
+  margin: 0;
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-secondary) var(--color-background);
 }
 
-li {
+.gestion-paisesciudades-card ul::-webkit-scrollbar {
+  width: 8px;
+}
+
+.gestion-paisesciudades-card ul::-webkit-scrollbar-track {
+  background: var(--color-background);
+  border-radius: 10px;
+}
+
+.gestion-paisesciudades-card ul::-webkit-scrollbar-thumb {
+  background-color: var(--color-secondary);
+  border-radius: 10px;
+}
+
+.gestion-paisesciudades-card li {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.4rem;
-  background: white;
-  padding: 0.4rem 0.6rem;
-  border-radius: 4px;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.5rem;
+  background-color: rgba(159, 211, 246, 0.1);
+  border-radius: 6px;
+  border-left: 4px solid var(--color-secondary);
+  transition: all 0.3s ease;
+  animation: slideIn 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.gestion-paisesciudades-card li:nth-child(odd) {
+  background-color: rgba(159, 211, 246, 0.05);
+}
+
+.gestion-paisesciudades-card li:hover {
+  background-color: rgba(159, 211, 246, 0.2);
+  transform: translateX(5px);
 }
 
 .btn-eliminar {
-  background: #e74c3c;
+  background: none;
   border: none;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  color: white;
+  color: var(--color-accent);
   cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .btn-eliminar:hover {
-  background: #c0392b;
+  background-color: rgba(231, 76, 60, 0.1);
+  transform: scale(1.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .gestion-paisesciudades-panel {
+    grid-template-columns: 1fr;
+  }
+  
+  .gestion-paisesciudades-form {
+    flex-direction: column;
+  }
+  
+  .gestion-paisesciudades-form input,
+  .gestion-paisesciudades-form select,
+  .gestion-paisesciudades-form button {
+    width: 100%;
+  }
+}
+
+/* Animaciones para elementos de lista */
+.gestion-paisesciudades-card li {
+  animation-delay: calc(var(--index) * 0.1s);
 }
