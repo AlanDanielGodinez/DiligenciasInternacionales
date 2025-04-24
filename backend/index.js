@@ -951,11 +951,6 @@ app.get('/api/tramites', authenticateToken, async (req, res) => {
 // RUTAS PARA CLIENTES
 // ==============================================
 
-
-// ==============================================
-// RUTAS PARA CLIENTES
-// ==============================================
-
 // Obtener todos los clientes
 app.get('/api/clientes', authenticateToken, async (req, res) => {
   try {
@@ -1125,17 +1120,51 @@ app.delete('/api/clientes/:id', authenticateToken, async (req, res) => {
 });
 
 // ==============================================
-// RUTAS PARA CIUDADES Y PAISES
+// RUTAS PARA PAÍSES
 // ==============================================
 
-// Obtener todos los países
+// Obtener todos los países (lista simple)
 app.get('/api/paises', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query('SELECT idPais, nombrePais FROM Pais ORDER BY nombrePais');
+    const result = await pool.query(
+      'SELECT idPais, nombrePais FROM Pais ORDER BY nombrePais'
+    );
     res.json(result.rows);
   } catch (error) {
     console.error('Error al obtener países:', error);
     res.status(500).json({ error: 'Error al obtener países' });
+  }
+});
+
+// Obtener países con sus ciudades (estructura completa)
+app.get('/api/paises-completos', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        p.idPais, 
+        p.nombrePais,
+        json_agg(
+          json_build_object(
+            'idCiudad', c.idCiudad,
+            'nombreCiudad', c.nombreCiudad
+          ) ORDER BY c.nombreCiudad
+        ) AS ciudades
+      FROM Pais p
+      LEFT JOIN Ciudad c ON p.idPais = c.idPais
+      GROUP BY p.idPais
+      ORDER BY p.nombrePais
+    `);
+    
+    // Transformar el resultado para manejar casos sin ciudades
+    const paises = result.rows.map(pais => ({
+      ...pais,
+      ciudades: pais.ciudades[0] ? pais.ciudades : []
+    }));
+    
+    res.json(paises);
+  } catch (error) {
+    console.error('Error al obtener países con ciudades:', error);
+    res.status(500).json({ error: 'Error al obtener países con ciudades' });
   }
 });
 
@@ -1148,12 +1177,23 @@ app.post('/api/paises', authenticateToken, async (req, res) => {
   }
 
   try {
+    // Verificar si el país ya existe
+    const existe = await pool.query(
+      'SELECT idPais FROM Pais WHERE LOWER(nombrePais) = LOWER($1)',
+      [nombrePais.trim()]
+    );
+    
+    if (existe.rows.length > 0) {
+      return res.status(400).json({ error: 'Ya existe un país con ese nombre' });
+    }
+
     const result = await pool.query(
       `INSERT INTO Pais (nombrePais)
        VALUES ($1)
        RETURNING idPais, nombrePais`,
       [nombrePais.trim()]
     );
+    
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error al crear país:', error);
@@ -1161,32 +1201,164 @@ app.post('/api/paises', authenticateToken, async (req, res) => {
   }
 });
 
-// Obtener todas las ciudades
-app.get('/api/ciudades', authenticateToken, async (req, res) => {
+// Actualizar país
+app.put('/api/paises/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { nombrePais } = req.body;
+
+  if (!nombrePais?.trim()) {
+    return res.status(400).json({ error: 'El nombre del país es requerido' });
+  }
+
   try {
-    const result = await pool.query('SELECT idCiudad, nombreCiudad FROM Ciudad ORDER BY nombreCiudad');
+    // Verificar si el país existe
+    const paisExists = await pool.query(
+      'SELECT idPais FROM Pais WHERE idPais = $1',
+      [id]
+    );
+    
+    if (paisExists.rows.length === 0) {
+      return res.status(404).json({ error: 'País no encontrado' });
+    }
+
+    // Verificar si el nuevo nombre ya existe
+    const nombreExiste = await pool.query(
+      'SELECT idPais FROM Pais WHERE LOWER(nombrePais) = LOWER($1) AND idPais != $2',
+      [nombrePais.trim(), id]
+    );
+    
+    if (nombreExiste.rows.length > 0) {
+      return res.status(400).json({ error: 'Ya existe otro país con ese nombre' });
+    }
+
+    const result = await pool.query(
+      `UPDATE Pais 
+       SET nombrePais = $1 
+       WHERE idPais = $2
+       RETURNING idPais, nombrePais`,
+      [nombrePais.trim(), id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al actualizar país:', error);
+    res.status(500).json({ error: 'Error al actualizar país' });
+  }
+});
+
+// Eliminar país
+app.delete('/api/paises/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Verificar si el país existe
+    const paisExists = await pool.query(
+      'SELECT idPais FROM Pais WHERE idPais = $1',
+      [id]
+    );
+    
+    if (paisExists.rows.length === 0) {
+      return res.status(404).json({ error: 'País no encontrado' });
+    }
+
+    // Verificar si tiene ciudades asociadas
+    const ciudadesCount = await pool.query(
+      'SELECT COUNT(*) FROM Ciudad WHERE idPais = $1',
+      [id]
+    );
+    
+    if (parseInt(ciudadesCount.rows[0].count) > 0) {
+      return res.status(400).json({
+        error: 'No se puede eliminar el país',
+        details: 'Tiene ciudades asociadas. Elimine las ciudades primero.'
+      });
+    }
+
+    const result = await pool.query(
+      'DELETE FROM Pais WHERE idPais = $1 RETURNING idPais',
+      [id]
+    );
+
+    res.json({
+      success: true,
+      message: 'País eliminado correctamente',
+      idPais: result.rows[0].idPais
+    });
+  } catch (error) {
+    console.error('Error al eliminar país:', error);
+    res.status(500).json({ error: 'Error al eliminar país' });
+  }
+});
+
+// ==============================================
+// RUTAS PARA CIUDADES
+// ==============================================
+
+// Obtener ciudades por país
+app.get('/api/paises/:idPais/ciudades', authenticateToken, async (req, res) => {
+  const { idPais } = req.params;
+  
+  try {
+    // Verificar si el país existe
+    const paisExists = await pool.query(
+      'SELECT idPais FROM Pais WHERE idPais = $1',
+      [idPais]
+    );
+    
+    if (paisExists.rows.length === 0) {
+      return res.status(404).json({ error: 'País no encontrado' });
+    }
+
+    const result = await pool.query(
+      'SELECT idCiudad, nombreCiudad FROM Ciudad WHERE idPais = $1 ORDER BY nombreCiudad',
+      [idPais]
+    );
+    
     res.json(result.rows);
   } catch (error) {
-    console.error('Error al obtener ciudades:', error);
-    res.status(500).json({ error: 'Error al obtener ciudades' });
+    console.error('Error al obtener ciudades por país:', error);
+    res.status(500).json({ error: 'Error al obtener ciudades por país' });
   }
 });
 
 // Crear nueva ciudad
 app.post('/api/ciudades', authenticateToken, async (req, res) => {
-  const { nombreCiudad } = req.body;
+  const { nombreCiudad, idPais } = req.body;
 
-  if (!nombreCiudad?.trim()) {
-    return res.status(400).json({ error: 'El nombre de la ciudad es requerido' });
+  if (!nombreCiudad?.trim() || !idPais) {
+    return res.status(400).json({ 
+      error: 'El nombre de la ciudad y el ID del país son requeridos' 
+    });
   }
 
   try {
-    const result = await pool.query(
-      `INSERT INTO Ciudad (nombreCiudad)
-       VALUES ($1)
-       RETURNING idCiudad, nombreCiudad`,
-      [nombreCiudad.trim()]
+    // Verificar que el país existe
+    const paisExists = await pool.query(
+      'SELECT idPais FROM Pais WHERE idPais = $1',
+      [idPais]
     );
+    
+    if (paisExists.rows.length === 0) {
+      return res.status(400).json({ error: 'El país especificado no existe' });
+    }
+
+    // Verificar si la ciudad ya existe en ese país
+    const ciudadExists = await pool.query(
+      'SELECT idCiudad FROM Ciudad WHERE LOWER(nombreCiudad) = LOWER($1) AND idPais = $2',
+      [nombreCiudad.trim(), idPais]
+    );
+    
+    if (ciudadExists.rows.length > 0) {
+      return res.status(400).json({ error: 'Ya existe una ciudad con ese nombre en este país' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO Ciudad (nombreCiudad, idPais)
+       VALUES ($1, $2)
+       RETURNING idCiudad, nombreCiudad, idPais`,
+      [nombreCiudad.trim(), idPais]
+    );
+    
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error al crear ciudad:', error);
@@ -1194,55 +1366,94 @@ app.post('/api/ciudades', authenticateToken, async (req, res) => {
   }
 });
 
-// ========================
-// RUTA: Eliminar País
-// ========================
-app.delete('/api/paises/:id', authenticateToken, async (req, res) => {
+// Actualizar ciudad
+app.put('/api/ciudades/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
+  const { nombreCiudad } = req.body;
 
-  try {
-    const result = await pool.query('DELETE FROM Pais WHERE idPais = $1 RETURNING *', [id]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'País no encontrado' });
-    }
-
-    res.json({ success: true, message: 'País eliminado' });
-  } catch (error) {
-    console.error('Error al eliminar país:', error);
-    res.status(500).json({ error: 'Error al eliminar país' });
-  }
-});
-
-
-// ========================
-// RUTA: Eliminar Ciudad
-// ========================
-app.delete('/api/ciudades/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-
-  // Validar que sea número
-  if (!id || isNaN(parseInt(id))) {
-    return res.status(400).json({ error: 'ID inválido para ciudad' });
+  if (!nombreCiudad?.trim()) {
+    return res.status(400).json({ error: 'El nombre de la ciudad es requerido' });
   }
 
   try {
-    const result = await pool.query('DELETE FROM Ciudad WHERE idCiudad = $1 RETURNING *', [id]);
-
-    if (result.rows.length === 0) {
+    // Verificar si la ciudad existe
+    const ciudadExists = await pool.query(
+      'SELECT idCiudad, idPais FROM Ciudad WHERE idCiudad = $1',
+      [id]
+    );
+    
+    if (ciudadExists.rows.length === 0) {
       return res.status(404).json({ error: 'Ciudad no encontrada' });
     }
 
-    res.json({ success: true, message: 'Ciudad eliminada' });
+    // Verificar si el nuevo nombre ya existe en el mismo país
+    const nombreExiste = await pool.query(
+      'SELECT idCiudad FROM Ciudad WHERE LOWER(nombreCiudad) = LOWER($1) AND idPais = $2 AND idCiudad != $3',
+      [nombreCiudad.trim(), ciudadExists.rows[0].idPais, id]
+    );
+    
+    if (nombreExiste.rows.length > 0) {
+      return res.status(400).json({ error: 'Ya existe otra ciudad con ese nombre en este país' });
+    }
+
+    const result = await pool.query(
+      `UPDATE Ciudad 
+       SET nombreCiudad = $1 
+       WHERE idCiudad = $2
+       RETURNING idCiudad, nombreCiudad, idPais`,
+      [nombreCiudad.trim(), id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al actualizar ciudad:', error);
+    res.status(500).json({ error: 'Error al actualizar ciudad' });
+  }
+});
+
+// Eliminar ciudad
+app.delete('/api/ciudades/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Verificar si la ciudad existe
+    const ciudadExists = await pool.query(
+      'SELECT idCiudad FROM Ciudad WHERE idCiudad = $1',
+      [id]
+    );
+    
+    if (ciudadExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Ciudad no encontrada' });
+    }
+
+    // Verificar si hay clientes asociados a esta ciudad
+    const clientesCount = await pool.query(
+      'SELECT COUNT(*) FROM Cliente WHERE idCiudad = $1',
+      [id]
+    );
+    
+    if (parseInt(clientesCount.rows[0].count) > 0) {
+      return res.status(400).json({
+        error: 'No se puede eliminar la ciudad',
+        details: 'Hay clientes asociados a esta ciudad. Actualice sus datos primero.'
+      });
+    }
+
+    const result = await pool.query(
+      'DELETE FROM Ciudad WHERE idCiudad = $1 RETURNING idCiudad',
+      [id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Ciudad eliminada correctamente',
+      idCiudad: result.rows[0].idCiudad
+    });
   } catch (error) {
     console.error('Error al eliminar ciudad:', error);
     res.status(500).json({ error: 'Error al eliminar ciudad' });
   }
 });
-
-
-
-
 
 // ==============================================
 // INICIO DEL SERVIDOR

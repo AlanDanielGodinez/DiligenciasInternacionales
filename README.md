@@ -222,6 +222,21 @@ UPDATE Empleado
 SET email = correoEmpleado
 WHERE email IS NULL;
 
+-- Eliminar la tabla Ciudad existente (si es necesario)
+DROP TABLE IF EXISTS Ciudad CASCADE;
+
+-- Crear la nueva tabla Ciudad con relación a Pais
+CREATE TABLE Ciudad (
+    idCiudad SERIAL PRIMARY KEY,
+    nombreCiudad VARCHAR(255) NOT NULL,
+    idPais INT REFERENCES Pais(idPais) ON DELETE CASCADE
+);
+
+-- Actualizar la tabla Cliente para mantener consistencia
+ALTER TABLE Cliente 
+DROP COLUMN IF EXISTS idCiudad,
+ADD COLUMN idCiudad INT REFERENCES Ciudad(idCiudad);
+
 
 -- Índices para mejorar el rendimiento
 CREATE INDEX idx_cliente_id ON Cliente(idCliente);

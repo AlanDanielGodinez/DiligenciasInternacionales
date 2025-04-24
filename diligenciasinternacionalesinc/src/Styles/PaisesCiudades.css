@@ -1,93 +1,86 @@
-.gestion-container {
+.gestion-paisesciudades-container {
   padding: 2rem;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: Arial, sans-serif;
 }
 
-.titulo-gestion {
-  text-align: center;
+.gestion-paisesciudades-titulo {
   font-size: 2rem;
-  color: #2c3e50;
+  text-align: center;
   margin-bottom: 2rem;
+  color: #2c3e50;
 }
 
-.seccion-doble {
+.gestion-paisesciudades-panel {
   display: flex;
-  flex-wrap: wrap;
   gap: 2rem;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
-.gestion-card {
-  background: #f8f9fa;
+.gestion-paisesciudades-card {
+  background: #f4f4f4;
   padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-  flex: 1;
-  min-width: 350px;
-  max-width: 500px;
+  border-radius: 8px;
+  width: 300px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
-.gestion-card h2 {
-  text-align: center;
+.gestion-paisesciudades-card h2 {
   margin-bottom: 1rem;
-  color: #333;
+  color: #3498db;
 }
 
-.form-nuevo {
+.gestion-paisesciudades-form {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
 
-.form-nuevo input {
-  flex: 1;
-  padding: 0.6rem;
+.gestion-paisesciudades-form input,
+.gestion-paisesciudades-form select {
+  padding: 0.5rem;
   border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1rem;
+  border-radius: 4px;
 }
 
-.form-nuevo button {
-  background: linear-gradient(to right, #4a90e2, #007bff);
+.gestion-paisesciudades-form button {
+  background-color: #2ecc71;
   color: white;
   border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
+  padding: 0.6rem;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: 0.2s;
 }
 
-.form-nuevo button:hover {
-  background: linear-gradient(to right, #3b78d2, #006ae6);
+.gestion-paisesciudades-form button:hover {
+  background-color: #27ae60;
 }
 
-.tabla-gestion {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 0.5rem;
+ul {
+  list-style: none;
+  padding-left: 0;
 }
 
-.tabla-gestion thead {
-  background-color: #dee2e6;
-}
-
-.tabla-gestion th,
-.tabla-gestion td {
-  text-align: left;
-  padding: 0.8rem;
-  border-bottom: 1px solid #ccc;
+li {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+  background: white;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
 }
 
 .btn-eliminar {
-  background: none;
+  background: #e74c3c;
   border: none;
-  color: #ff0019;
-  font-size: 1rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  color: white;
   cursor: pointer;
-  transition: transform 0.2s ease;
 }
 
 .btn-eliminar:hover {
-  transform: scale(1.1);
-  color: #a71d2a;
+  background: #c0392b;
 }
