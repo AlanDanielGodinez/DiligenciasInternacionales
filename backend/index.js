@@ -966,7 +966,7 @@ app.get('/api/clientes', authenticateToken, async (req, res) => {
   }
 });
 
-// Crear nuevo cliente
+// Crear nuevo cliente - Versión corregida
 app.post('/api/clientes', authenticateToken, async (req, res) => {
   const {
     nombreCliente,
@@ -987,42 +987,76 @@ app.post('/api/clientes', authenticateToken, async (req, res) => {
     idPais
   } = req.body;
 
+  // Validación básica
+  if (!nombreCliente || !apellidoPaternoCliente || !telefono || !identificacionunicanacional || !idPais || !idCiudad) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  }
+
   try {
+    // Verificar si el cliente ya existe (por identificación)
+    const existe = await pool.query(
+      'SELECT idCliente FROM Cliente WHERE identificacionunicanacional = $1',
+      [identificacionunicanacional]
+    );
+    
+    if (existe.rows.length > 0) {
+      return res.status(400).json({ error: 'Ya existe un cliente con esta identificación' });
+    }
+
+    // Formatear fecha si existe
+    const fechaNacimientoFormateada = fechaNacimiento 
+      ? new Date(fechaNacimiento).toISOString().split('T')[0]
+      : null;
+
     const result = await pool.query(
       `INSERT INTO Cliente (
         nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente,
         sexo, edad, telefono, estado_civil, identificacionunicanacional,
         Domicilio, condicionesEspeciales, fechaNacimiento, municipioNacimiento,
         EstadoNacimiento, PaisNacimiento, idCiudad, idPais
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
-                $9, $10, $11, $12, $13, $14, $15, $16)
-       RETURNING idCliente, nombreCliente`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      RETURNING idCliente, nombreCliente, apellidoPaternoCliente`,
       [
         nombreCliente,
         apellidoPaternoCliente,
-        apellidoMaternoCliente,
-        sexo,
-        edad,
+        apellidoMaternoCliente || null,
+        sexo || null,
+        edad ? parseInt(edad) : null,
         telefono,
-        estado_civil,
+        estado_civil || null,
         identificacionunicanacional,
-        Domicilio,
-        condicionesEspeciales,
-        fechaNacimiento,
-        municipioNacimiento,
-        EstadoNacimiento,
-        PaisNacimiento,
+        Domicilio || null,
+        condicionesEspeciales || null,
+        fechaNacimientoFormateada,
+        municipioNacimiento || null,
+        EstadoNacimiento || null,
+        PaisNacimiento || null,
         idCiudad,
         idPais
       ]
     );
+    
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error al crear cliente:', error);
-    res.status(500).json({ error: 'Error al crear cliente' });
+    
+    let mensajeError = 'Error al crear cliente';
+    if (error.code === '23503') { // Foreign key violation
+      if (error.constraint.includes('idPais')) {
+        mensajeError = 'El país seleccionado no existe';
+      } else if (error.constraint.includes('idCiudad')) {
+        mensajeError = 'La ciudad seleccionada no existe';
+      }
+    } else if (error.code === '23505') { // Unique violation
+      mensajeError = 'Ya existe un cliente con esta identificación';
+    }
+    
+    res.status(500).json({ 
+      error: mensajeError,
+      details: process.env.NODE_ENV === 'development' ? error.message : null
+    });
   }
 });
-
 // Actualizar cliente
 app.put('/api/clientes/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
