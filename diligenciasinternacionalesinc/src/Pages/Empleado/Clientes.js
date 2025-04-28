@@ -6,7 +6,6 @@ const ClientesTable = () => {
   const [clientes, setClientes] = useState([]);
   const [clientesFiltrados, setClientesFiltrados] = useState([]);
   const [termino, setTermino] = useState('');
-
   const [mostrarModal, setMostrarModal] = useState(false);
   const [clienteActual, setClienteActual] = useState({});
 
@@ -29,38 +28,46 @@ const ClientesTable = () => {
     cargarClientes();
   }, []);
 
-  // Buscar
-  useEffect(() => {
-    const t = termino.toLowerCase();
-    setClientesFiltrados(clientes.filter(c => 
-      c.nombreCliente?.toLowerCase().includes(t) ||
-      c.apellidoPaternoCliente?.toLowerCase().includes(t) ||
-      c.apellidoMaternoCliente?.toLowerCase().includes(t) ||
-      c.identificacionunicanacional?.toLowerCase().includes(t)
-    ));
-  }, [termino, clientes]);
-
-  // Guardar cliente (nuevo o edición)
-  const guardarCliente = async (e) => {
-    e.preventDefault();
-
-    const url = clienteActual.idCliente 
-      ? `http://localhost:5000/api/clientes/${clienteActual.idCliente}` 
-      : 'http://localhost:5000/api/clientes';
-
-    const metodo = clienteActual.idCliente ? 'put' : 'post';
-
+  // Función para guardar cliente (nuevo o edición)
+  const handleGuardarCliente = async (datosCliente) => {
     try {
-      await axios[metodo](url, clienteActual, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
+      const token = localStorage.getItem('authToken');
+      let response;
+      
+      if (clienteActual.idCliente) {
+        // Editar cliente existente
+        response = await axios.put(
+          `http://localhost:5000/api/clientes/${clienteActual.idCliente}`,
+          datosCliente,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      } else {
+        // Crear nuevo cliente
+        response = await axios.post(
+          'http://localhost:5000/api/clientes',
+          datosCliente,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      }
+      
+      // Actualizar lista de clientes
+      await cargarClientes();
       setMostrarModal(false);
       setClienteActual({});
-      await cargarClientes();
-    } catch (err) {
-      console.error('Error al guardar cliente:', err);
+      return response.data;
+    } catch (error) {
+      console.error('Error al guardar cliente:', error);
+      throw error; // Permite que el ModalCliente maneje el error
     }
   };
 
@@ -79,6 +86,17 @@ const ClientesTable = () => {
       console.error('Error al eliminar cliente:', err);
     }
   };
+
+  // Buscar
+  useEffect(() => {
+    const t = termino.toLowerCase();
+    setClientesFiltrados(clientes.filter(c => 
+      c.nombreCliente?.toLowerCase().includes(t) ||
+      c.apellidoPaternoCliente?.toLowerCase().includes(t) ||
+      c.apellidoMaternoCliente?.toLowerCase().includes(t) ||
+      c.identificacionunicanacional?.toLowerCase().includes(t)
+    ));
+  }, [termino, clientes]);
 
   return (
     <div className="clientes-container">
@@ -154,12 +172,12 @@ const ClientesTable = () => {
       <ModalCliente 
         mostrar={mostrarModal}
         cerrar={() => {
-            setMostrarModal(false);      // 🔹 Oculta el modal
-            setClienteActual({});        // 🔹 Limpia el formulario
+          setMostrarModal(false);
+          setClienteActual({});
         }}
         cliente={clienteActual}
-        onGuardar={guardarCliente}
-        />
+        guardarCliente={handleGuardarCliente}
+      />
     </div>
   );
 };
