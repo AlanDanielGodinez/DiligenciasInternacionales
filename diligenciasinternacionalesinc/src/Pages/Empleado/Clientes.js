@@ -147,12 +147,22 @@ const ClientesTable = () => {
             onChange={(e) => setTermino(e.target.value)}
             className="clientes-busqueda"
           />
-          <button 
-            className="btn-agregar-cliente" 
-            onClick={() => setMostrarModal(true)}
-          >
-            <i className="fas fa-plus"></i> Nuevo Cliente
-          </button>
+        <button 
+          className="btn-agregar-cliente" 
+          onClick={() => {
+            setClienteActual({
+              nombreCliente: '',
+              apellidoPaternoCliente: '',
+              apellidoMaternoCliente: '',
+              telefono: '',
+              identificacionunicanacional: '',
+              // otros campos iniciales
+            });
+            setMostrarModal(true);
+          }}
+        >
+  <i className="fas fa-plus"></i> Nuevo Cliente
+</button>
         </div>
       </div>
 
