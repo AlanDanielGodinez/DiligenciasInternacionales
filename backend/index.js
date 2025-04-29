@@ -936,7 +936,7 @@ app.get('/api/tramites', authenticateToken, async (req, res) => {
 // RUTAS PARA CLIENTES
 // ==============================================
 
-// Ruta corregida en index.js:
+// Mostrar clientes
 app.get('/api/clientes', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(`
@@ -1049,27 +1049,32 @@ app.post('/api/clientes', authenticateToken, async (req, res) => {
     });
   }
 });
+
+// Obtener un cliente específico
+app.get('/api/clientes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const result = await pool.query(
+      'SELECT * FROM Cliente WHERE idCliente = $1',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente no encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener cliente:', error);
+    res.status(500).json({ error: 'Error al obtener cliente' });
+  }
+});
+
 // Actualizar cliente
 app.put('/api/clientes/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
-  const {
-    nombreCliente,
-    apellidoPaternoCliente,
-    apellidoMaternoCliente,
-    sexo,
-    edad,
-    telefono,
-    estado_civil,
-    identificacionunicanacional,
-    Domicilio,
-    condicionesEspeciales,
-    fechaNacimiento,
-    municipioNacimiento,
-    EstadoNacimiento,
-    PaisNacimiento,
-    idCiudad,
-    idPais
-  } = req.body;
+  const datosActualizados = req.body;
 
   try {
     const result = await pool.query(
@@ -1091,24 +1096,24 @@ app.put('/api/clientes/:id', authenticateToken, async (req, res) => {
         idCiudad = $15,
         idPais = $16
       WHERE idCliente = $17
-      RETURNING idCliente`,
+      RETURNING *`,  // Devuelve todos los campos actualizados
       [
-        nombreCliente,
-        apellidoPaternoCliente,
-        apellidoMaternoCliente,
-        sexo,
-        edad,
-        telefono,
-        estado_civil,
-        identificacionunicanacional,
-        Domicilio,
-        condicionesEspeciales,
-        fechaNacimiento,
-        municipioNacimiento,
-        EstadoNacimiento,
-        PaisNacimiento,
-        idCiudad,
-        idPais,
+        datosActualizados.nombreCliente,
+        datosActualizados.apellidoPaternoCliente,
+        datosActualizados.apellidoMaternoCliente,
+        datosActualizados.sexo,
+        datosActualizados.edad,
+        datosActualizados.telefono,
+        datosActualizados.estado_civil,
+        datosActualizados.identificacionunicanacional,
+        datosActualizados.Domicilio,
+        datosActualizados.condicionesEspeciales,
+        datosActualizados.fechaNacimiento,
+        datosActualizados.municipioNacimiento,
+        datosActualizados.EstadoNacimiento,
+        datosActualizados.PaisNacimiento,
+        datosActualizados.idCiudad,
+        datosActualizados.idPais,
         id
       ]
     );
@@ -1117,10 +1122,20 @@ app.put('/api/clientes/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Cliente no encontrado' });
     }
 
-    res.json({ success: true, message: 'Cliente actualizado', idCliente: result.rows[0].idCliente });
+    res.json(result.rows[0]); // Devuelve el cliente actualizado
   } catch (error) {
     console.error('Error al actualizar cliente:', error);
-    res.status(500).json({ error: 'Error al actualizar cliente' });
+    
+    let mensaje = 'Error al actualizar cliente';
+    if (error.code === '23503') { // Violación de llave foránea
+      if (error.constraint.includes('idPais')) {
+        mensaje = 'El país seleccionado no existe';
+      } else if (error.constraint.includes('idCiudad')) {
+        mensaje = 'La ciudad seleccionada no existe o no pertenece al país';
+      }
+    }
+    
+    res.status(500).json({ error: mensaje });
   }
 });
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
-  // Estado inicial del formulario con todos los campos necesarios
+  // Estado inicial del formulario
   const [formulario, setFormulario] = useState({
     nombreCliente: '',
     apellidoPaternoCliente: '',
@@ -19,56 +19,69 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
     EstadoNacimiento: '',
     PaisNacimiento: '',
     idPais: '',
-    idCiudad: '',
-    ...cliente
+    idCiudad: ''
   });
 
   const [errores, setErrores] = useState({});
   const [paises, setPaises] = useState([]);
   const [ciudades, setCiudades] = useState([]);
   const [cargando, setCargando] = useState(false);
+  const [paisesCache, setPaisesCache] = useState([]);
+
+  // Función para transformar los datos del cliente al cargar el modal
+  const transformarDatosCliente = (cliente) => {
+    // Si no hay cliente o no tiene idCliente, es un nuevo cliente
+    const isNew = !cliente || !cliente.idCliente;
+    
+    return {
+      nombreCliente: isNew ? '' : cliente.nombreCliente || '',
+      apellidoPaternoCliente: isNew ? '' : cliente.apellidoPaternoCliente || '',
+      apellidoMaternoCliente: isNew ? '' : cliente.apellidoMaternoCliente || '',
+      sexo: isNew ? '' : cliente.sexo || '',
+      edad: isNew ? '' : cliente.edad || '',
+      telefono: isNew ? '' : (cliente.rawTelefono || cliente.telefono || ''),
+      estado_civil: isNew ? '' : cliente.estado_civil || '',
+      identificacionunicanacional: isNew ? '' : cliente.identificacionunicanacional || '',
+      Domicilio: isNew ? '' : cliente.Domicilio || '',
+      condicionesEspeciales: isNew ? '' : cliente.condicionesEspeciales || '',
+      fechaNacimiento: isNew ? '' : (cliente.fechaNacimiento ? 
+        new Date(cliente.fechaNacimiento).toISOString().split('T')[0] : ''),
+      municipioNacimiento: isNew ? '' : cliente.municipioNacimiento || '',
+      EstadoNacimiento: isNew ? '' : cliente.EstadoNacimiento || '',
+      PaisNacimiento: isNew ? '' : cliente.PaisNacimiento || '',
+      idPais: isNew ? '' : cliente.idPais || '',
+      idCiudad: isNew ? '' : cliente.idCiudad || ''
+    };
+  };
 
   // Efecto para cargar datos cuando el modal se muestra
   useEffect(() => {
     if (mostrar) {
-      // Resetear formulario con los datos del cliente (si existe)
-      setFormulario({
-        nombreCliente: '',
-        apellidoPaternoCliente: '',
-        apellidoMaternoCliente: '',
-        sexo: '',
-        edad: '',
-        telefono: '',
-        estado_civil: '',
-        identificacionunicanacional: '',
-        Domicilio: '',
-        condicionesEspeciales: '',
-        fechaNacimiento: '',
-        municipioNacimiento: '',
-        EstadoNacimiento: '',
-        PaisNacimiento: '',
-        idPais: '',
-        idCiudad: '',
-        ...cliente
-      });
-      
+      // Inicializar formulario con datos transformados
+      setFormulario(transformarDatosCliente(cliente));
       setErrores({});
-      cargarPaises();
       
-      // Si el cliente tiene país, cargar sus ciudades
-      if (cliente.idPais) {
+      // Cargar países si no están en caché
+      if (paisesCache.length === 0) {
+        cargarPaises();
+      } else {
+        setPaises(paisesCache);
+      }
+      
+      // Si hay un cliente con país, cargar sus ciudades
+      if (cliente?.idPais) {
         cargarCiudadesPorPais(cliente.idPais);
+      } else if (formulario.idPais) {
+        // Si el formulario ya tiene un país (por ejemplo, al reabrir)
+        cargarCiudadesPorPais(formulario.idPais);
       }
     }
   }, [mostrar, cliente]);
-
   // Función para cargar la lista de países
   const cargarPaises = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      if (!token) {
-        throw new Error('No hay token de autenticación');
-      }
+      if (!token) throw new Error('No hay token de autenticación');
       
       const res = await axios.get('http://localhost:5000/api/paises', {
         headers: {
@@ -77,11 +90,13 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
         }
       });
       
-      // Normalizar datos de la API (por si hay diferencias en mayúsculas/minúsculas)
-      setPaises(res.data.map(pais => ({
+      const paisesNormalizados = res.data.map(pais => ({
         idPais: pais.idPais || pais.idpais,
         nombrePais: pais.nombrePais || pais.nombrepais
-      })));
+      }));
+      
+      setPaises(paisesNormalizados);
+      setPaisesCache(paisesNormalizados); // Guardar en caché
     } catch (err) {
       console.error('Error cargando países:', err);
       alert('Error al cargar la lista de países. Verifica tu conexión o intenta más tarde.');
@@ -97,9 +112,7 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
     
     try {
       const token = localStorage.getItem('authToken');
-      if (!token) {
-        throw new Error('No hay token de autenticación');
-      }
+      if (!token) throw new Error('No hay token de autenticación');
       
       const res = await axios.get(`http://localhost:5000/api/paises/${idPais}/ciudades`, {
         headers: {
@@ -108,7 +121,6 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
         }
       });
       
-      // Normalizar datos de la API
       setCiudades(res.data.map(ciudad => ({
         idCiudad: ciudad.idCiudad || ciudad.idciudad,
         nombreCiudad: ciudad.nombreCiudad || ciudad.nombreciudad
@@ -119,7 +131,6 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
       alert('Error al cargar las ciudades. Verifica tu conexión o intenta más tarde.');
     }
   };
-  
 
   // Manejador de cambios en los campos del formulario
   const handleChange = (e) => {
@@ -147,8 +158,6 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
     }
   };
 
-  
-
   // Función para validar el formulario
   const validarFormulario = () => {
     const nuevosErrores = {};
@@ -168,7 +177,7 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
       }
     });
 
-    // Validaciones específicas para cada campo
+    // Validaciones específicas
     if (formulario.nombreCliente?.trim().length < 2) {
       nuevosErrores.nombreCliente = 'El nombre debe tener al menos 2 caracteres';
     }
@@ -177,7 +186,8 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
       nuevosErrores.apellidoPaternoCliente = 'El apellido debe tener al menos 2 caracteres';
     }
 
-    if (!formulario.telefono?.match(/^\d{10,}$/)) {
+    const telefonoLimpio = formulario.telefono?.replace(/\D/g, '');
+    if (!telefonoLimpio || telefonoLimpio.length < 10) {
       nuevosErrores.telefono = 'El teléfono debe tener al menos 10 dígitos';
     }
 
@@ -208,68 +218,76 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
     return Object.keys(nuevosErrores).length === 0;
   };
 
+  // Función para formatear fecha al enviar
+  const formatearFechaEnvio = (fecha) => {
+    if (!fecha) return null;
+    return new Date(fecha).toISOString().split('T')[0];
+  };
+
   // Manejador de envío del formulario
-  // Manejador de envío del formulario
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  if (!validarFormulario()) {
-    return;
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!window.confirm('¿Está seguro de guardar los cambios?')) {
+      return;
+    }
 
-  setCargando(true);
-  
-  try {
-    // Preparar datos para enviar (versión optimizada)
-    const datosEnvio = {
-      nombreCliente: formulario.nombreCliente.trim(),
-      apellidoPaternoCliente: formulario.apellidoPaternoCliente.trim(),
-      apellidoMaternoCliente: formulario.apellidoMaternoCliente?.trim() || null,
-      sexo: formulario.sexo || null,
-      edad: formulario.edad ? Number(formulario.edad) : null,
-      telefono: formulario.telefono.trim(),
-      estado_civil: formulario.estado_civil || null,
-      identificacionunicanacional: formulario.identificacionunicanacional.trim(),
-      Domicilio: formulario.Domicilio || null,
-      condicionesEspeciales: formulario.condicionesEspeciales || null,
-      fechaNacimiento: formulario.fechaNacimiento || null,
-      municipioNacimiento: formulario.municipioNacimiento || null,
-      EstadoNacimiento: formulario.EstadoNacimiento || null,
-      PaisNacimiento: formulario.PaisNacimiento || null,
-      idCiudad: formulario.idCiudad,
-      idPais: formulario.idPais
-    };
+    if (!validarFormulario()) {
+      return;
+    }
 
-    console.log('Datos a enviar:', datosEnvio);
+    setCargando(true);
+    
+    try {
+      const datosEnvio = {
+        nombreCliente: formulario.nombreCliente.trim(),
+        apellidoPaternoCliente: formulario.apellidoPaternoCliente.trim(),
+        apellidoMaternoCliente: formulario.apellidoMaternoCliente?.trim() || null,
+        sexo: formulario.sexo || null,
+        edad: formulario.edad ? Number(formulario.edad) : null,
+        telefono: formulario.telefono.replace(/\D/g, ''), // Eliminar caracteres no numéricos
+        estado_civil: formulario.estado_civil || null,
+        identificacionunicanacional: formulario.identificacionunicanacional.trim(),
+        Domicilio: formulario.Domicilio || null,
+        condicionesEspeciales: formulario.condicionesEspeciales || null,
+        fechaNacimiento: formatearFechaEnvio(formulario.fechaNacimiento),
+        municipioNacimiento: formulario.municipioNacimiento || null,
+        EstadoNacimiento: formulario.EstadoNacimiento || null,
+        PaisNacimiento: formulario.PaisNacimiento || null,
+        idCiudad: formulario.idCiudad,
+        idPais: formulario.idPais
+      };
 
-    await guardarCliente(datosEnvio);
-    alert('Cliente guardado con éxito');
-    cerrar();
-  } catch (error) {
-    console.error('Error detallado:', {
-      message: error.message,
-      response: error.response?.data,
-      request: error.request,
-      config: error.config
-    });
+      await guardarCliente(datosEnvio);
+      alert('Cliente guardado con éxito');
+      cerrar();
+    } catch (error) {
+      console.error('Error detallado:', {
+        message: error.message,
+        response: error.response?.data,
+        request: error.request,
+        config: error.config
+      });
 
-    const mensaje = error.response?.data?.error || 
-                   error.message || 
-                   'Error desconocido al guardar cliente';
-    alert(`Error: ${mensaje}`);
-  } finally {
-    setCargando(false);
-  }
-};
+      let mensaje = 'Error al guardar cliente';
+      if (error.response?.data?.error) {
+        mensaje = error.response.data.error;
+      } else if (error.message) {
+        mensaje = error.message;
+      }
 
-  // Si el modal no debe mostrarse, retornar null
+      alert(`Error: ${mensaje}`);
+    } finally {
+      setCargando(false);
+    }
+  };
+
   if (!mostrar) return null;
 
-  // Renderizado del modal
   return (
     <div className="cliente-modal-backdrop">
       <div className="cliente-modal">
-        <h2>{cliente.idCliente ? 'Editar Cliente' : 'Agregar Nuevo Cliente'}</h2>
+      <h2>{cliente && cliente.idCliente ? 'Editar Cliente' : 'Agregar Nuevo Cliente'}</h2>
         
         <form onSubmit={handleSubmit}>
           <div className="grid-form">
@@ -500,7 +518,7 @@ const handleSubmit = async (e) => {
             >
               {cargando ? (
                 <>
-                  <span className="spinner"></span> Guardando...
+                  <i className="fa fa-spinner fa-spin"></i> Guardando...
                 </>
               ) : (
                 'Guardar Cliente'
