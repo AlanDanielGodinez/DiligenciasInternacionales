@@ -916,21 +916,6 @@ app.delete('/api/roles/:id', authenticateToken, async (req, res) => {
 });
 
 
-// Obtener todos los clientes
-app.get('/api/clientes', authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT idCliente, nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente 
-      FROM Cliente
-      ORDER BY nombreCliente
-    `);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error al obtener clientes:', error);
-    res.status(500).json({ error: 'Error al obtener clientes' });
-  }
-});
-
 // Obtener todos los trámites
 app.get('/api/tramites', authenticateToken, async (req, res) => {
   try {
@@ -951,11 +936,17 @@ app.get('/api/tramites', authenticateToken, async (req, res) => {
 // RUTAS PARA CLIENTES
 // ==============================================
 
-// Obtener todos los clientes
+// Ruta corregida en index.js:
 app.get('/api/clientes', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT idCliente, nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente, telefono, identificacionunicanacional 
+      SELECT 
+        idCliente,
+        nombreCliente,
+        apellidoPaternoCliente,
+        apellidoMaternoCliente,
+        telefono,
+        identificacionunicanacional
       FROM Cliente
       ORDER BY nombreCliente
     `);
@@ -965,6 +956,7 @@ app.get('/api/clientes', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Error al obtener clientes' });
   }
 });
+
 
 // Crear nuevo cliente - Versión corregida
 app.post('/api/clientes', authenticateToken, async (req, res) => {
