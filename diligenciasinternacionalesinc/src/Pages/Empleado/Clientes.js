@@ -13,6 +13,24 @@ const ClientesTable = () => {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
 
+  const cargarClienteParaEdicion = async (idCliente) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get(
+        `http://localhost:5000/api/clientes/${idCliente}/completo`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      
+      return response.data;
+    } catch (err) {
+      console.error('Error al cargar cliente para edición:', err);
+      throw err;
+    }
+  };
+  
+
   // Función para cargar clientes
   const cargarClientes = async () => {
     setCargando(true);
@@ -215,9 +233,14 @@ const ClientesTable = () => {
                       </button>
                       <button 
                         className="btn-editar"
-                        onClick={() => {
-                          setClienteActual(cliente);
-                          setMostrarModal(true);
+                        onClick={async () => {
+                          try {
+                            const clienteCompleto = await cargarClienteParaEdicion(cliente.idCliente);
+                            setClienteActual(clienteCompleto);
+                            setMostrarModal(true);
+                          } catch (error) {
+                            alert('Error al cargar datos del cliente para edición');
+                          }
                         }}
                         title="Editar cliente"
                       >
