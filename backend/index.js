@@ -957,6 +957,56 @@ app.get('/api/clientes', authenticateToken, async (req, res) => {
   }
 });
 
+// Obtener un cliente con todos sus datos (para edición)
+
+// Endpoint para obtener cliente completo (manteniendo fecha como string)
+app.get('/api/clientes/:id/completo', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  console.log(`Consultando cliente completo con ID: ${id}`); // Log de depuración
+  
+  try {
+    const query = `
+      SELECT 
+        idCliente,
+        nombreCliente,
+        apellidoPaternoCliente,
+        apellidoMaternoCliente,
+        sexo,
+        edad,
+        telefono,
+        estado_civil,
+        identificacionunicanacional,
+        Domicilio,
+        condicionesEspeciales,
+        fechaNacimiento,
+        municipioNacimiento,
+        EstadoNacimiento,
+        PaisNacimiento,
+        idCiudad,
+        idPais
+      FROM Cliente 
+      WHERE idCliente = $1`;
+    
+    console.log('Query a ejecutar:', query); // Log de la consulta
+    
+    const result = await pool.query(query, [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente no encontrado' });
+    }
+    
+    console.log('Resultado obtenido:', result.rows[0]); // Log del resultado
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error completo al obtener cliente:', {
+      message: error.message,
+      stack: error.stack,
+      query: error.query // Esto mostrará la consulta real que falló
+    });
+    res.status(500).json({ error: 'Error al obtener cliente completo' });
+  }
+});
+
 
 // Crear nuevo cliente - Versión corregida
 app.post('/api/clientes', authenticateToken, async (req, res) => {

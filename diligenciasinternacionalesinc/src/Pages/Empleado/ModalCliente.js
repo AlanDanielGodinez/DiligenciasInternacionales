@@ -29,36 +29,87 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
   const [paisesCache, setPaisesCache] = useState([]);
 
   // Función para transformar los datos del cliente al cargar el modal
-  const transformarDatosCliente = (cliente) => {
-    // Si no hay cliente o no tiene idCliente, es un nuevo cliente
-    const isNew = !cliente || !cliente.idCliente;
-    
-    return {
-      nombreCliente: isNew ? '' : cliente.nombreCliente || '',
-      apellidoPaternoCliente: isNew ? '' : cliente.apellidoPaternoCliente || '',
-      apellidoMaternoCliente: isNew ? '' : cliente.apellidoMaternoCliente || '',
-      sexo: isNew ? '' : cliente.sexo || '',
-      edad: isNew ? '' : cliente.edad || '',
-      telefono: isNew ? '' : (cliente.rawTelefono || cliente.telefono || ''),
-      estado_civil: isNew ? '' : cliente.estado_civil || '',
-      identificacionunicanacional: isNew ? '' : cliente.identificacionunicanacional || '',
-      Domicilio: isNew ? '' : cliente.Domicilio || '',
-      condicionesEspeciales: isNew ? '' : cliente.condicionesEspeciales || '',
-      fechaNacimiento: isNew ? '' : (cliente.fechaNacimiento ? 
-        new Date(cliente.fechaNacimiento).toISOString().split('T')[0] : ''),
-      municipioNacimiento: isNew ? '' : cliente.municipioNacimiento || '',
-      EstadoNacimiento: isNew ? '' : cliente.EstadoNacimiento || '',
-      PaisNacimiento: isNew ? '' : cliente.PaisNacimiento || '',
-      idPais: isNew ? '' : cliente.idPais || '',
-      idCiudad: isNew ? '' : cliente.idCiudad || ''
-    };
-  };
+  // Modificar la función transformarDatosCliente
+      // Función para transformar los datos del cliente
+      const transformarDatosCliente = (cliente) => {
+        if (!cliente) {
+          return {
+            nombreCliente: '',
+            apellidoPaternoCliente: '',
+            apellidoMaternoCliente: '',
+            sexo: '',
+            edad: '',
+            telefono: '',
+            estado_civil: '',
+            identificacionunicanacional: '',
+            Domicilio: '',
+            condicionesEspeciales: '',
+            // En la función transformarDatosCliente, para el campo fechaNacimiento:
+fechaNacimiento: cliente?.fechaNacimiento ? 
+cliente.fechaNacimiento.split('T')[0] : '', // Asegurar formato YYYY-MM-DD // Mantener como string
+            municipioNacimiento: '',
+            EstadoNacimiento: '',
+            PaisNacimiento: '',
+            idPais: '',
+            idCiudad: ''
+          };
+        }
+      
+        // Mapeo de campos alternativos (por si vienen en diferente formato de la BD)
+        const getField = (field) => {
+          const variations = [
+            field,
+            field.toLowerCase(),
+            field.replace(/([A-Z])/g, '_$1').toLowerCase()
+          ];
+          
+          for (const variation of variations) {
+            if (cliente[variation] !== undefined) {
+              return cliente[variation];
+            }
+          }
+          return '';
+        };
+      
+        return {
+          nombreCliente: getField('nombreCliente'),
+          apellidoPaternoCliente: getField('apellidoPaternoCliente'),
+          apellidoMaternoCliente: getField('apellidoMaternoCliente'),
+          sexo: getField('sexo'),
+          edad: getField('edad'),
+          telefono: getField('telefono'),
+          estado_civil: getField('estado_civil'),
+          identificacionunicanacional: getField('identificacionunicanacional'),
+          Domicilio: getField('Domicilio'),
+          condicionesEspeciales: getField('condicionesEspeciales'),
+          fechaNacimiento: getField('fechaNacimiento'), // Mantener como string
+          municipioNacimiento: getField('municipioNacimiento'),
+          EstadoNacimiento: getField('EstadoNacimiento'),
+          PaisNacimiento: getField('PaisNacimiento'),
+          idPais: getField('idPais'),
+          idCiudad: getField('idCiudad')
+        };
+      };
+
+// Función para formatear la fecha al enviar al backend
+const formatearFechaParaBackend = (fechaInput) => {
+  if (!fechaInput) return null;
+  
+  // El input date siempre devuelve YYYY-MM-DD
+  // Puedes dejarlo así o convertirlo a otro formato si lo prefieres
+  return fechaInput; // Se guarda como VARCHAR en formato YYYY-MM-DD
+  
+  // O si prefieres otro formato:
+  // const [year, month, day] = fechaInput.split('-');
+  // return `${day}/${month}/${year}`; // Para formato DD/MM/YYYY
+};
 
   // Efecto para cargar datos cuando el modal se muestra
   useEffect(() => {
     if (mostrar) {
       // Inicializar formulario con datos transformados
-      setFormulario(transformarDatosCliente(cliente));
+      const datosTransformados = transformarDatosCliente(cliente);
+      setFormulario(datosTransformados);
       setErrores({});
       
       // Cargar países si no están en caché
@@ -69,11 +120,9 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
       }
       
       // Si hay un cliente con país, cargar sus ciudades
-      if (cliente?.idPais) {
-        cargarCiudadesPorPais(cliente.idPais);
-      } else if (formulario.idPais) {
-        // Si el formulario ya tiene un país (por ejemplo, al reabrir)
-        cargarCiudadesPorPais(formulario.idPais);
+      const idPais = datosTransformados.idPais || cliente?.idPais;
+      if (idPais) {
+        cargarCiudadesPorPais(idPais);
       }
     }
   }, [mostrar, cliente]);
@@ -231,11 +280,11 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
     if (!window.confirm('¿Está seguro de guardar los cambios?')) {
       return;
     }
-
+  
     if (!validarFormulario()) {
       return;
     }
-
+  
     setCargando(true);
     
     try {
@@ -245,38 +294,25 @@ const ModalCliente = ({ mostrar, cerrar, cliente = {}, guardarCliente }) => {
         apellidoMaternoCliente: formulario.apellidoMaternoCliente?.trim() || null,
         sexo: formulario.sexo || null,
         edad: formulario.edad ? Number(formulario.edad) : null,
-        telefono: formulario.telefono.replace(/\D/g, ''), // Eliminar caracteres no numéricos
+        telefono: formulario.telefono.replace(/\D/g, ''),
         estado_civil: formulario.estado_civil || null,
         identificacionunicanacional: formulario.identificacionunicanacional.trim(),
         Domicilio: formulario.Domicilio || null,
         condicionesEspeciales: formulario.condicionesEspeciales || null,
-        fechaNacimiento: formatearFechaEnvio(formulario.fechaNacimiento),
+        fechaNacimiento: formatearFechaParaBackend(formulario.fechaNacimiento),
         municipioNacimiento: formulario.municipioNacimiento || null,
         EstadoNacimiento: formulario.EstadoNacimiento || null,
         PaisNacimiento: formulario.PaisNacimiento || null,
         idCiudad: formulario.idCiudad,
         idPais: formulario.idPais
       };
-
+  
       await guardarCliente(datosEnvio);
       alert('Cliente guardado con éxito');
       cerrar();
     } catch (error) {
-      console.error('Error detallado:', {
-        message: error.message,
-        response: error.response?.data,
-        request: error.request,
-        config: error.config
-      });
-
-      let mensaje = 'Error al guardar cliente';
-      if (error.response?.data?.error) {
-        mensaje = error.response.data.error;
-      } else if (error.message) {
-        mensaje = error.message;
-      }
-
-      alert(`Error: ${mensaje}`);
+      console.error('Error al guardar cliente:', error);
+      alert(`Error: ${error.response?.data?.error || error.message || 'Error al guardar cliente'}`);
     } finally {
       setCargando(false);
     }
