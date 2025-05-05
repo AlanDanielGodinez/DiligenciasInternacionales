@@ -1,203 +1,185 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaEye, FaEdit, FaTrash } from 'react-icons/fa';
-import ModalCliente from './ModalCliente';
+import { FaEye, FaEdit, FaTrash, FaPlus, FaSearch, FaSpinner } from 'react-icons/fa';
+import CrearCliente from './CrearCliente';
+import EditarCliente from './EditarCliente';
 
+const Clientes = () => {
+  // Estados
+  const [state, setState] = useState({
+    clientes: [],
+    clientesFiltrados: [],
+    terminoBusqueda: '',
+    cargando: true,
+    error: null,
+    mostrarModalCrear: false,
+    mostrarModalEditar: false,
+    clienteSeleccionado: null
+  });
 
-const ClientesTable = () => {
-  const [clientes, setClientes] = useState([]);
-  const [clientesFiltrados, setClientesFiltrados] = useState([]);
-  const [termino, setTermino] = useState('');
-  const [mostrarModal, setMostrarModal] = useState(false);
-  const [clienteActual, setClienteActual] = useState(null);
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState(null);
+  // Efectos
+  useEffect(() => {
+    cargarClientes();
+  }, []);
 
-  const cargarClienteParaEdicion = async (idCliente) => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get(
-        `http://localhost:5000/api/clientes/${idCliente}/completo`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-      
-      return response.data;
-    } catch (err) {
-      console.error('Error al cargar cliente para edición:', err);
-      throw err;
-    }
-  };
-  
+  useEffect(() => {
+    filtrarClientes();
+  }, [state.terminoBusqueda, state.clientes]);
 
-  // Función para cargar clientes
+  // Funciones principales
   const cargarClientes = async () => {
-    setCargando(true);
-    setError(null);
+    setState(prev => ({ ...prev, cargando: true, error: null }));
+    
     try {
       const token = localStorage.getItem('authToken');
       const response = await axios.get('http://localhost:5000/api/clientes', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      const clientesTransformados = response.data.map(cliente => {
-        // Formatear teléfono si existe
-        const formatoTelefono = (tel) => tel ? tel.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3') : 'Sin teléfono';
-        
-        return {
-          idCliente: cliente.idcliente,
-          identificacion: cliente.identificacionunicanacional || 'Sin ID',
-          nombre: cliente.nombrecliente || 'Sin nombre',
-          apellidoPaterno: cliente.apellidopaternocliente || '',
-          apellidoMaterno: cliente.apellidomaternocliente || '',
-          telefono: formatoTelefono(cliente.telefono),
-          rawTelefono: cliente.telefono // Guardamos el original sin formato
-        };
-      });
-
-      setClientes(clientesTransformados);
-      setClientesFiltrados(clientesTransformados);
+      const clientesFormateados = formatearClientes(response.data);
+      
+      setState(prev => ({
+        ...prev,
+        clientes: clientesFormateados,
+        clientesFiltrados: clientesFormateados,
+        cargando: false
+      }));
     } catch (err) {
       console.error('Error al cargar clientes:', err);
-      setError(err.response?.data?.error || err.message || 'Error al cargar clientes');
-    } finally {
-      setCargando(false);
+      setState(prev => ({
+        ...prev,
+        error: err.response?.data?.error || 'Error al cargar clientes',
+        cargando: false
+      }));
     }
   };
 
-  // Función para eliminar cliente
-  const eliminarCliente = async (idCliente) => {
-    if (!window.confirm('¿Estás seguro de eliminar este cliente?')) return;
-
-    try {
-      const token = localStorage.getItem('authToken');
-      await axios.delete(`http://localhost:5000/api/clientes/${idCliente}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      await cargarClientes(); // Recargar la lista después de eliminar
-    } catch (err) {
-      console.error('Error al eliminar cliente:', err);
-      alert(err.response?.data?.error || 'Error al eliminar cliente');
-    }
-  };
-
-  // Función para guardar (crear/actualizar) cliente
-  const handleGuardarCliente = async (datosCliente) => {
-    try {
-      const token = localStorage.getItem('authToken');
-      let response;
-
-      if (clienteActual?.idCliente) {
-        // Actualizar cliente existente
-        response = await axios.put(
-          `http://localhost:5000/api/clientes/${clienteActual.idCliente}`,
-          datosCliente,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-      } else {
-        // Crear nuevo cliente
-        response = await axios.post(
-          'http://localhost:5000/api/clientes',
-          datosCliente,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-      }
-
-      await cargarClientes(); // Recargar la lista
-      return response.data;
-    } catch (error) {
-      console.error('Error al guardar cliente:', error);
-      throw error;
-    } finally {
-      setMostrarModal(false);
-      setClienteActual(null);
-    }
-  };
-
-  // Efecto para cargar clientes al montar el componente
-  useEffect(() => {
-    cargarClientes();
-  }, []);
-
-  // Efecto para filtrar clientes
-  useEffect(() => {
-    if (!termino) {
-      setClientesFiltrados(clientes);
+  const filtrarClientes = () => {
+    if (!state.terminoBusqueda) {
+      setState(prev => ({ ...prev, clientesFiltrados: prev.clientes }));
       return;
     }
 
-    const terminoLower = termino.toLowerCase();
-    const filtrados = clientes.filter(cliente => {
+    const terminoLower = state.terminoBusqueda.toLowerCase();
+    const filtrados = state.clientes.filter(cliente => {
       const camposBusqueda = [
-        cliente.nombre,
-        cliente.apellidoPaterno,
-        cliente.apellidoMaterno,
-        cliente.identificacion,
+        cliente.nombreCliente,
+        cliente.apellidoPaternoCliente,
+        cliente.apellidoMaternoCliente,
+        cliente.identificacionunicanacional,
         cliente.telefono
       ].map(campo => campo?.toLowerCase() || '');
 
       return camposBusqueda.some(campo => campo.includes(terminoLower));
     });
 
-    setClientesFiltrados(filtrados);
-  }, [termino, clientes]);
+    setState(prev => ({ ...prev, clientesFiltrados: filtrados }));
+  };
 
+  // Funciones auxiliares
+  const formatearClientes = (clientes) => {
+    return clientes.map(cliente => ({
+      idCliente: cliente.idCliente || cliente.idcliente,
+      nombreCliente: cliente.nombreCliente || cliente.nombrecliente,
+      apellidoPaternoCliente: cliente.apellidoPaternoCliente || cliente.apellidopaternocliente,
+      apellidoMaternoCliente: cliente.apellidoMaternoCliente || cliente.apellidomaternocliente,
+      telefono: cliente.telefono,
+      identificacionunicanacional: cliente.identificacionunicanacional
+    }));
+  };
+
+  const formatearTelefono = (telefono) => {
+    if (!telefono) return 'N/A';
+    const numeros = telefono.replace(/\D/g, '');
+    return numeros.length === 10 ? 
+      `${numeros.substring(0, 3)}-${numeros.substring(3, 6)}-${numeros.substring(6)}` : 
+      telefono;
+  };
+
+  // Handlers
+  const handleEliminarCliente = async (idCliente) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este cliente?')) return;
+
+    try {
+      const token = localStorage.getItem('authToken');
+      await axios.delete(`http://localhost:5000/api/clientes/${idCliente}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      await cargarClientes();
+      alert('Cliente eliminado correctamente');
+    } catch (err) {
+      console.error('Error al eliminar cliente:', err);
+      alert(err.response?.data?.error || 'Error al eliminar cliente');
+    }
+  };
+
+  const handleClienteCreado = () => {
+    cargarClientes();
+    setState(prev => ({ ...prev, mostrarModalCrear: false }));
+  };
+
+  const handleClienteActualizado = () => {
+    cargarClientes();
+    setState(prev => ({ ...prev, mostrarModalEditar: false }));
+  };
+
+  const handleInputChange = (e) => {
+    setState(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const toggleModal = (modal, value, cliente = null) => {
+    setState(prev => ({
+      ...prev,
+      [`mostrarModal${modal}`]: value,
+      clienteSeleccionado: cliente
+    }));
+  };
+
+  // Renderizado
   return (
-    <div className="clientes-container">
-      <div className="clientes-header">
-        <h1>Clientes Registrados</h1>
-        <div className="clientes-controls">
-          <input
-            type="text"
-            placeholder="Buscar cliente..."
-            value={termino}
-            onChange={(e) => setTermino(e.target.value)}
-            className="clientes-busqueda"
-          />
-        <button 
-          className="btn-agregar-cliente" 
-          onClick={() => {
-            setClienteActual({
-              nombreCliente: '',
-              apellidoPaternoCliente: '',
-              apellidoMaternoCliente: '',
-              telefono: '',
-              identificacionunicanacional: '',
-              // otros campos iniciales
-            });
-            setMostrarModal(true);
-          }}
-        >
-  <i className="fas fa-plus"></i> Nuevo Cliente
-</button>
+    <div className="duo-container">
+      <div className="duo-header">
+        <h1 className="duo-title">Gestión de Clientes</h1>
+        <div className="duo-controls">
+          <div className="duo-search">
+            <FaSearch className="duo-search-icon" />
+            <input
+              type="text"
+              name="terminoBusqueda"
+              placeholder="Buscar cliente..."
+              value={state.terminoBusqueda}
+              onChange={handleInputChange}
+              className="duo-search-input"
+            />
+          </div>
+          <button 
+            className="duo-btn duo-btn-primary"
+            onClick={() => toggleModal('Crear', true)}
+          >
+            <FaPlus className="duo-btn-icon" />
+            Nuevo Cliente
+          </button>
         </div>
       </div>
 
-      {error && (
-        <div className="error-message">
-          Error: {error}
-          <button onClick={cargarClientes}>Reintentar</button>
+      {state.error && (
+        <div className="duo-alert duo-alert-error">
+          {state.error}
+          <button className="duo-btn duo-btn-error" onClick={cargarClientes}>
+            Reintentar
+          </button>
         </div>
       )}
 
-      {cargando ? (
-        <div className="loading-spinner">
-          <i className="fas fa-spinner fa-spin"></i> Cargando clientes...
+      {state.cargando ? (
+        <div className="duo-loading">
+          <FaSpinner className="duo-spinner" />
+          <p>Cargando clientes...</p>
         </div>
       ) : (
-        <div className="clientes-tabla-wrapper">
-          <table className="clientes-tabla">
+        <div className="duo-table-container">
+          <table className="duo-table">
             <thead>
               <tr>
                 <th>Identificación</th>
@@ -209,50 +191,48 @@ const ClientesTable = () => {
               </tr>
             </thead>
             <tbody>
-              {clientesFiltrados.length === 0 ? (
+              {state.clientesFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="sin-resultados">
-                    {termino ? 'No se encontraron clientes con ese criterio' : 'No hay clientes registrados'}
+                  <td colSpan="6" className="duo-no-results">
+                    {state.terminoBusqueda ? 
+                      'No se encontraron clientes con ese criterio' : 
+                      'No hay clientes registrados'}
                   </td>
                 </tr>
               ) : (
-                clientesFiltrados.map(cliente => (
-                  <tr key={cliente.idCliente}>
-                    <td>{cliente.identificacion || 'N/A'}</td>
-                    <td>{cliente.nombre || 'N/A'}</td>
-                    <td>{cliente.apellidoPaterno || 'N/A'}</td>
-                    <td>{cliente.apellidoMaterno || 'N/A'}</td>
-                    <td>{cliente.telefono || 'N/A'}</td>
-                    <td className="acciones">
-                      <button 
-                        className="btn-ver"
-                        onClick={() => {/* Implementar lógica de visualización */}}
-                        title="Ver detalles"
-                      >
-                        <FaEye />
-                      </button>
-                      <button 
-                        className="btn-editar"
-                        onClick={async () => {
-                          try {
-                            const clienteCompleto = await cargarClienteParaEdicion(cliente.idCliente);
-                            setClienteActual(clienteCompleto);
-                            setMostrarModal(true);
-                          } catch (error) {
-                            alert('Error al cargar datos del cliente para edición');
-                          }
-                        }}
-                        title="Editar cliente"
-                      >
-                        <FaEdit />
-                      </button>
-                      <button 
-                        className="btn-eliminar"
-                        onClick={() => eliminarCliente(cliente.idCliente)}
-                        title="Eliminar cliente"
-                      >
-                        <FaTrash />
-                      </button>
+                state.clientesFiltrados.map((cliente) => (
+                  <tr key={cliente.idCliente} className="duo-table-row">
+                    <td>{cliente.identificacionunicanacional || 'N/A'}</td>
+                    <td>{cliente.nombreCliente || 'N/A'}</td>
+                    <td>{cliente.apellidoPaternoCliente || 'N/A'}</td>
+                    <td>{cliente.apellidoMaternoCliente || 'N/A'}</td>
+                    <td>{formatearTelefono(cliente.telefono)}</td>
+                    <td className="duo-actions">
+                      <div className="duo-actions-container">
+                        <button 
+                          className="duo-btn-action duo-btn-view"
+                          onClick={() => {
+                            alert(`Mostrando detalles del cliente: ${cliente.nombreCliente}`);
+                          }}
+                          title="Ver detalles"
+                        >
+                          <FaEye />
+                        </button>
+                        <button 
+                          className="duo-btn-action duo-btn-edit"
+                          onClick={() => toggleModal('Editar', true, cliente)}
+                          title="Editar"
+                        >
+                          <FaEdit />
+                        </button>
+                        <button 
+                          className="duo-btn-action duo-btn-delete"
+                          onClick={() => handleEliminarCliente(cliente.idCliente)}
+                          title="Eliminar"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -262,17 +242,22 @@ const ClientesTable = () => {
         </div>
       )}
 
-      <ModalCliente 
-        mostrar={mostrarModal}
-        cerrar={() => {
-          setMostrarModal(false);
-          setClienteActual(null);
-        }}
-        cliente={clienteActual}
-        guardarCliente={handleGuardarCliente}
+      <CrearCliente
+        mostrar={state.mostrarModalCrear}
+        cerrar={() => toggleModal('Crear', false)}
+        onClienteCreado={handleClienteCreado}
       />
+
+      {state.clienteSeleccionado && (
+        <EditarCliente
+          mostrar={state.mostrarModalEditar}
+          cerrar={() => toggleModal('Editar', false)}
+          clienteId={state.clienteSeleccionado.idCliente}
+          onClienteActualizado={handleClienteActualizado}
+        />
+      )}
     </div>
   );
 };
 
-export default ClientesTable;
+export default Clientes;

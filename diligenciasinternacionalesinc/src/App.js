@@ -40,6 +40,8 @@ import '../src/Styles/AsignarRoles.css';
 import '../src/Styles/AsignarResponsableModal.css';
 import '../src/Styles/Clientes.css';
 import '../src/Styles/PaisesCiudades.css';
+import "../src/Styles/CrearCliente.css";
+import "../src/Styles/EditarCliente.css";
 import EditarArea from "./Pages/Empleado/EditarArea";
 
 
