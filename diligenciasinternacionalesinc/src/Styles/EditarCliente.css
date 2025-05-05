@@ -1,0 +1,218 @@
+/* Variables de color */
+:root {
+    --editar-primary: #2c3e50;
+    --editar-secondary: #9fd3f6;
+    --editar-accent: #e74c3c;
+    --editar-warning: #f7d091;
+    --editar-background: #f8f9fa;
+    --editar-text: #2c3e50;
+    --editar-text-light: #ffffff;
+    --editar-border: #dee2e6;
+    --editar-success: #2ecc71;
+    --editar-shadow: rgba(44, 62, 80, 0.1);
+    --editar-error-bg: #ffebee;
+  }
+  
+  /* Estilos del modal */
+  .editar-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+  }
+  
+  .editar-modal-container {
+    background-color: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 6px 18px var(--editar-shadow);
+    animation: editar-modal-fadeIn 0.3s ease-out;
+  }
+  
+  @keyframes editar-modal-fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .editar-modal-title {
+    color: var(--editar-primary);
+    font-size: 1.5rem;
+    padding: 1.5rem;
+    margin: 0;
+    border-bottom: 1px solid var(--editar-border);
+    background-color: var(--editar-background);
+    border-radius: 12px 12px 0 0;
+  }
+  
+  /* Estilos del formulario */
+  .editar-form {
+    padding: 1.5rem;
+  }
+  
+  .editar-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .editar-form-section {
+    background-color: var(--editar-background);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--editar-border);
+  }
+  
+  .editar-section-title {
+    color: var(--editar-primary);
+    font-size: 1.1rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--editar-secondary);
+  }
+  
+  .editar-form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .editar-form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--editar-primary);
+    font-weight: 500;
+  }
+  
+  .editar-form-label:after {
+    content: '*';
+    color: var(--editar-accent);
+    margin-left: 0.25rem;
+    opacity: 0;
+  }
+  
+  .editar-form-label.required:after {
+    opacity: 1;
+  }
+  
+  .editar-form-input,
+  .editar-form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--editar-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+  }
+  
+  .editar-form-input:focus,
+  .editar-form-select:focus {
+    outline: none;
+    border-color: var(--editar-secondary);
+    box-shadow: 0 0 0 3px rgba(159, 211, 246, 0.3);
+  }
+  
+  .editar-form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+  }
+  
+  /* Estilos de error */
+  .editar-input-error {
+    border-color: var(--editar-accent) !important;
+  }
+  
+  .editar-error-message {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--editar-accent);
+    font-size: 0.85rem;
+  }
+  
+  /* Loading state */
+  .editar-loading {
+    padding: 2rem;
+    text-align: center;
+    color: var(--editar-primary);
+    font-weight: 500;
+  }
+  
+  /* Botones */
+  .editar-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--editar-border);
+  }
+  
+  .editar-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .editar-btn-cancel {
+    background-color: white;
+    color: var(--editar-primary);
+    border: 2px solid var(--editar-border);
+  }
+  
+  .editar-btn-cancel:hover {
+    background-color: var(--editar-background);
+  }
+  
+  .editar-btn-submit {
+    background-color: var(--editar-primary);
+    color: white;
+  }
+  
+  .editar-btn-submit:hover {
+    background-color: #1a2a3a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--editar-shadow);
+  }
+  
+  .editar-btn-submit:active {
+    transform: translateY(0);
+  }
+  
+  .editar-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .editar-form-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .editar-form-actions {
+      flex-direction: column-reverse;
+    }
+    
+    .editar-btn {
+      width: 100%;
+    }
+  }
