@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-
 const CrearCliente = ({ mostrar, cerrar, onClienteCreado }) => {
   // Estados
   const [formData, setFormData] = useState({
@@ -147,18 +146,18 @@ const CrearCliente = ({ mostrar, cerrar, onClienteCreado }) => {
         {
           nombreCliente: formData.nombreCliente,
           apellidoPaternoCliente: formData.apellidoPaternoCliente,
-          apellidoMaternoCliente: formData.apellidoMaternoCliente || null, // Si está vacío, enviamos null
-          sexo: formData.sexo || null,  // Si no se selecciona, enviar null
-          edad: formData.edad ? Number(formData.edad) : null,  // Si está vacío, enviar null
-          telefono: formData.telefono.replace(/\D/g, ''),  // Eliminar cualquier carácter no numérico
-          estado_civil: formData.estado_civil || null,  // Si está vacío, enviar null
+          apellidoMaternoCliente: formData.apellidoMaternoCliente || null,
+          sexo: formData.sexo || null,
+          edad: formData.edad ? Number(formData.edad) : null,
+          telefono: formData.telefono.replace(/\D/g, ''),
+          estado_civil: formData.estado_civil || null,
           identificacionunicanacional: formData.identificacionunicanacional,
-          Domicilio: formData.Domicilio || null,  // Si está vacío, enviar null
-          condicionesEspeciales: formData.condicionesEspeciales || null,  // Si está vacío, enviar null
-          fechaNacimiento: formData.fechaNacimiento || null,  // Si está vacío, enviar null
-          municipioNacimiento: formData.municipioNacimiento || null,  // Si está vacío, enviar null
-          EstadoNacimiento: formData.EstadoNacimiento || null,  // Si está vacío, enviar null
-          PaisNacimiento: formData.PaisNacimiento || null,  // Si está vacío, enviar null
+          Domicilio: formData.Domicilio || null,
+          condicionesEspeciales: formData.condicionesEspeciales || null,
+          fechaNacimiento: formData.fechaNacimiento || null,
+          municipioNacimiento: formData.municipioNacimiento || null,
+          EstadoNacimiento: formData.EstadoNacimiento || null,
+          PaisNacimiento: formData.PaisNacimiento || null,
           idPais: formData.idPais,
           idCiudad: formData.idCiudad
         },
@@ -177,8 +176,6 @@ const CrearCliente = ({ mostrar, cerrar, onClienteCreado }) => {
       setIsSubmitting(false);
     }
   };
-  
-  
 
   if (!mostrar) return null;
 
@@ -233,23 +230,63 @@ const CrearCliente = ({ mostrar, cerrar, onClienteCreado }) => {
               </div>
 
               <div className="cliente-form-group">
-                <label className="cliente-form-label">Teléfono*</label>
+                <label className="cliente-form-label">Sexo</label>
+                <select
+                  name="sexo"
+                  value={formData.sexo}
+                  onChange={handleInputChange}
+                  className="cliente-form-select"
+                >
+                  <option value="">Seleccionar...</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+
+              <div className="cliente-form-group">
+                <label className="cliente-form-label">Edad</label>
+                <input
+                  type="number"
+                  name="edad"
+                  value={formData.edad}
+                  onChange={handleInputChange}
+                  min="0"
+                  max="120"
+                  className={`cliente-form-input ${validationErrors.edad ? 'cliente-input-error' : ''}`}
+                />
+                {validationErrors.edad && (
+                  <span className="cliente-error-message">{validationErrors.edad}</span>
+                )}
+              </div>
+
+              <div className="cliente-form-group">
+                <label className="cliente-form-label">Estado Civil</label>
                 <input
                   type="text"
-                  name="telefono"
-                  value={formData.telefono}
+                  name="estado_civil"
+                  value={formData.estado_civil}
                   onChange={handleInputChange}
-                  className={`cliente-form-input ${validationErrors.telefono ? 'cliente-input-error' : ''}`}
+                  className="cliente-form-input"
                 />
-                {validationErrors.telefono && (
-                  <span className="cliente-error-message">{validationErrors.telefono}</span>
-                )}
+              </div>
+
+              <div className="cliente-form-group">
+                <label className="cliente-form-label">Fecha Nacimiento</label>
+                <input
+                  type="date"
+                  name="fechaNacimiento"
+                  value={formData.fechaNacimiento}
+                  onChange={handleInputChange}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="cliente-form-input"
+                />
               </div>
             </div>
 
-            {/* Sección Ubicación */}
+            {/* Sección Ubicación y Datos Adicionales */}
             <div className="cliente-form-section">
-              <h3 className="cliente-section-title">Ubicación</h3>
+              <h3 className="cliente-section-title">Ubicación y Datos Adicionales</h3>
               
               <div className="cliente-form-group">
                 <label className="cliente-form-label">País*</label>
@@ -316,62 +353,66 @@ const CrearCliente = ({ mostrar, cerrar, onClienteCreado }) => {
                   <span className="cliente-error-message">{validationErrors.identificacionunicanacional}</span>
                 )}
               </div>
-            </div>
-
-            {/* Sección Información Adicional */}
-            <div className="cliente-form-section">
-              <h3 className="cliente-section-title">Información Adicional</h3>
-              
-              <div className="cliente-form-group">
-                <label className="cliente-form-label">Sexo</label>
-                <select
-                  name="sexo"
-                  value={formData.sexo}
-                  onChange={handleInputChange}
-                  className="cliente-form-select"
-                >
-                  <option value="">Seleccionar...</option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Femenino">Femenino</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              </div>
 
               <div className="cliente-form-group">
-                <label className="cliente-form-label">Edad</label>
+                <label className="cliente-form-label">Teléfono*</label>
                 <input
-                  type="number"
-                  name="edad"
-                  value={formData.edad}
+                  type="text"
+                  name="telefono"
+                  value={formData.telefono}
                   onChange={handleInputChange}
-                  min="0"
-                  max="120"
-                  className={`cliente-form-input ${validationErrors.edad ? 'cliente-input-error' : ''}`}
+                  className={`cliente-form-input ${validationErrors.telefono ? 'cliente-input-error' : ''}`}
                 />
-                {validationErrors.edad && (
-                  <span className="cliente-error-message">{validationErrors.edad}</span>
+                {validationErrors.telefono && (
+                  <span className="cliente-error-message">{validationErrors.telefono}</span>
                 )}
               </div>
 
               <div className="cliente-form-group">
-                <label className="cliente-form-label">Estado Civil</label>
+                <label className="cliente-form-label">Condiciones Especiales</label>
+                <textarea
+                  name="condicionesEspeciales"
+                  value={formData.condicionesEspeciales}
+                  onChange={handleInputChange}
+                  className="cliente-form-input"
+                  rows="3"
+                />
+              </div>
+            </div>
+
+            {/* Sección Lugar de Nacimiento */}
+            <div className="cliente-form-section">
+              <h3 className="cliente-section-title">Lugar de Nacimiento</h3>
+              
+              <div className="cliente-form-group">
+                <label className="cliente-form-label">Municipio de Nacimiento</label>
                 <input
                   type="text"
-                  name="estado_civil"
-                  value={formData.estado_civil}
+                  name="municipioNacimiento"
+                  value={formData.municipioNacimiento}
                   onChange={handleInputChange}
                   className="cliente-form-input"
                 />
               </div>
 
               <div className="cliente-form-group">
-                <label className="cliente-form-label">Fecha Nacimiento</label>
+                <label className="cliente-form-label">Estado de Nacimiento</label>
                 <input
-                  type="date"
-                  name="fechaNacimiento"
-                  value={formData.fechaNacimiento}
+                  type="text"
+                  name="EstadoNacimiento"
+                  value={formData.EstadoNacimiento}
                   onChange={handleInputChange}
-                  max={new Date().toISOString().split('T')[0]}
+                  className="cliente-form-input"
+                />
+              </div>
+
+              <div className="cliente-form-group">
+                <label className="cliente-form-label">País de Nacimiento</label>
+                <input
+                  type="text"
+                  name="PaisNacimiento"
+                  value={formData.PaisNacimiento}
+                  onChange={handleInputChange}
                   className="cliente-form-input"
                 />
               </div>
