@@ -250,24 +250,6 @@ app.get('/api/auth/current-user', authenticateToken, async (req, res) => {
   }
 });
 
-// Crear nuevo cliente
-app.post('/api/clientes', authenticateToken, async (req, res) => {
-  const { nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente, telefono, identificacionunicanacional } = req.body;
-
-  try {
-    const result = await pool.query(
-      `INSERT INTO Cliente (
-        nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente,
-        telefono, identificacionunicanacional
-      ) VALUES ($1, $2, $3, $4, $5) RETURNING idCliente, nombreCliente, apellidoPaternoCliente`,
-      [nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente, telefono, identificacionunicanacional]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error('Error al crear cliente:', error);
-    res.status(500).json({ error: 'Error al crear cliente' });
-  }
-});
 
 // Crear nuevo trámite
 app.post('/api/tramites', authenticateToken, async (req, res) => {
@@ -960,47 +942,46 @@ app.get('/api/clientes', authenticateToken, async (req, res) => {
 // Obtener un cliente con todos sus datos (para edición)
 
 // Endpoint para obtener cliente completo (manteniendo fecha como string)
-// En tu backend (server.js)
 app.get('/api/clientes/:id/completo', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  
+  const { id } = req.params;  // Obtén el id del cliente de los parámetros
+
   try {
     const query = `
       SELECT 
-        idCliente,
-        nombreCliente,
-        apellidoPaternoCliente,
-        apellidoMaternoCliente,
-        sexo,
-        edad,
-        telefono,
-        estado_civil,
-        identificacionunicanacional,
-        Domicilio,
-        condicionesEspeciales,
-        fechaNacimiento,
-        municipioNacimiento,
-        EstadoNacimiento,
-        PaisNacimiento,
-        idCiudad,
-        idPais
-      FROM Cliente 
-      WHERE idCliente = $1`;
+        c.idCliente,
+        c.nombreCliente,
+        c.apellidoPaternoCliente,
+        c.apellidoMaternoCliente,
+        c.sexo,
+        c.edad,
+        c.telefono,
+        c.estado_civil,
+        c.identificacionunicanacional,
+        c.Domicilio,
+        c.condicionesEspeciales,
+        c.fechaNacimiento,
+        c.municipioNacimiento,
+        c.EstadoNacimiento,
+        c.PaisNacimiento,
+        ci.nombreCiudad AS nombreCiudad,
+        p.nombrePais AS nombrePais,
+        c.idCiudad,
+        c.idPais
+      FROM 
+        Cliente c
+      LEFT JOIN Ciudad ci ON c.idCiudad = ci.idCiudad
+      LEFT JOIN Pais p ON c.idPais = p.idPais
+      WHERE 
+        c.idCliente = $1;
+    `;
     
-    const result = await pool.query(query, [id]);
-    
+    const result = await pool.query(query, [id]); // Ejecuta la consulta y pasa el id del cliente
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Cliente no encontrado' });
     }
-    
-    // Asegurar que la fecha esté en formato correcto
-    const cliente = result.rows[0];
-    if (cliente.fechaNacimiento) {
-      // Convertir a formato ISO si no lo está
-      cliente.fechaNacimiento = new Date(cliente.fechaNacimiento).toISOString().split('T')[0];
-    }
-    
-    res.json(cliente);
+
+    res.json(result.rows[0]);  // Envía la respuesta con los datos del cliente
   } catch (error) {
     console.error('Error al obtener cliente completo:', error);
     res.status(500).json({ error: 'Error al obtener cliente completo' });
@@ -1008,7 +989,9 @@ app.get('/api/clientes/:id/completo', authenticateToken, async (req, res) => {
 });
 
 
+
 // Crear nuevo cliente - Versión corregida
+// Endpoint corregido para crear cliente
 app.post('/api/clientes', authenticateToken, async (req, res) => {
   const {
     nombreCliente,
@@ -1029,27 +1012,45 @@ app.post('/api/clientes', authenticateToken, async (req, res) => {
     idPais
   } = req.body;
 
-  // Validación básica
-  if (!nombreCliente || !apellidoPaternoCliente || !telefono || !identificacionunicanacional || !idPais || !idCiudad) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  // Validación de campos obligatorios
+  const camposObligatorios = {
+    nombreCliente: 'Nombre',
+    apellidoPaternoCliente: 'Apellido paterno',
+    telefono: 'Teléfono',
+    identificacionunicanacional: 'Identificación',
+    idPais: 'País',
+    idCiudad: 'Ciudad'
+  };
+
+  const faltantes = [];
+  for (const [campo, nombre] of Object.entries(camposObligatorios)) {
+    if (!req.body[campo]?.toString().trim()) {
+      faltantes.push(nombre);
+    }
+  }
+
+  if (faltantes.length > 0) {
+    return res.status(400).json({ 
+      error: 'Faltan campos obligatorios',
+      camposFaltantes: faltantes 
+    });
   }
 
   try {
-    // Verificar si el cliente ya existe (por identificación)
+    // Verificar si ya existe un cliente con la misma identificación
     const existe = await pool.query(
       'SELECT idCliente FROM Cliente WHERE identificacionunicanacional = $1',
       [identificacionunicanacional]
     );
-    
+
     if (existe.rows.length > 0) {
-      return res.status(400).json({ error: 'Ya existe un cliente con esta identificación' });
+      return res.status(400).json({ 
+        error: 'Ya existe un cliente con esta identificación',
+        idClienteExistente: existe.rows[0].idCliente
+      });
     }
 
-    // Formatear fecha si existe
-    const fechaNacimientoFormateada = fechaNacimiento 
-      ? new Date(fechaNacimiento).toISOString().split('T')[0]
-      : null;
-
+    // Insertar nuevo cliente
     const result = await pool.query(
       `INSERT INTO Cliente (
         nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente,
@@ -1057,48 +1058,57 @@ app.post('/api/clientes', authenticateToken, async (req, res) => {
         Domicilio, condicionesEspeciales, fechaNacimiento, municipioNacimiento,
         EstadoNacimiento, PaisNacimiento, idCiudad, idPais
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-      RETURNING idCliente, nombreCliente, apellidoPaternoCliente`,
+      RETURNING *`,
       [
-        nombreCliente,
-        apellidoPaternoCliente,
-        apellidoMaternoCliente || null,
+        nombreCliente.trim(),
+        apellidoPaternoCliente.trim(),
+        apellidoMaternoCliente?.trim() || null,
         sexo || null,
         edad ? parseInt(edad) : null,
-        telefono,
+        telefono.replace(/\D/g, ''), // Eliminar caracteres no numéricos
         estado_civil || null,
         identificacionunicanacional,
-        Domicilio || null,
-        condicionesEspeciales || null,
-        fechaNacimientoFormateada,
-        municipioNacimiento || null,
-        EstadoNacimiento || null,
-        PaisNacimiento || null,
+        Domicilio?.trim() || null,
+        condicionesEspeciales?.trim() || null,
+        fechaNacimiento || null,
+        municipioNacimiento?.trim() || null,
+        EstadoNacimiento?.trim() || null,
+        PaisNacimiento?.trim() || null,
         idCiudad,
         idPais
       ]
     );
-    
+
     res.status(201).json(result.rows[0]);
+
   } catch (error) {
     console.error('Error al crear cliente:', error);
-    
+
     let mensajeError = 'Error al crear cliente';
-    if (error.code === '23503') { // Foreign key violation
+    if (error.code === '23503') { // Violación de clave foránea
       if (error.constraint.includes('idPais')) {
         mensajeError = 'El país seleccionado no existe';
       } else if (error.constraint.includes('idCiudad')) {
-        mensajeError = 'La ciudad seleccionada no existe';
+        mensajeError = 'La ciudad seleccionada no existe o no pertenece al país especificado';
       }
-    } else if (error.code === '23505') { // Unique violation
+    } else if (error.code === '23505') { // Violación de unicidad
       mensajeError = 'Ya existe un cliente con esta identificación';
+    } else if (error.code === '22007') { // Formato de fecha inválido
+      mensajeError = 'Formato de fecha inválido (use YYYY-MM-DD)';
+    } else if (error.code === '22P02') { // Tipo de dato inválido
+      mensajeError = 'Tipo de dato inválido para alguno de los campos';
     }
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       error: mensajeError,
-      details: process.env.NODE_ENV === 'development' ? error.message : null
+      details: process.env.NODE_ENV === 'development' ? error.message : null,
+      code: error.code
     });
   }
 });
+
+
+
 
 // Obtener un cliente específico
 app.get('/api/clientes/:id', authenticateToken, async (req, res) => {
