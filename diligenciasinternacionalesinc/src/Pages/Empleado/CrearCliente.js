@@ -135,35 +135,50 @@ const CrearCliente = ({ mostrar, cerrar, onClienteCreado }) => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    
+  
     if (!validateForm()) return;
-    
+  
     setIsSubmitting(true);
-    
+  
     try {
       const token = localStorage.getItem('authToken');
       const response = await axios.post(
         'http://localhost:5000/api/clientes',
         {
-          ...formData,
-          edad: formData.edad ? Number(formData.edad) : null,
-          telefono: formData.telefono.replace(/\D/g, '')
+          nombreCliente: formData.nombreCliente,
+          apellidoPaternoCliente: formData.apellidoPaternoCliente,
+          apellidoMaternoCliente: formData.apellidoMaternoCliente || null, // Si está vacío, enviamos null
+          sexo: formData.sexo || null,  // Si no se selecciona, enviar null
+          edad: formData.edad ? Number(formData.edad) : null,  // Si está vacío, enviar null
+          telefono: formData.telefono.replace(/\D/g, ''),  // Eliminar cualquier carácter no numérico
+          estado_civil: formData.estado_civil || null,  // Si está vacío, enviar null
+          identificacionunicanacional: formData.identificacionunicanacional,
+          Domicilio: formData.Domicilio || null,  // Si está vacío, enviar null
+          condicionesEspeciales: formData.condicionesEspeciales || null,  // Si está vacío, enviar null
+          fechaNacimiento: formData.fechaNacimiento || null,  // Si está vacío, enviar null
+          municipioNacimiento: formData.municipioNacimiento || null,  // Si está vacío, enviar null
+          EstadoNacimiento: formData.EstadoNacimiento || null,  // Si está vacío, enviar null
+          PaisNacimiento: formData.PaisNacimiento || null,  // Si está vacío, enviar null
+          idPais: formData.idPais,
+          idCiudad: formData.idCiudad
         },
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-
+  
       alert('Cliente creado exitosamente');
       onClienteCreado(response.data);
       cerrar();
     } catch (error) {
-      console.error('Error creating client:', error);
+      console.error('Error creando cliente:', error);
       alert(error.response?.data?.error || 'Error al crear cliente');
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  
 
   if (!mostrar) return null;
 
