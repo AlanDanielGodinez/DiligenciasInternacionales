@@ -30,10 +30,16 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
 
   // Efectos
   useEffect(() => {
-    if (mostrar && clienteId) {
-      fetchClientData();
-      fetchCountries();
-    }
+    const loadData = async () => {
+      if (mostrar && clienteId) {
+        // Primero cargar países
+        await fetchCountries();
+        // Luego cargar datos del cliente (que también cargará las ciudades)
+        await fetchClientData();
+      }
+    };
+    
+    loadData();
   }, [mostrar, clienteId]);
 
   // Funciones de API
@@ -47,14 +53,46 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
       );
       
       const clientData = response.data;
-      if (clientData.fechaNacimiento) {
-        clientData.fechaNacimiento = new Date(clientData.fechaNacimiento).toISOString().split('T')[0];
+      
+      // Función para normalizar nombres de campos
+      const normalizeField = (data, fieldName) => {
+        return data[fieldName] !== undefined ? data[fieldName] : 
+               data[fieldName.toLowerCase()] !== undefined ? data[fieldName.toLowerCase()] : 
+               '';
+      };
+  
+      // Formatear todos los datos del cliente para el formulario
+      const formattedData = {
+        nombreCliente: normalizeField(clientData, 'nombreCliente'),
+        apellidoPaternoCliente: normalizeField(clientData, 'apellidoPaternoCliente'),
+        apellidoMaternoCliente: normalizeField(clientData, 'apellidoMaternoCliente'),
+        sexo: normalizeField(clientData, 'sexo'),
+        edad: clientData.edad ? clientData.edad.toString() : '',
+        telefono: normalizeField(clientData, 'telefono'),
+        estado_civil: normalizeField(clientData, 'estado_civil'),
+        identificacionunicanacional: normalizeField(clientData, 'identificacionunicanacional'),
+        Domicilio: normalizeField(clientData, 'Domicilio'),
+        condicionesEspeciales: normalizeField(clientData, 'condicionesEspeciales'),
+        fechaNacimiento: normalizeField(clientData, 'fechaNacimiento'),
+        municipioNacimiento: normalizeField(clientData, 'municipioNacimiento'),
+        EstadoNacimiento: normalizeField(clientData, 'EstadoNacimiento'),
+        PaisNacimiento: normalizeField(clientData, 'paisNacimiento'),
+        idPais: normalizeField(clientData, 'idPais'),
+        idCiudad: normalizeField(clientData, 'idCiudad'),
+        nombreCiudad: normalizeField(clientData, 'nombreCiudad'),
+        nombrePais: normalizeField(clientData, 'nombrePais')
+      };
+      
+      setFormData(formattedData);
+      
+      // Cargar países primero si no están cargados
+      if (countries.length === 0) {
+        await fetchCountries();
       }
       
-      setFormData(clientData);
-      
-      if (clientData.idPais) {
-        await fetchCitiesByCountry(clientData.idPais);
+      // Cargar ciudades si hay un país seleccionado
+      if (formattedData.idPais) {
+        await fetchCitiesByCountry(formattedData.idPais);
       }
     } catch (error) {
       console.error('Error fetching client data:', error);
@@ -101,6 +139,14 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
       }));
       
       setCities(formattedCities);
+      
+      // Verificar si la ciudad actual del cliente existe en las nuevas ciudades cargadas
+      if (formData.idCiudad) {
+        const ciudadExiste = formattedCities.some(c => c.idCiudad === formData.idCiudad);
+        if (!ciudadExiste) {
+          setFormData(prev => ({ ...prev, idCiudad: '' }));
+        }
+      }
     } catch (error) {
       console.error('Error fetching cities:', error);
       setCities([]);
@@ -153,8 +199,8 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
       errors.telefono = 'Mínimo 10 dígitos';
     }
 
-    if (formData.edad && (formData.edad < 0 || formData.edad > 120)) {
-      errors.edad = 'Edad inválida';
+    if (formData.edad && (parseInt(formData.edad) < 0 || parseInt(formData.edad) > 120)) {
+      errors.edad = 'Edad inválida (0-120)';
     }
 
     setValidationErrors(errors);
@@ -170,11 +216,11 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
     
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.put(
+      await axios.put(
         `http://localhost:5000/api/clientes/${clienteId}`,
         {
           ...formData,
-          edad: formData.edad ? Number(formData.edad) : null,
+          edad: formData.edad ? parseInt(formData.edad) : null,
           telefono: formData.telefono.replace(/\D/g, '')
         },
         {
@@ -183,11 +229,23 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
       );
 
       alert('Cliente actualizado exitosamente');
-      onClienteActualizado(response.data);
+      onClienteActualizado();
       cerrar();
     } catch (error) {
       console.error('Error updating client:', error);
-      alert(error.response?.data?.error || 'Error al actualizar cliente');
+      
+      let errorMessage = 'Error al actualizar cliente';
+      if (error.response) {
+        if (error.response.data?.error) {
+          errorMessage = error.response.data.error;
+        } else if (error.response.status === 404) {
+          errorMessage = 'Cliente no encontrado';
+        } else if (error.response.status === 400) {
+          errorMessage = 'Datos inválidos';
+        }
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -201,13 +259,16 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
         <h2 className="editar-modal-title">Editar Cliente</h2>
         
         {isLoadingData ? (
-          <div className="editar-loading">Cargando datos del cliente...</div>
+          <div className="editar-loading">
+            <div className="spinner"></div>
+            <p>Cargando datos del cliente...</p>
+          </div>
         ) : (
           <form onSubmit={handleFormSubmit} className="editar-form">
             <div className="editar-form-grid">
-              {/* Sección Datos Personales */}
+              {/* Sección 1: Información Básica */}
               <div className="editar-form-section">
-                <h3 className="editar-section-title">Datos Personales</h3>
+                <h3 className="editar-section-title">Información Básica</h3>
                 
                 <div className="editar-form-group">
                   <label className="editar-form-label">Nombre*</label>
@@ -217,6 +278,7 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
                     value={formData.nombreCliente}
                     onChange={handleInputChange}
                     className={`editar-form-input ${validationErrors.nombreCliente ? 'editar-input-error' : ''}`}
+                    placeholder="Nombre del cliente"
                   />
                   {validationErrors.nombreCliente && (
                     <span className="editar-error-message">{validationErrors.nombreCliente}</span>
@@ -231,6 +293,7 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
                     value={formData.apellidoPaternoCliente}
                     onChange={handleInputChange}
                     className={`editar-form-input ${validationErrors.apellidoPaternoCliente ? 'editar-input-error' : ''}`}
+                    placeholder="Apellido paterno"
                   />
                   {validationErrors.apellidoPaternoCliente && (
                     <span className="editar-error-message">{validationErrors.apellidoPaternoCliente}</span>
@@ -245,9 +308,48 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
                     value={formData.apellidoMaternoCliente}
                     onChange={handleInputChange}
                     className="editar-form-input"
+                    placeholder="Apellido materno (opcional)"
                   />
                 </div>
 
+                <div className="editar-form-group">
+                  <label className="editar-form-label">Sexo</label>
+                  <select
+                    name="sexo"
+                    value={formData.sexo}
+                    onChange={handleInputChange}
+                    className="editar-form-select"
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                    <option value="Otro">Otro</option>
+                    <option value="Prefiero no decir">Prefiero no decir</option>
+                  </select>
+                </div>
+
+                <div className="editar-form-group">
+                  <label className="editar-form-label">Edad</label>
+                  <input
+                    type="number"
+                    name="edad"
+                    value={formData.edad}
+                    onChange={handleInputChange}
+                    min="0"
+                    max="120"
+                    className={`editar-form-input ${validationErrors.edad ? 'editar-input-error' : ''}`}
+                    placeholder="Edad (opcional)"
+                  />
+                  {validationErrors.edad && (
+                    <span className="editar-error-message">{validationErrors.edad}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Sección 2: Contacto e Identificación */}
+              <div className="editar-form-section">
+                <h3 className="editar-section-title">Contacto e Identificación</h3>
+                
                 <div className="editar-form-group">
                   <label className="editar-form-label">Teléfono*</label>
                   <input
@@ -256,14 +358,71 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
                     value={formData.telefono}
                     onChange={handleInputChange}
                     className={`editar-form-input ${validationErrors.telefono ? 'editar-input-error' : ''}`}
+                    placeholder="Ej: 5551234567"
                   />
                   {validationErrors.telefono && (
                     <span className="editar-error-message">{validationErrors.telefono}</span>
                   )}
                 </div>
+
+                <div className="editar-form-group">
+                  <label className="editar-form-label">Estado Civil</label>
+                  <select
+                    name="estado_civil"
+                    value={formData.estado_civil}
+                    onChange={handleInputChange}
+                    className="editar-form-select"
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="Soltero/a">Soltero/a</option>
+                    <option value="Casado/a">Casado/a</option>
+                    <option value="Divorciado/a">Divorciado/a</option>
+                    <option value="Viudo/a">Viudo/a</option>
+                    <option value="Unión Libre">Unión Libre</option>
+                  </select>
+                </div>
+
+                <div className="editar-form-group">
+                  <label className="editar-form-label">Identificación*</label>
+                  <input
+                    type="text"
+                    name="identificacionunicanacional"
+                    value={formData.identificacionunicanacional}
+                    onChange={handleInputChange}
+                    className={`editar-form-input ${validationErrors.identificacionunicanacional ? 'editar-input-error' : ''}`}
+                    placeholder="Número de identificación"
+                  />
+                  {validationErrors.identificacionunicanacional && (
+                    <span className="editar-error-message">{validationErrors.identificacionunicanacional}</span>
+                  )}
+                </div>
+
+                <div className="editar-form-group">
+                  <label className="editar-form-label">Domicilio</label>
+                  <textarea
+                    name="Domicilio"
+                    value={formData.Domicilio}
+                    onChange={handleInputChange}
+                    className="editar-form-textarea"
+                    placeholder="Dirección completa"
+                    rows="3"
+                  />
+                </div>
+
+                <div className="editar-form-group">
+                  <label className="editar-form-label">Condiciones Especiales</label>
+                  <textarea
+                    name="condicionesEspeciales"
+                    value={formData.condicionesEspeciales}
+                    onChange={handleInputChange}
+                    className="editar-form-textarea"
+                    placeholder="Alergias, discapacidades, etc."
+                    rows="3"
+                  />
+                </div>
               </div>
 
-              {/* Sección Ubicación */}
+              {/* Sección 3: Ubicación */}
               <div className="editar-form-section">
                 <h3 className="editar-section-title">Ubicación</h3>
                 
@@ -307,81 +466,14 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
                     <span className="editar-error-message">{validationErrors.idCiudad}</span>
                   )}
                 </div>
-
-                <div className="editar-form-group">
-                  <label className="editar-form-label">Domicilio</label>
-                  <input
-                    type="text"
-                    name="Domicilio"
-                    value={formData.Domicilio}
-                    onChange={handleInputChange}
-                    className="editar-form-input"
-                  />
-                </div>
-
-                <div className="editar-form-group">
-                  <label className="editar-form-label">Identificación*</label>
-                  <input
-                    type="text"
-                    name="identificacionunicanacional"
-                    value={formData.identificacionunicanacional}
-                    onChange={handleInputChange}
-                    className={`editar-form-input ${validationErrors.identificacionunicanacional ? 'editar-input-error' : ''}`}
-                  />
-                  {validationErrors.identificacionunicanacional && (
-                    <span className="editar-error-message">{validationErrors.identificacionunicanacional}</span>
-                  )}
-                </div>
               </div>
 
-              {/* Sección Información Adicional */}
+              {/* Sección 4: Datos de Nacimiento */}
               <div className="editar-form-section">
-                <h3 className="editar-section-title">Información Adicional</h3>
+                <h3 className="editar-section-title">Datos de Nacimiento</h3>
                 
                 <div className="editar-form-group">
-                  <label className="editar-form-label">Sexo</label>
-                  <select
-                    name="sexo"
-                    value={formData.sexo}
-                    onChange={handleInputChange}
-                    className="editar-form-select"
-                  >
-                    <option value="">Seleccionar...</option>
-                    <option value="Masculino">Masculino</option>
-                    <option value="Femenino">Femenino</option>
-                    <option value="Otro">Otro</option>
-                  </select>
-                </div>
-
-                <div className="editar-form-group">
-                  <label className="editar-form-label">Edad</label>
-                  <input
-                    type="number"
-                    name="edad"
-                    value={formData.edad}
-                    onChange={handleInputChange}
-                    min="0"
-                    max="120"
-                    className={`editar-form-input ${validationErrors.edad ? 'editar-input-error' : ''}`}
-                  />
-                  {validationErrors.edad && (
-                    <span className="editar-error-message">{validationErrors.edad}</span>
-                  )}
-                </div>
-
-                <div className="editar-form-group">
-                  <label className="editar-form-label">Estado Civil</label>
-                  <input
-                    type="text"
-                    name="estado_civil"
-                    value={formData.estado_civil}
-                    onChange={handleInputChange}
-                    className="editar-form-input"
-                  />
-                </div>
-
-                <div className="editar-form-group">
-                  <label className="editar-form-label">Fecha Nacimiento</label>
+                  <label className="editar-form-label">Fecha de Nacimiento</label>
                   <input
                     type="date"
                     name="fechaNacimiento"
@@ -389,6 +481,42 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
                     onChange={handleInputChange}
                     max={new Date().toISOString().split('T')[0]}
                     className="editar-form-input"
+                  />
+                </div>
+
+                <div className="editar-form-group">
+                  <label className="editar-form-label">Municipio de Nacimiento</label>
+                  <input
+                    type="text"
+                    name="municipioNacimiento"
+                    value={formData.municipioNacimiento}
+                    onChange={handleInputChange}
+                    className="editar-form-input"
+                    placeholder="Municipio donde nació"
+                  />
+                </div>
+
+                <div className="editar-form-group">
+                  <label className="editar-form-label">Estado de Nacimiento</label>
+                  <input
+                    type="text"
+                    name="EstadoNacimiento"
+                    value={formData.EstadoNacimiento}
+                    onChange={handleInputChange}
+                    className="editar-form-input"
+                    placeholder="Estado donde nació"
+                  />
+                </div>
+
+                <div className="editar-form-group">
+                  <label className="editar-form-label">País de Nacimiento</label>
+                  <input
+                    type="text"
+                    name="PaisNacimiento"
+                    value={formData.PaisNacimiento}
+                    onChange={handleInputChange}
+                    className="editar-form-input"
+                    placeholder="País donde nació"
                   />
                 </div>
               </div>
@@ -408,7 +536,12 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
                 disabled={isSubmitting}
                 className="editar-btn editar-btn-submit"
               >
-                {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+                {isSubmitting ? (
+                  <>
+                    <span className="spinner-small"></span>
+                    Guardando...
+                  </>
+                ) : 'Guardar Cambios'}
               </button>
             </div>
           </form>

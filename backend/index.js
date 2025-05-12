@@ -942,31 +942,32 @@ app.get('/api/clientes', authenticateToken, async (req, res) => {
 // Obtener un cliente con todos sus datos (para edición)
 
 // Endpoint para obtener cliente completo (manteniendo fecha como string)
+// En tu backend (index.js)
 app.get('/api/clientes/:id/completo', authenticateToken, async (req, res) => {
-  const { id } = req.params;  // Obtén el id del cliente de los parámetros
+  const { id } = req.params;
 
   try {
     const query = `
       SELECT 
         c.idCliente,
-        c.nombreCliente,
-        c.apellidoPaternoCliente,
-        c.apellidoMaternoCliente,
-        c.sexo,
-        c.edad,
-        c.telefono,
-        c.estado_civil,
-        c.identificacionunicanacional,
-        c.Domicilio,
-        c.condicionesEspeciales,
-        c.fechaNacimiento,
-        c.municipioNacimiento,
-        c.EstadoNacimiento,
-        c.PaisNacimiento,
-        ci.nombreCiudad AS nombreCiudad,
-        p.nombrePais AS nombrePais,
-        c.idCiudad,
-        c.idPais
+        c.nombreCliente AS "nombreCliente",
+        c.apellidoPaternoCliente AS "apellidoPaternoCliente",
+        c.apellidoMaternoCliente AS "apellidoMaternoCliente",
+        c.sexo AS "sexo",
+        c.edad AS "edad",
+        c.telefono AS "telefono",
+        c.estado_civil AS "estado_civil",
+        c.identificacionunicanacional AS "identificacionunicanacional",
+        c.Domicilio AS "Domicilio",
+        c.condicionesEspeciales AS "condicionesEspeciales",
+        c.fechaNacimiento AS "fechaNacimiento",
+        c.municipioNacimiento AS "municipioNacimiento",
+        c.EstadoNacimiento AS "EstadoNacimiento",
+        c.PaisNacimiento AS "PaisNacimiento",
+        ci.nombreCiudad AS "nombreCiudad",
+        p.nombrePais AS "nombrePais",
+        c.idCiudad AS "idCiudad",
+        c.idPais AS "idPais"
       FROM 
         Cliente c
       LEFT JOIN Ciudad ci ON c.idCiudad = ci.idCiudad
@@ -975,23 +976,20 @@ app.get('/api/clientes/:id/completo', authenticateToken, async (req, res) => {
         c.idCliente = $1;
     `;
     
-    const result = await pool.query(query, [id]); // Ejecuta la consulta y pasa el id del cliente
+    const result = await pool.query(query, [id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Cliente no encontrado' });
     }
 
-    res.json(result.rows[0]);  // Envía la respuesta con los datos del cliente
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Error al obtener cliente completo:', error);
     res.status(500).json({ error: 'Error al obtener cliente completo' });
   }
 });
 
-
-
-// Crear nuevo cliente - Versión corregida
-// Endpoint corregido para crear cliente
+// Crear nuevo cliente
 app.post('/api/clientes', authenticateToken, async (req, res) => {
   const {
     nombreCliente,
@@ -1108,8 +1106,6 @@ app.post('/api/clientes', authenticateToken, async (req, res) => {
 });
 
 
-
-
 // Obtener un cliente específico
 app.get('/api/clientes/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
@@ -1136,7 +1132,59 @@ app.put('/api/clientes/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const datosActualizados = req.body;
 
+  // Validación de campos obligatorios
+  const camposObligatorios = {
+    nombreCliente: 'Nombre',
+    apellidoPaternoCliente: 'Apellido paterno',
+    telefono: 'Teléfono',
+    identificacionunicanacional: 'Identificación',
+    idPais: 'País',
+    idCiudad: 'Ciudad'
+  };
+
+  const faltantes = [];
+  for (const [campo, nombre] of Object.entries(camposObligatorios)) {
+    if (!datosActualizados[campo]?.toString().trim()) {
+      faltantes.push(nombre);
+    }
+  }
+
+  if (faltantes.length > 0) {
+    return res.status(400).json({ 
+      error: 'Faltan campos obligatorios',
+      camposFaltantes: faltantes 
+    });
+  }
+
   try {
+    // Verificar si el cliente existe
+    const clienteExiste = await pool.query(
+      'SELECT idCliente FROM Cliente WHERE idCliente = $1',
+      [id]
+    );
+    
+    if (clienteExiste.rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente no encontrado' });
+    }
+
+    // Verificar si la identificación ya existe en otro cliente
+    if (datosActualizados.identificacionunicanacional) {
+      const identificacionExistente = await pool.query(
+        'SELECT idCliente FROM Cliente WHERE identificacionunicanacional = $1 AND idCliente != $2',
+        [datosActualizados.identificacionunicanacional, id]
+      );
+      
+      if (identificacionExistente.rows.length > 0) {
+        return res.status(400).json({ 
+          error: 'Ya existe otro cliente con esta identificación'
+        });
+      }
+    }
+
+    // Formatear datos
+    const telefonoLimpio = datosActualizados.telefono?.replace(/\D/g, '') || null;
+    const edadFormateada = datosActualizados.edad ? parseInt(datosActualizados.edad) : null;
+
     const result = await pool.query(
       `UPDATE Cliente SET
         nombreCliente = $1,
@@ -1156,33 +1204,29 @@ app.put('/api/clientes/:id', authenticateToken, async (req, res) => {
         idCiudad = $15,
         idPais = $16
       WHERE idCliente = $17
-      RETURNING *`,  // Devuelve todos los campos actualizados
+      RETURNING *`,
       [
-        datosActualizados.nombreCliente,
-        datosActualizados.apellidoPaternoCliente,
-        datosActualizados.apellidoMaternoCliente,
-        datosActualizados.sexo,
-        datosActualizados.edad,
-        datosActualizados.telefono,
-        datosActualizados.estado_civil,
+        datosActualizados.nombreCliente.trim(),
+        datosActualizados.apellidoPaternoCliente.trim(),
+        datosActualizados.apellidoMaternoCliente?.trim() || null,
+        datosActualizados.sexo || null,
+        edadFormateada,
+        telefonoLimpio,
+        datosActualizados.estado_civil || null,
         datosActualizados.identificacionunicanacional,
-        datosActualizados.Domicilio,
-        datosActualizados.condicionesEspeciales,
-        datosActualizados.fechaNacimiento,
-        datosActualizados.municipioNacimiento,
-        datosActualizados.EstadoNacimiento,
-        datosActualizados.PaisNacimiento,
+        datosActualizados.Domicilio?.trim() || null,
+        datosActualizados.condicionesEspeciales?.trim() || null,
+        datosActualizados.fechaNacimiento || null,
+        datosActualizados.municipioNacimiento?.trim() || null,
+        datosActualizados.EstadoNacimiento?.trim() || null,
+        datosActualizados.PaisNacimiento?.trim() || null,
         datosActualizados.idCiudad,
         datosActualizados.idPais,
         id
       ]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Cliente no encontrado' });
-    }
-
-    res.json(result.rows[0]); // Devuelve el cliente actualizado
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Error al actualizar cliente:', error);
     
@@ -1193,9 +1237,14 @@ app.put('/api/clientes/:id', authenticateToken, async (req, res) => {
       } else if (error.constraint.includes('idCiudad')) {
         mensaje = 'La ciudad seleccionada no existe o no pertenece al país';
       }
+    } else if (error.code === '22007') { // Formato de fecha inválido
+      mensaje = 'Formato de fecha inválido (use YYYY-MM-DD)';
     }
     
-    res.status(500).json({ error: mensaje });
+    res.status(500).json({ 
+      error: mensaje,
+      details: process.env.NODE_ENV === 'development' ? error.message : null
+    });
   }
 });
 
