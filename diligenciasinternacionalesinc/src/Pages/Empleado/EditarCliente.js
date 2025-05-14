@@ -207,85 +207,23 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
   };
 
   const validateForm = () => {
-    const errors = {};
-    const requiredFields = [
-      'nombreCliente',
-      'apellidoPaternoCliente',
-      'telefono',
-      'identificacionunicanacional',
-      'idPais',
-      'idCiudad'
-    ];
-
-    // Validación de campos obligatorios
-    requiredFields.forEach(field => {
-      if (!formData[field]?.toString().trim()) {
-        errors[field] = 'Este campo es obligatorio';
-      }
-    });
-
-    // Validación de nombre
-    if (formData.nombreCliente?.trim().length < 2) {
-      errors.nombreCliente = 'Mínimo 2 caracteres';
+    const newErrors = {};
+    
+    // Campos requeridos
+    if (!formData.nombreCliente.trim()) newErrors.nombreCliente = 'Nombre requerido';
+    if (!formData.apellidoPaternoCliente.trim()) newErrors.apellidoPaternoCliente = 'Apellido requerido';
+    if (!formData.telefono.trim()) newErrors.telefono = 'Teléfono requerido';
+    if (!formData.identificacionunicanacional.trim()) newErrors.identificacionunicanacional = 'Identificación requerida';
+    if (!formData.idPais) newErrors.idPais = 'País requerido';
+    if (!formData.idCiudad) newErrors.idCiudad = 'Ciudad requerida';
+  
+    // Validaciones adicionales
+    if (formData.telefono && formData.telefono.replace(/\D/g, '').length < 10) {
+      newErrors.telefono = 'Teléfono debe tener 10 dígitos';
     }
-
-    // Validación de teléfono
-    const cleanPhone = formData.telefono?.replace(/\D/g, '');
-    if (!cleanPhone || cleanPhone.length < 10) {
-      errors.telefono = 'Mínimo 10 dígitos';
-    }
-
-    // Validación de edad
-    if (formData.edad && (parseInt(formData.edad) < 0 || parseInt(formData.edad) > 120)) {
-      errors.edad = 'Edad inválida (0-120)';
-    }
-
-    // Validación de identificación según país de nacimiento
-    if (formData.identificacionunicanacional && formData.PaisNacimiento) {
-      const idNumber = formData.identificacionunicanacional.trim();
-      const birthCountry = formData.PaisNacimiento.toLowerCase();
-
-      // Validación para México (CURP/RFC)
-      if (birthCountry.includes('méxico') || birthCountry.includes('mexico')) {
-        if (!/^[A-Z]{4}\d{6}[A-Z]{6}\d{2}$/.test(idNumber.toUpperCase()) && // CURP
-            !/^[A-Z]{4}\d{6}[A-Z0-9]{3}$/.test(idNumber.toUpperCase())) {   // RFC
-          errors.identificacionunicanacional = 'Formato inválido para México (debe ser CURP o RFC)';
-        }
-      }
-      // Validación para Estados Unidos (SSN)
-      else if (birthCountry.includes('estados unidos') || birthCountry.includes('united states')) {
-        if (!/^\d{3}-\d{2}-\d{4}$/.test(idNumber)) {
-          errors.identificacionunicanacional = 'Formato inválido para USA (debe ser ###-##-####)';
-        }
-      }
-      // Validación para otros países (documento genérico)
-      else {
-        if (idNumber.length < 5 || idNumber.length > 20) {
-          errors.identificacionunicanacional = 'Longitud inválida (5-20 caracteres)';
-        }
-      }
-    }
-
-    // Validación de fecha de nacimiento vs edad
-    if (formData.fechaNacimiento && formData.edad) {
-      const birthDate = new Date(formData.fechaNacimiento);
-      const today = new Date();
-      const calculatedAge = today.getFullYear() - birthDate.getFullYear();
-      
-      // Ajuste para meses/días no cumplidos
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        calculatedAge--;
-      }
-      
-      if (Math.abs(calculatedAge - parseInt(formData.edad)) > 1) {
-        errors.edad = `La edad no coincide con la fecha de nacimiento (edad calculada: ${calculatedAge})`;
-        errors.fechaNacimiento = `La fecha no coincide con la edad (${formData.edad} años)`;
-      }
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+  
+    setValidationErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleFormSubmit = async (e) => {
