@@ -42,6 +42,7 @@ import '../src/Styles/Clientes.css';
 import '../src/Styles/PaisesCiudades.css';
 import "../src/Styles/CrearCliente.css";
 import "../src/Styles/EditarCliente.css";
+import "../src/Styles/VerCliente.css";
 import EditarArea from "./Pages/Empleado/EditarArea";
 
 

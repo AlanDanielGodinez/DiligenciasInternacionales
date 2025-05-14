@@ -173,6 +173,39 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
     }
   };
 
+  const handleDateChange = (e) => {
+    const { name, value } = e.target;
+    
+    setFormData(prev => {
+      const updatedForm = { ...prev, [name]: value };
+      
+      // Calcular edad automáticamente si se proporciona fecha de nacimiento
+      if (name === 'fechaNacimiento' && value) {
+        const birthDate = new Date(value);
+        const today = new Date();
+        let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+        
+        // Ajustar si aún no ha pasado el cumpleaños este año
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          calculatedAge--;
+        }
+        
+        updatedForm.edad = calculatedAge.toString();
+      }
+      
+      return updatedForm;
+    });
+    
+    if (validationErrors[name] || validationErrors.edad) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: undefined,
+        edad: undefined
+      }));
+    }
+  };
+
   const validateForm = () => {
     const errors = {};
     const requiredFields = [
@@ -184,23 +217,71 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
       'idCiudad'
     ];
 
+    // Validación de campos obligatorios
     requiredFields.forEach(field => {
       if (!formData[field]?.toString().trim()) {
         errors[field] = 'Este campo es obligatorio';
       }
     });
 
+    // Validación de nombre
     if (formData.nombreCliente?.trim().length < 2) {
       errors.nombreCliente = 'Mínimo 2 caracteres';
     }
 
+    // Validación de teléfono
     const cleanPhone = formData.telefono?.replace(/\D/g, '');
     if (!cleanPhone || cleanPhone.length < 10) {
       errors.telefono = 'Mínimo 10 dígitos';
     }
 
+    // Validación de edad
     if (formData.edad && (parseInt(formData.edad) < 0 || parseInt(formData.edad) > 120)) {
       errors.edad = 'Edad inválida (0-120)';
+    }
+
+    // Validación de identificación según país de nacimiento
+    if (formData.identificacionunicanacional && formData.PaisNacimiento) {
+      const idNumber = formData.identificacionunicanacional.trim();
+      const birthCountry = formData.PaisNacimiento.toLowerCase();
+
+      // Validación para México (CURP/RFC)
+      if (birthCountry.includes('méxico') || birthCountry.includes('mexico')) {
+        if (!/^[A-Z]{4}\d{6}[A-Z]{6}\d{2}$/.test(idNumber.toUpperCase()) && // CURP
+            !/^[A-Z]{4}\d{6}[A-Z0-9]{3}$/.test(idNumber.toUpperCase())) {   // RFC
+          errors.identificacionunicanacional = 'Formato inválido para México (debe ser CURP o RFC)';
+        }
+      }
+      // Validación para Estados Unidos (SSN)
+      else if (birthCountry.includes('estados unidos') || birthCountry.includes('united states')) {
+        if (!/^\d{3}-\d{2}-\d{4}$/.test(idNumber)) {
+          errors.identificacionunicanacional = 'Formato inválido para USA (debe ser ###-##-####)';
+        }
+      }
+      // Validación para otros países (documento genérico)
+      else {
+        if (idNumber.length < 5 || idNumber.length > 20) {
+          errors.identificacionunicanacional = 'Longitud inválida (5-20 caracteres)';
+        }
+      }
+    }
+
+    // Validación de fecha de nacimiento vs edad
+    if (formData.fechaNacimiento && formData.edad) {
+      const birthDate = new Date(formData.fechaNacimiento);
+      const today = new Date();
+      const calculatedAge = today.getFullYear() - birthDate.getFullYear();
+      
+      // Ajuste para meses/días no cumplidos
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        calculatedAge--;
+      }
+      
+      if (Math.abs(calculatedAge - parseInt(formData.edad)) > 1) {
+        errors.edad = `La edad no coincide con la fecha de nacimiento (edad calculada: ${calculatedAge})`;
+        errors.fechaNacimiento = `La fecha no coincide con la edad (${formData.edad} años)`;
+      }
     }
 
     setValidationErrors(errors);
@@ -478,10 +559,13 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
                     type="date"
                     name="fechaNacimiento"
                     value={formData.fechaNacimiento}
-                    onChange={handleInputChange}
+                    onChange={handleDateChange}
                     max={new Date().toISOString().split('T')[0]}
-                    className="editar-form-input"
+                    className={`editar-form-input ${validationErrors.fechaNacimiento ? 'editar-input-error' : ''}`}
                   />
+                  {validationErrors.fechaNacimiento && (
+                    <span className="editar-error-message">{validationErrors.fechaNacimiento}</span>
+                  )}
                 </div>
 
                 <div className="editar-form-group">
