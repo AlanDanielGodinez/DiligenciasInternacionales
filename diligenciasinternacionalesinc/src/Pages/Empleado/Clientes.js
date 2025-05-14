@@ -3,6 +3,7 @@ import axios from 'axios';
 import { FaEye, FaEdit, FaTrash, FaPlus, FaSearch, FaSpinner } from 'react-icons/fa';
 import CrearCliente from './CrearCliente';
 import EditarCliente from './EditarCliente';
+import VerClienteModal from './VerCliente';
 
 const Clientes = () => {
   // Estados
@@ -14,7 +15,9 @@ const Clientes = () => {
     error: null,
     mostrarModalCrear: false,
     mostrarModalEditar: false,
-    clienteSeleccionado: null
+    mostrarModalVer: false,
+    clienteSeleccionado: null,
+    clienteDetalles: null
   });
 
   // Efectos
@@ -97,6 +100,27 @@ const Clientes = () => {
   };
 
   // Handlers
+  const handleVerDetalles = async (cliente) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get(
+        `http://localhost:5000/api/clientes/${cliente.idCliente}/completo`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      
+      setState(prev => ({
+        ...prev,
+        clienteDetalles: response.data,
+        mostrarModalVer: true
+      }));
+    } catch (err) {
+      console.error('Error al obtener detalles del cliente:', err);
+      alert(err.response?.data?.error || 'Error al cargar detalles del cliente');
+    }
+  };
+
   const handleEliminarCliente = async (idCliente) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar este cliente?')) return;
 
@@ -211,9 +235,7 @@ const Clientes = () => {
                       <div className="duo-actions-container">
                         <button 
                           className="duo-btn-action duo-btn-view"
-                          onClick={() => {
-                            alert(`Mostrando detalles del cliente: ${cliente.nombreCliente}`);
-                          }}
+                          onClick={() => handleVerDetalles(cliente)}
                           title="Ver detalles"
                         >
                           <FaEye />
@@ -256,6 +278,12 @@ const Clientes = () => {
           onClienteActualizado={handleClienteActualizado}
         />
       )}
+
+      <VerClienteModal
+        mostrar={state.mostrarModalVer}
+        cerrar={() => setState(prev => ({ ...prev, mostrarModalVer: false }))}
+        cliente={state.clienteDetalles}
+      />
     </div>
   );
 };
