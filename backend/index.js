@@ -1269,6 +1269,311 @@ app.delete('/api/clientes/:id', authenticateToken, async (req, res) => {
   }
 });
 
+
+
+
+
+// ==============================================
+// RUTAS PARA ANTECEDENTES
+// ==============================================
+
+/**
+ * Obtener antecedentes de un cliente
+ */
+app.get('/api/clientes/:idCliente/antecedentes', authenticateToken, async (req, res) => {
+  const { idCliente } = req.params;
+
+  try {
+    // Verificar que el cliente existe
+    const clienteExiste = await pool.query(
+      'SELECT idCliente FROM Cliente WHERE idCliente = $1',
+      [idCliente]
+    );
+    
+    if (clienteExiste.rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente no encontrado' });
+    }
+
+    // Obtener antecedentes del cliente
+    const result = await pool.query(
+      `SELECT 
+        idAntecedente,
+        TipoTramiteA AS "tipoTramite",
+        descipcion AS "descripcion",
+        telefono,
+        fechaTramiteAntecendente AS "fechaTramite",
+        estadoTramiteAntecente AS "estadoTramite",
+        Domicilio,
+        observaciones
+      FROM Antecedente 
+      WHERE idCliente = $1
+      ORDER BY fechaTramiteAntecendente DESC`,
+      [idCliente]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener antecedentes:', error);
+    res.status(500).json({ 
+      error: 'Error al obtener antecedentes',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * Crear un nuevo antecedente
+ */
+app.post('/api/antecedentes', authenticateToken, async (req, res) => {
+  const {
+    idCliente,
+    tipoTramite,
+    descripcion,
+    telefono,
+    fechaTramite,
+    estadoTramite,
+    Domicilio,
+    observaciones
+  } = req.body;
+
+  // Validación de campos obligatorios
+  if (!idCliente || !tipoTramite?.trim()) {
+    return res.status(400).json({ 
+      error: 'El ID del cliente y el tipo de trámite son requeridos'
+    });
+  }
+
+  try {
+    // Verificar que el cliente existe
+    const clienteExiste = await pool.query(
+      'SELECT idCliente FROM Cliente WHERE idCliente = $1',
+      [idCliente]
+    );
+    
+    if (clienteExiste.rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente no encontrado' });
+    }
+
+    // Insertar nuevo antecedente
+    const result = await pool.query(
+      `INSERT INTO Antecedente (
+        idCliente,
+        TipoTramiteA,
+        descipcion,
+        telefono,
+        fechaTramiteAntecendente,
+        estadoTramiteAntecente,
+        Domicilio,
+        observaciones,
+        apellidoPaternoCliente
+      ) 
+      SELECT 
+        $1, $2, $3, $4, $5, $6, $7, $8,
+        c.apellidoPaternoCliente
+      FROM Cliente c
+      WHERE c.idCliente = $1
+      RETURNING 
+        idAntecedente,
+        TipoTramiteA AS "tipoTramite",
+        descipcion AS "descripcion",
+        telefono,
+        fechaTramiteAntecendente AS "fechaTramite",
+        estadoTramiteAntecente AS "estadoTramite",
+        Domicilio,
+        observaciones`,
+      [
+        idCliente,
+        tipoTramite.trim(),
+        descripcion?.trim() || null,
+        telefono?.replace(/\D/g, '') || null,
+        fechaTramite || null,
+        estadoTramite?.trim() || null,
+        Domicilio?.trim() || null,
+        observaciones?.trim() || null
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al crear antecedente:', error);
+    
+    let mensaje = 'Error al crear antecedente';
+    if (error.code === '23503') { // Violación de llave foránea
+      mensaje = 'El cliente especificado no existe';
+    } else if (error.code === '23505') { // Violación de unicidad
+      mensaje = 'Error de duplicación (¿ya existe este antecedente?)';
+    } else if (error.code === '22008') { // Formato de fecha inválido
+      mensaje = 'Formato de fecha inválido (use YYYY-MM-DD)';
+    }
+    
+    res.status(500).json({ 
+      error: mensaje,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * Actualizar un antecedente
+ */
+app.put('/api/antecedentes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const {
+    tipoTramite,
+    descripcion,
+    telefono,
+    fechaTramite,
+    estadoTramite,
+    Domicilio,
+    observaciones
+  } = req.body;
+
+  // Validación de campos obligatorios
+  if (!tipoTramite?.trim()) {
+    return res.status(400).json({ 
+      error: 'El tipo de trámite es requerido'
+    });
+  }
+
+  try {
+    // Verificar que el antecedente existe
+    const antecedenteExiste = await pool.query(
+      'SELECT idAntecedente FROM Antecedente WHERE idAntecedente = $1',
+      [id]
+    );
+    
+    if (antecedenteExiste.rows.length === 0) {
+      return res.status(404).json({ error: 'Antecedente no encontrado' });
+    }
+
+    // Actualizar antecedente
+    const result = await pool.query(
+      `UPDATE Antecedente SET
+        TipoTramiteA = $1,
+        descipcion = $2,
+        telefono = $3,
+        fechaTramiteAntecendente = $4,
+        estadoTramiteAntecente = $5,
+        Domicilio = $6,
+        observaciones = $7
+      WHERE idAntecedente = $8
+      RETURNING 
+        idAntecedente,
+        idCliente,
+        TipoTramiteA AS "tipoTramite",
+        descipcion AS "descripcion",
+        telefono,
+        fechaTramiteAntecendente AS "fechaTramite",
+        estadoTramiteAntecente AS "estadoTramite",
+        Domicilio,
+        observaciones`,
+      [
+        tipoTramite.trim(),
+        descripcion?.trim() || null,
+        telefono?.replace(/\D/g, '') || null,
+        fechaTramite || null,
+        estadoTramite?.trim() || null,
+        Domicilio?.trim() || null,
+        observaciones?.trim() || null,
+        id
+      ]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al actualizar antecedente:', error);
+    
+    let mensaje = 'Error al actualizar antecedente';
+    if (error.code === '22008') { // Formato de fecha inválido
+      mensaje = 'Formato de fecha inválido (use YYYY-MM-DD)';
+    }
+    
+    res.status(500).json({ 
+      error: mensaje,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * Eliminar un antecedente
+ */
+app.delete('/api/antecedentes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Verificar que el antecedente existe
+    const antecedenteExiste = await pool.query(
+      'SELECT idAntecedente FROM Antecedente WHERE idAntecedente = $1',
+      [id]
+    );
+    
+    if (antecedenteExiste.rows.length === 0) {
+      return res.status(404).json({ error: 'Antecedente no encontrado' });
+    }
+
+    // Eliminar antecedente
+    const result = await pool.query(
+      'DELETE FROM Antecedente WHERE idAntecedente = $1 RETURNING idAntecedente',
+      [id]
+    );
+
+    res.json({ 
+      success: true,
+      message: 'Antecedente eliminado correctamente',
+      idAntecedente: result.rows[0].idAntecedente
+    });
+  } catch (error) {
+    console.error('Error al eliminar antecedente:', error);
+    res.status(500).json({ 
+      error: 'Error al eliminar antecedente',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * Obtener un antecedente específico
+ */
+app.get('/api/antecedentes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+        a.idAntecedente,
+        a.idCliente,
+        a.TipoTramiteA AS "tipoTramite",
+        a.descipcion AS "descripcion",
+        a.telefono,
+        a.fechaTramiteAntecendente AS "fechaTramite",
+        a.estadoTramiteAntecente AS "estadoTramite",
+        a.Domicilio,
+        a.observaciones,
+        c.nombreCliente || ' ' || c.apellidoPaternoCliente AS "nombreCliente"
+      FROM Antecedente a
+      JOIN Cliente c ON a.idCliente = c.idCliente
+      WHERE a.idAntecedente = $1`,
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Antecedente no encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener antecedente:', error);
+    res.status(500).json({ 
+      error: 'Error al obtener antecedente',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+
+
+
 // ==============================================
 // RUTAS PARA PAÍSES
 // ==============================================

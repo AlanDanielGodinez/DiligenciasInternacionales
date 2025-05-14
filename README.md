@@ -221,6 +221,8 @@ ADD COLUMN email VARCHAR(255);
 UPDATE Empleado
 SET email = correoEmpleado
 WHERE email IS NULL;
+ALTER TABLE Antecedente 
+ALTER COLUMN descipcion TYPE VARCHAR(255);
 
 -- Eliminar la tabla Ciudad existente (si es necesario)
 DROP TABLE IF EXISTS Ciudad CASCADE;

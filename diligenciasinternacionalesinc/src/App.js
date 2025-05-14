@@ -45,6 +45,7 @@ import "../src/Styles/CrearCliente.css";
 import "../src/Styles/EditarCliente.css";
 import "../src/Styles/VerCliente.css";
 import "../src/Styles/Antecedentes.css";
+import "../src/Styles/CrearAntecedente.css";
 import EditarArea from "./Pages/Empleado/EditarArea";
 
 

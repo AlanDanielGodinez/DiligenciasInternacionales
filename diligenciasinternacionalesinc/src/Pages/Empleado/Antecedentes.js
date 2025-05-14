@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaPlus, FaSearch, FaSpinner, FaHistory, FaTrash, FaEdit } from 'react-icons/fa';
-
+import CrearAntecedente from './CrearAntecedente';
+import EditarAntecedente from './EditarAntecedente';
 
 const Antecedentes = () => {
-  // Estados
+  // Estados principales
   const [clientes, setClientes] = useState([]);
   const [clientesFiltrados, setClientesFiltrados] = useState([]);
   const [terminoBusqueda, setTerminoBusqueda] = useState('');
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Estados para modales
   const [mostrarModalAntecedentes, setMostrarModalAntecedentes] = useState(false);
+  const [mostrarModalCrearAntecedente, setMostrarModalCrearAntecedente] = useState(false);
+  const [mostrarModalEditarAntecedente, setMostrarModalEditarAntecedente] = useState(false);
+  
+  // Estados para datos seleccionados
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
+  const [antecedenteSeleccionado, setAntecedenteSeleccionado] = useState(null);
   const [antecedentes, setAntecedentes] = useState([]);
   const [cargandoAntecedentes, setCargandoAntecedentes] = useState(false);
 
@@ -94,7 +102,8 @@ const Antecedentes = () => {
       apellidoPaternoCliente: cliente.apellidoPaternoCliente || cliente.apellidopaternocliente,
       apellidoMaternoCliente: cliente.apellidoMaternoCliente || cliente.apellidomaternocliente,
       telefono: cliente.telefono,
-      identificacionunicanacional: cliente.identificacionunicanacional
+      identificacionunicanacional: cliente.identificacionunicanacional,
+      Domicilio: cliente.Domicilio || ''
     }));
   };
 
@@ -114,15 +123,42 @@ const Antecedentes = () => {
   };
 
   const handleAgregarAntecedente = () => {
-    // Implementar lógica para agregar antecedente
-    alert(`Agregar antecedente al cliente: ${clienteSeleccionado.nombreCliente}`);
+    setMostrarModalCrearAntecedente(true);
   };
 
-  const handleEliminarAntecedente = (idAntecedente) => {
+  const handleEditarAntecedente = (antecedente) => {
+    setAntecedenteSeleccionado(antecedente);
+    setMostrarModalEditarAntecedente(true);
+  };
+
+  const handleEliminarAntecedente = async (idAntecedente) => {
     if (window.confirm('¿Estás seguro de eliminar este antecedente?')) {
-      // Implementar lógica para eliminar antecedente
-      alert(`Eliminar antecedente con ID: ${idAntecedente}`);
+      try {
+        const token = localStorage.getItem('authToken');
+        await axios.delete(`http://localhost:5000/api/antecedentes/${idAntecedente}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // Actualizar la lista de antecedentes
+        setAntecedentes(prev => prev.filter(a => a.idAntecedente !== idAntecedente));
+      } catch (err) {
+        console.error('Error al eliminar antecedente:', err);
+        alert(err.response?.data?.error || 'Error al eliminar antecedente');
+      }
     }
+  };
+
+  const handleAntecedenteCreado = (nuevoAntecedente) => {
+    // Actualizar la lista de antecedentes
+    setAntecedentes(prev => [nuevoAntecedente, ...prev]);
+    setMostrarModalCrearAntecedente(false);
+  };
+
+  const handleAntecedenteActualizado = (antecedenteActualizado) => {
+    setAntecedentes(prev => prev.map(a => 
+      a.idAntecedente === antecedenteActualizado.idAntecedente ? antecedenteActualizado : a
+    ));
+    setMostrarModalEditarAntecedente(false);
   };
 
   const handleInputChange = (e) => {
@@ -265,18 +301,19 @@ const Antecedentes = () => {
                     <tbody>
                       {antecedentes.map((antecedente) => (
                         <tr key={antecedente.idAntecedente}>
-                          <td>{antecedente.TipoTramiteA || 'N/A'}</td>
-                          <td>{antecedente.descipcion || 'N/A'}</td>
-                          <td>{antecedente.fechaTramiteAntecendente || 'N/A'}</td>
+                          <td>{antecedente.tipoTramite || antecedente.TipoTramiteA || 'N/A'}</td>
+                          <td>{antecedente.descripcion || antecedente.descipcion || 'N/A'}</td>
+                          <td>{antecedente.fechaTramite || antecedente.fechaTramiteAntecendente || 'N/A'}</td>
                           <td>
-                            <span className={`antecedentes-status antecedentes-status-${antecedente.estadoTramiteAntecente?.toLowerCase() || 'desconocido'}`}>
-                              {antecedente.estadoTramiteAntecente || 'Desconocido'}
+                            <span className={`antecedentes-status antecedentes-status-${(antecedente.estadoTramite || antecedente.estadoTramiteAntecente || 'desconocido').toLowerCase()}`}>
+                              {antecedente.estadoTramite || antecedente.estadoTramiteAntecente || 'Desconocido'}
                             </span>
                           </td>
                           <td className="antecedentes-actions">
                             <button 
                               className="antecedentes-btn-action antecedentes-btn-edit"
                               title="Editar"
+                              onClick={() => handleEditarAntecedente(antecedente)}
                             >
                               <FaEdit />
                             </button>
@@ -314,6 +351,22 @@ const Antecedentes = () => {
           </div>
         </div>
       )}
+
+      {/* Modal para crear nuevo antecedente */}
+      <CrearAntecedente
+        mostrar={mostrarModalCrearAntecedente}
+        cerrar={() => setMostrarModalCrearAntecedente(false)}
+        cliente={clienteSeleccionado}
+        onAntecedenteCreado={handleAntecedenteCreado}
+      />
+
+      {/* Modal para editar antecedente */}
+      <EditarAntecedente
+        mostrar={mostrarModalEditarAntecedente}
+        cerrar={() => setMostrarModalEditarAntecedente(false)}
+        antecedente={antecedenteSeleccionado}
+        onAntecedenteActualizado={handleAntecedenteActualizado}
+      />
     </div>
   );
 };
