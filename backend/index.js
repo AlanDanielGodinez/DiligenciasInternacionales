@@ -1486,6 +1486,8 @@ app.put('/api/antecedentes/:id', authenticateToken, async (req, res) => {
     let mensaje = 'Error al actualizar antecedente';
     if (error.code === '22008') { // Formato de fecha inválido
       mensaje = 'Formato de fecha inválido (use YYYY-MM-DD)';
+    } else if (error.code === '22P02') { // Error de tipo de dato
+      mensaje = 'Error en los tipos de datos enviados. Verifique que todos los campos tengan valores válidos.';
     }
     
     res.status(500).json({ 
@@ -1535,6 +1537,7 @@ app.delete('/api/antecedentes/:id', authenticateToken, async (req, res) => {
 /**
  * Obtener un antecedente específico
  */
+// En el backend (index.js), modifica el endpoint para obtener un antecedente específico
 app.get('/api/antecedentes/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
 

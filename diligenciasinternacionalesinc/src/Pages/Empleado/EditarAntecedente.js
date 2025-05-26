@@ -3,7 +3,6 @@ import axios from 'axios';
 import { FaSave, FaTimes, FaCalendarAlt, FaPhone, FaHome, FaStickyNote } from 'react-icons/fa';
 
 const EditarAntecedente = ({ mostrar, cerrar, antecedente, onAntecedenteActualizado }) => {
-  // Estados del formulario
   const [formData, setFormData] = useState({
     tipoTramite: '',
     descripcion: '',
@@ -18,88 +17,99 @@ const EditarAntecedente = ({ mostrar, cerrar, antecedente, onAntecedenteActualiz
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
 
-  // Cargar datos del antecedente cuando cambia
   useEffect(() => {
     if (antecedente) {
+      console.log('Antecedente recibido para edición:', antecedente);
       setFormData({
-        tipoTramite: antecedente.tipoTramite || antecedente.TipoTramiteA || '',
-        descripcion: antecedente.descripcion || antecedente.descipcion || '',
+        tipoTramite: antecedente.tipoTramite || '',
+        descripcion: antecedente.descripcion || '',
         telefono: antecedente.telefono || '',
-        fechaTramite: antecedente.fechaTramite || antecedente.fechaTramiteAntecendente || '',
-        estadoTramite: antecedente.estadoTramite || antecedente.estadoTramiteAntecente || 'Pendiente',
-        Domicilio: antecedente.Domicilio || '',
+        fechaTramite: antecedente.fechaTramite || '',
+        estadoTramite: antecedente.estadoTramite || 'Pendiente',
+        Domicilio: antecedente.Domicilio || antecedente.domicilio || '',
         observaciones: antecedente.observaciones || ''
       });
     }
   }, [antecedente]);
 
-  // Manejadores de cambios
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    
-    // Limpiar error si se corrige
     if (errores[name]) {
       setErrores(prev => ({ ...prev, [name]: '' }));
     }
   };
 
   const handleTelefonoChange = (e) => {
-    const value = e.target.value.replace(/\D/g, ''); // Solo números
+    const value = e.target.value.replace(/\D/g, '');
     setFormData(prev => ({
       ...prev,
       telefono: value
     }));
   };
 
-  // Validación del formulario
   const validarFormulario = () => {
     const nuevosErrores = {};
-    
     if (!formData.tipoTramite.trim()) {
       nuevosErrores.tipoTramite = 'El tipo de trámite es requerido';
     }
-    
     if (formData.telefono && formData.telefono.length < 10) {
       nuevosErrores.telefono = 'El teléfono debe tener al menos 10 dígitos';
     }
-    
     if (!formData.fechaTramite) {
       nuevosErrores.fechaTramite = 'La fecha es requerida';
     }
-    
     setErrores(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
   };
 
-  // Envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validarFormulario()) return;
-    if (!antecedente) return;
-    
+
+    const idAntecedente = antecedente?.idAntecedente;
+    if (!idAntecedente || isNaN(parseInt(idAntecedente))) {
+      console.error('ID de antecedente no válido o no recibido:', antecedente);
+      setError("No se pudo determinar el ID del antecedente a editar.");
+      return;
+    }
+
     setCargando(true);
     setError(null);
-    
+
     try {
       const token = localStorage.getItem('authToken');
+
+      const datosParaEnviar = {
+        tipoTramite: formData.tipoTramite,
+        descripcion: formData.descripcion,
+        telefono: formData.telefono,
+        fechaTramite: formData.fechaTramite,
+        estadoTramite: formData.estadoTramite,
+        Domicilio: formData.Domicilio,
+        observaciones: formData.observaciones
+      };
+
       const response = await axios.put(
-        `http://localhost:5000/api/antecedentes/${antecedente.idAntecedente}`,
-        formData,
+        `http://localhost:5000/api/antecedentes/${idAntecedente}`,
+        datosParaEnviar,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-      
+
       onAntecedenteActualizado(response.data);
       cerrar();
     } catch (err) {
       console.error('Error al actualizar antecedente:', err);
       setError(err.response?.data?.error || 'Error al actualizar antecedente');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Detalles del error:', err.response?.data);
+      }
     } finally {
       setCargando(false);
     }
@@ -116,17 +126,17 @@ const EditarAntecedente = ({ mostrar, cerrar, antecedente, onAntecedenteActualiz
             <FaTimes />
           </button>
         </div>
-        
+
         <div className="crear-antecedente-info-cliente">
           <p><strong>ID Antecedente:</strong> {antecedente.idAntecedente}</p>
         </div>
-        
+
         {error && (
           <div className="crear-antecedente-error">
             {error}
           </div>
         )}
-        
+
         <form onSubmit={handleSubmit} className="crear-antecedente-form">
           <div className="crear-antecedente-form-group">
             <label>Tipo de Trámite *</label>
@@ -139,7 +149,7 @@ const EditarAntecedente = ({ mostrar, cerrar, antecedente, onAntecedenteActualiz
             />
             {errores.tipoTramite && <span className="error-message">{errores.tipoTramite}</span>}
           </div>
-          
+
           <div className="crear-antecedente-form-group">
             <label>Descripción</label>
             <textarea
@@ -149,7 +159,7 @@ const EditarAntecedente = ({ mostrar, cerrar, antecedente, onAntecedenteActualiz
               rows="3"
             />
           </div>
-          
+
           <div className="crear-antecedente-form-row">
             <div className="crear-antecedente-form-group">
               <label>Teléfono</label>
@@ -166,7 +176,7 @@ const EditarAntecedente = ({ mostrar, cerrar, antecedente, onAntecedenteActualiz
               </div>
               {errores.telefono && <span className="error-message">{errores.telefono}</span>}
             </div>
-            
+
             <div className="crear-antecedente-form-group">
               <label>Fecha de Trámite *</label>
               <div className="input-with-icon">
@@ -182,7 +192,7 @@ const EditarAntecedente = ({ mostrar, cerrar, antecedente, onAntecedenteActualiz
               {errores.fechaTramite && <span className="error-message">{errores.fechaTramite}</span>}
             </div>
           </div>
-          
+
           <div className="crear-antecedente-form-row">
             <div className="crear-antecedente-form-group">
               <label>Estado del Trámite</label>
@@ -197,7 +207,7 @@ const EditarAntecedente = ({ mostrar, cerrar, antecedente, onAntecedenteActualiz
                 <option value="En proceso">En proceso</option>
               </select>
             </div>
-            
+
             <div className="crear-antecedente-form-group">
               <label>Domicilio</label>
               <div className="input-with-icon">
@@ -211,7 +221,7 @@ const EditarAntecedente = ({ mostrar, cerrar, antecedente, onAntecedenteActualiz
               </div>
             </div>
           </div>
-          
+
           <div className="crear-antecedente-form-group">
             <label>Observaciones</label>
             <div className="input-with-icon">
@@ -224,7 +234,7 @@ const EditarAntecedente = ({ mostrar, cerrar, antecedente, onAntecedenteActualiz
               />
             </div>
           </div>
-          
+
           <div className="crear-antecedente-footer">
             <button
               type="button"
