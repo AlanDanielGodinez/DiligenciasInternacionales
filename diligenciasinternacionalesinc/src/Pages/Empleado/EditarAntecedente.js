@@ -71,7 +71,8 @@ const EditarAntecedente = ({ mostrar, cerrar, antecedente, onAntecedenteActualiz
 
     if (!validarFormulario()) return;
 
-    const idAntecedente = antecedente?.idAntecedente;
+    const idAntecedente = antecedente?.idAntecedente || antecedente?.idantecedente;
+
     if (!idAntecedente || isNaN(parseInt(idAntecedente))) {
       console.error('ID de antecedente no válido o no recibido:', antecedente);
       setError("No se pudo determinar el ID del antecedente a editar.");
