@@ -126,10 +126,22 @@ const Antecedentes = () => {
     setMostrarModalCrearAntecedente(true);
   };
 
-  const handleEditarAntecedente = (antecedente) => {
-    setAntecedenteSeleccionado(antecedente);
-    setMostrarModalEditarAntecedente(true);
+  const handleEditarAntecedente = (a) => {
+  const antecedente = {
+    idAntecedente: a.idAntecedente || a.idantecedente,
+    tipoTramite: a.tipoTramite || a.TipoTramiteA || '',
+    descripcion: a.descripcion || a.descipcion || '',
+    telefono: a.telefono || '',
+    fechaTramite: a.fechaTramite || a.fechaTramiteAntecendente || '',
+    estadoTramite: a.estadoTramite || a.estadoTramiteAntecente || 'Pendiente',
+    Domicilio: a.Domicilio || a.domicilio || '',
+    observaciones: a.observaciones || ''
   };
+  console.log('Antecedente para editar:', antecedente);
+  setAntecedenteSeleccionado(antecedente);
+  setMostrarModalEditarAntecedente(true);
+};
+
 
   const handleEliminarAntecedente = async (idAntecedente) => {
     if (window.confirm('¿Estás seguro de eliminar este antecedente?')) {
@@ -154,12 +166,13 @@ const Antecedentes = () => {
     setMostrarModalCrearAntecedente(false);
   };
 
-  const handleAntecedenteActualizado = (antecedenteActualizado) => {
-    setAntecedentes(prev => prev.map(a => 
-      a.idAntecedente === antecedenteActualizado.idAntecedente ? antecedenteActualizado : a
-    ));
-    setMostrarModalEditarAntecedente(false);
-  };
+  const handleAntecedenteActualizado = async () => {
+  setMostrarModalEditarAntecedente(false);
+  if (clienteSeleccionado?.idCliente) {
+    await cargarAntecedentes(clienteSeleccionado.idCliente);
+  }
+};
+
 
   const handleInputChange = (e) => {
     setTerminoBusqueda(e.target.value);
