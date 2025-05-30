@@ -37,7 +37,6 @@ const SidebarNavigation = () => {
       items: [
         { name: "Lista de Clientes", path: "/empleado/clientes" },
         { name: "Antecedentes", path: "/antecedentes" },
-        { name: "Condiciones Especiales", path: "/condiciones" },
         { name: "Paises y Ciudades", path: "/empleado/paisesciudades" }
       ]
     },

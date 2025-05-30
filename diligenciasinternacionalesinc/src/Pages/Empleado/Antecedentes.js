@@ -166,12 +166,15 @@ const Antecedentes = () => {
     setMostrarModalCrearAntecedente(false);
   };
 
-  const handleAntecedenteActualizado = async () => {
+  const handleAntecedenteActualizado = (actualizado) => {
   setMostrarModalEditarAntecedente(false);
-  if (clienteSeleccionado?.idCliente) {
-    await cargarAntecedentes(clienteSeleccionado.idCliente);
-  }
+  setTimeout(() => {
+    if (clienteSeleccionado?.idCliente) {
+      cargarAntecedentes(clienteSeleccionado.idCliente);
+    }
+  }, 300); // Opcional, para animaciones suaves
 };
+
 
 
   const handleInputChange = (e) => {
