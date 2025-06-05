@@ -1,0 +1,452 @@
+/* Variables específicas para trámites */
+:root {
+  --tramites-primary: #6e48aa;
+  --tramites-secondary: #9d50bb;
+  --tramites-accent: #4776e6;
+  --tramites-text: #f0f0f0;
+  --tramites-bg: #121212;
+  --tramites-card-bg: rgba(30, 30, 40, 0.7);
+  --tramites-card-border: rgba(255, 255, 255, 0.1);
+  --tramites-glow: rgba(110, 72, 170, 0.4);
+  --tramites-active: #4caf50;
+  --tramites-completed: #f44336;
+}
+
+/* Estilos base para el módulo de trámites */
+.tramites-main-container {
+  min-height: 100vh;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--tramites-bg);
+  color: var(--tramites-text);
+}
+
+.tramites-particles-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.tramites-bg-particle {
+  position: absolute;
+  background: linear-gradient(135deg, var(--tramites-primary), var(--tramites-accent));
+  border-radius: 50%;
+  opacity: 0.6;
+  filter: blur(1px);
+}
+
+@keyframes tramites-float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+  }
+}
+
+/* Encabezado */
+.tramites-header-container {
+  text-align: center;
+  margin-bottom: 3rem;
+  position: relative;
+  z-index: 1;
+}
+
+.tramites-header-container h1 {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.tramites-gradient-title {
+  background: linear-gradient(90deg, var(--tramites-primary), var(--tramites-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 10px rgba(110, 72, 170, 0.3);
+}
+
+.tramites-header-description {
+  font-size: 1.2rem;
+  opacity: 0.8;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Controles */
+.tramites-controls-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  background: rgba(30, 30, 40, 0.5);
+  backdrop-filter: blur(10px);
+  padding: 1.5rem;
+  border-radius: 15px;
+  border: 1px solid var(--tramites-card-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 2;
+}
+
+.tramites-search-container {
+  position: relative;
+  flex-grow: 1;
+  min-width: 250px;
+}
+
+.tramites-search-input {
+  width: 100%;
+  padding: 0.8rem 1rem 0.8rem 2.5rem;
+  border: none;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--tramites-text);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.tramites-search-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 2px var(--tramites-primary);
+}
+
+.tramites-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.7;
+}
+
+.tramites-filter-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tramites-filter-btn {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--tramites-text);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.tramites-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.tramites-filter-active {
+  background: var(--tramites-primary);
+  color: white;
+}
+
+.tramites-create-btn {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(90deg, var(--tramites-primary), var(--tramites-secondary));
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(110, 72, 170, 0.3);
+}
+
+.tramites-create-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(110, 72, 170, 0.4);
+}
+
+.tramites-create-icon {
+  font-size: 1.2rem;
+}
+
+/* Contenido principal */
+.tramites-content-area {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  position: relative;
+  z-index: 1;
+}
+
+.tramites-section-active,
+.tramites-section-completed {
+  animation: tramites-fadeIn 0.5s ease-out;
+}
+
+@keyframes tramites-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tramites-section-title {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  display: inline-block;
+}
+
+.tramites-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--tramites-primary), transparent);
+  border-radius: 3px;
+}
+
+/* Grid de trámites */
+.tramites-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Tarjetas */
+.tramites-card {
+  position: relative;
+  background: var(--tramites-card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid var(--tramites-card-border);
+  overflow: hidden;
+  backdrop-filter: blur(5px);
+  transform-style: preserve-3d;
+  transform: perspective(1000px);
+}
+
+.tramites-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(110, 72, 170, 0.1), transparent);
+  z-index: -1;
+}
+
+.tramites-card:hover {
+  transform: translateY(-5px) scale(1.02) perspective(1000px) rotateX(5deg);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+  border-color: rgba(110, 72, 170, 0.3);
+}
+
+.tramites-card-hovered {
+  z-index: 10;
+}
+
+.tramites-card-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, var(--tramites-glow) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tramites-card:hover .tramites-card-glow {
+  opacity: 1;
+}
+
+.tramites-card-title {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.tramites-card-desc {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tramites-card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 1rem;
+}
+
+.tramites-status-indicator-active,
+.tramites-status-indicator-completed {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.tramites-status-indicator-active {
+  background-color: var(--tramites-active);
+  box-shadow: 0 0 10px var(--tramites-active);
+}
+
+.tramites-status-indicator-completed {
+  background-color: var(--tramites-completed);
+  box-shadow: 0 0 10px var(--tramites-completed);
+}
+
+.tramites-card-completed {
+  opacity: 0.8;
+}
+
+.tramites-card-completed:hover {
+  opacity: 1;
+}
+
+/* Sin resultados */
+.tramites-no-results {
+  text-align: center;
+  padding: 3rem;
+  background: rgba(30, 30, 40, 0.3);
+  border-radius: 15px;
+  border: 1px dashed var(--tramites-card-border);
+}
+
+.tramites-holographic-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+  animation: tramites-holographic 3s ease-in-out infinite;
+}
+
+@keyframes tramites-holographic {
+  0%, 100% {
+    text-shadow: 0 0 10px var(--tramites-primary);
+    transform: scale(1);
+  }
+  50% {
+    text-shadow: 0 0 20px var(--tramites-accent);
+    transform: scale(1.1);
+  }
+}
+
+.tramites-no-results-title {
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.tramites-no-results-message {
+  opacity: 0.7;
+}
+
+/* Cursor personalizado */
+.tramites-custom-cursor {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(110, 72, 170, 0.5);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
+  z-index: 9999;
+  transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease;
+}
+
+/* Loader */
+.tramites-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.tramites-particle-loader {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 2rem;
+}
+
+.tramites-loader-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--tramites-primary);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  margin-top: -3px;
+  margin-left: -3px;
+  animation: tramites-particle-rotate 1.2s linear infinite;
+}
+
+@keyframes tramites-particle-rotate {
+  0% {
+    transform: rotate(0deg) translate(40px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) translate(40px) rotate(-360deg);
+    opacity: 0.3;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tramites-header-container h1 {
+    font-size: 2.5rem;
+  }
+  
+  .tramites-controls-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .tramites-filter-buttons {
+    justify-content: center;
+  }
+  
+  .tramites-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .tramites-main-container {
+    padding: 1rem;
+  }
+  
+  .tramites-header-container h1 {
+    font-size: 2rem;
+  }
+}
