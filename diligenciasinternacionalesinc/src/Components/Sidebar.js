@@ -44,9 +44,9 @@ const SidebarNavigation = () => {
       title: "Trámites",
       icon: "📋",
       items: [
-        { name: "Tipos de Trámites", path: "/tramites" },
+        { name: "Trámites", path: "/empleado/tramiteslista" },
         { name: "Nueva Solicitud", path: "/empleado/solicitudform" },
-        { name: "Solicitudes Activas", path: "/solicitudes" },
+        { name: "Solicitudes Activas", path: "/empleado/tramiteslista" },
         { name: "Calendario de Plazos", path: "/calendario" },
       ]
     },
