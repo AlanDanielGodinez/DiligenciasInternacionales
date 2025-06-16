@@ -1,99 +1,124 @@
-/* Estilos del modal */
+/* Estilos base del modal */
 .duo-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(44, 62, 80, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.3s ease-out;
 }
 
 .duo-modal {
-  background-color: #fff;
+  background-color: var(--color-background);
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   width: 90%;
   max-width: 800px;
   max-height: 90vh;
-  overflow-y: auto;
-  animation: duo-modal-fadeIn 0.3s ease-out;
-}
-
-@keyframes duo-modal-fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateY(0);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  border: 1px solid var(--color-border);
 }
 
 .duo-modal-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #eee;
+  padding: 1.25rem 1.5rem;
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .duo-modal-title {
   margin: 0;
   font-size: 1.5rem;
-  color: #333;
+  font-weight: 600;
+  color: var(--color-text-light);
 }
 
 .duo-modal-close {
   background: none;
   border: none;
+  color: var(--color-text-light);
   font-size: 1.25rem;
   cursor: pointer;
-  color: #666;
-  transition: color 0.2s;
+  transition: color 0.2s ease;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
 }
 
 .duo-modal-close:hover {
-  color: #333;
+  color: var(--color-secondary);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .duo-modal-form {
   padding: 1.5rem;
+  overflow-y: auto;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Grupos de formulario */
 .duo-form-group {
   margin-bottom: 1.25rem;
+  position: relative;
 }
 
 .duo-form-label {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #444;
+  color: var(--color-primary);
+  font-size: 0.9rem;
 }
 
+.duo-form-label:after {
+  content: '*';
+  color: var(--color-accent);
+  margin-left: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.duo-form-group.required .duo-form-label:after,
+.duo-form-group [required] + .duo-form-label:after {
+  opacity: 1;
+}
+
+/* Inputs y selects */
 .duo-form-input,
 .duo-form-select,
 .duo-form-textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background-color: white;
+  color: var(--color-text);
 }
 
 .duo-form-input:focus,
 .duo-form-select:focus,
 .duo-form-textarea:focus {
   outline: none;
-  border-color: #6e48aa;
-  box-shadow: 0 0 0 2px rgba(110, 72, 170, 0.2);
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(159, 211, 246, 0.3);
 }
 
 .duo-form-textarea {
@@ -101,10 +126,18 @@
   resize: vertical;
 }
 
+.duo-form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%232c3e50' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+}
+
+/* Filas de formulario */
 .duo-form-row {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1.25rem;
 }
 
 .duo-form-row .duo-form-group {
@@ -112,59 +145,200 @@
   margin-bottom: 0;
 }
 
-.duo-modal-footer {
-  padding-top: 1.5rem;
-  border-top: 1px solid #eee;
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
+/* Botones */
+.duo-btn {
+  padding: 0.65rem 1.25rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
 }
 
-/* Estilos para el spinner */
-.duo-spinner {
-  animation: duo-spin 1s linear infinite;
+.duo-btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+}
+
+.duo-btn-primary:hover {
+  background-color: #34495e;
+  transform: translateY(-1px);
+}
+
+.duo-btn-primary:active {
+  transform: translateY(0);
+}
+
+.duo-btn-secondary {
+  background-color: white;
+  color: var(--color-primary);
+  border-color: var(--color-border);
+}
+
+.duo-btn-secondary:hover {
+  background-color: #f1f3f5;
+  transform: translateY(-1px);
+}
+
+.duo-btn-secondary:active {
+  transform: translateY(0);
+}
+
+.duo-btn-small {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.duo-btn-icon {
   margin-right: 0.5rem;
 }
 
-@keyframes duo-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Footer del modal */
+.duo-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
+  margin-top: auto;
+  border-top: 1px solid var(--color-border);
 }
 
-/* Estilos responsivos */
+/* Alertas */
+.duo-alert {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin: 0 1.5rem 1.5rem;
+  font-size: 0.9rem;
+}
+
+.duo-alert-error {
+  background-color: #fdecea;
+  color: var(--color-accent);
+  border-left: 4px solid var(--color-accent);
+}
+
+/* Spinner */
+.duo-spinner {
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Efectos de hover y focus */
+.duo-form-input:hover,
+.duo-form-select:hover,
+.duo-form-textarea:hover {
+  border-color: #b8c2cc;
+}
+
+/* Responsividad */
 @media (max-width: 768px) {
-  .duo-form-row {
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-  
   .duo-modal {
     width: 95%;
-    max-height: 85vh;
+  }
+  
+  .duo-form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .duo-form-row .duo-form-group {
+    margin-bottom: 1.25rem;
+  }
+  
+  .duo-form-row .duo-form-group:last-child {
+    margin-bottom: 0;
+  }
+  
+  .duo-modal-footer {
+    flex-direction: column;
+  }
+  
+  .duo-btn {
+    width: 100%;
   }
 }
 
-/* Estilos para campos requeridos */
-.duo-form-label[required]::after {
-  content: ' *';
-  color: #e74c3c;
+/* Estilos para elementos deshabilitados */
+.duo-btn:disabled,
+.duo-form-input:disabled,
+.duo-form-select:disabled,
+.duo-form-textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f1f3f5;
 }
 
-/* Estilos para estado de carga */
-.duo-form-loading {
-  position: relative;
+/* Estilos para los botones de agregar/quitar */
+.duo-btn-add-remove {
+  min-width: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.duo-form-loading::after {
-  content: '';
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  border: 2px solid #ddd;
-  border-top-color: #6e48aa;
-  border-radius: 50%;
-  animation: duo-spin 0.8s linear infinite;
+/* Mejoras de accesibilidad */
+.duo-form-input:focus-visible,
+.duo-form-select:focus-visible,
+.duo-form-textarea:focus-visible,
+.duo-btn:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+/* Transiciones suaves */
+.duo-modal,
+.duo-modal-overlay,
+.duo-form-input,
+.duo-form-select,
+.duo-form-textarea,
+.duo-btn {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estilo para el placeholder */
+.duo-form-input::placeholder,
+.duo-form-textarea::placeholder {
+  color: #adb5bd;
+  opacity: 1;
+}
+
+/* Estilo para los selects múltiples */
+.duo-form-select[multiple] {
+  background-image: none;
+  min-height: 120px;
+}
+
+/* Scrollbar personalizado para el modal */
+.duo-modal-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.duo-modal-form::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.duo-modal-form::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.duo-modal-form::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }

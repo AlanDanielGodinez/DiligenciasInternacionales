@@ -223,6 +223,11 @@ SET email = correoEmpleado
 WHERE email IS NULL;
 ALTER TABLE Antecedente 
 ALTER COLUMN descipcion TYPE VARCHAR(255);
+ALTER TABLE Ciudad_Destino DROP COLUMN cantidadGrupo;
+DROP TABLE IF EXISTS Ciudad_Destino CASCADE;
+ALTER TABLE Tramite DROP COLUMN idCiudad;
+
+
 
 -- Eliminar la tabla Ciudad existente (si es necesario)
 DROP TABLE IF EXISTS Ciudad CASCADE;
@@ -249,26 +254,4 @@ CREATE INDEX idx_producto_id ON Producto(idProducto);
 CREATE INDEX idx_cliente_identificacion ON Cliente(identificacionunicanacional);
 CREATE INDEX idx_empleado_identificacion ON Empleado(identificacionunicanacional);
 
--- Comentarios sobre las tablas
-COMMENT ON TABLE Cliente IS 'Tabla que almacena información de los clientes del sistema';
-COMMENT ON TABLE Empleado IS 'Tabla que almacena información de los empleados del sistema';
-COMMENT ON TABLE Tramite IS 'Tabla que contiene los diferentes tipos de trámites disponibles';
-COMMENT ON TABLE Solicitud IS 'Tabla que registra las solicitudes de trámites realizadas por clientes';
-COMMENT ON TABLE Seguimiento IS 'Tabla que registra el seguimiento de las solicitudes';
-COMMENT ON TABLE Documento IS 'Tabla que almacena los documentos asociados a las solicitudes';
 
--- Datos iniciales (opcional)
-INSERT INTO Rol (nombreRol) VALUES 
-('Administrador'), ('Empleado'), ('Supervisor');
-
-INSERT INTO Categoria_productos (nombreCategoria) VALUES 
-('Documentos'), ('Paquetes'), ('Servicios');
-
-INSERT INTO MetodoPago (nombreMetodo) VALUES 
-('Efectivo'), ('Tarjeta de Crédito'), ('Transferencia Bancaria');
-
-INSERT INTO Pais (nombrePais) VALUES 
-('México'), ('Estados Unidos'), ('Canadá');
-
-INSERT INTO Ciudad (nombreCiudad) VALUES 
-('Ciudad de México'), ('Guadalajara'), ('Monterrey');
