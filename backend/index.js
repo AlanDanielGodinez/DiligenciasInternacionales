@@ -2288,6 +2288,62 @@ app.get('/api/clientes/:idCliente/tramites', authenticateToken, async (req, res)
 });
 
 // ==============================================
+// RUTAS PARA ciudad destino
+// ==============================================
+app.get('/api/ciudades-destino', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT idCiudad, nombreCiudad FROM Ciudad_Destino ORDER BY nombreCiudad'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener ciudades destino:', error);
+    res.status(500).json({ error: 'Error al obtener ciudades destino' });
+  }
+});
+
+app.post('/api/ciudades-destino', authenticateToken, async (req, res) => {
+  const { nombreCiudad } = req.body;
+
+  if (!nombreCiudad?.trim()) {
+    return res.status(400).json({ 
+      error: 'El nombre de la ciudad es requerido',
+      details: 'Debe proporcionar un nombre válido para la ciudad'
+    });
+  }
+
+  try {
+    // Verificar si ya existe
+    const existe = await pool.query(
+      'SELECT idCiudad FROM Ciudad_Destino WHERE LOWER(nombreCiudad) = LOWER($1)',
+      [nombreCiudad.trim()]
+    );
+    
+    if (existe.rows.length > 0) {
+      return res.status(400).json({ 
+        error: 'Ciudad ya existe',
+        details: 'Ya existe una ciudad con ese nombre'
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO Ciudad_Destino (nombreCiudad)
+       VALUES ($1)
+       RETURNING idCiudad AS "idCiudad", nombreCiudad AS "nombreCiudad"`,
+      [nombreCiudad.trim()]
+    );
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al crear ciudad destino:', error);
+    res.status(500).json({ 
+      error: 'Error al crear ciudad destino',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// ==============================================
 // INICIO DEL SERVIDOR
 // ==============================================
 
