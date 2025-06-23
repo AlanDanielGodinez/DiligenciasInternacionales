@@ -5,23 +5,20 @@ import { FaTimes, FaSave, FaSpinner, FaPlus, FaMinus } from 'react-icons/fa';
 const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado }) => {
   // Estado principal del formulario
   const [formData, setFormData] = useState({
-    tipoTramite: '',
-    descripcion: '',
-    fecha_inicio: new Date().toISOString().split('T')[0],
-    fecha_fin: '',
-    requisitos: '',
-    plazo_estimado: '',
-    costo: '',
-    idCliente: null,
-    idEmpleado: null,
-    idCiudad: '',
-    clientes: [''],
-    empleados: ['']
-  });
+  tipoTramite: '',
+  descripcion: '',
+  fecha_inicio: new Date().toISOString().split('T')[0],
+  fecha_fin: '',
+  requisitos: '',
+  plazo_estimado: '',
+  costo: '',
+  clientes: [''],
+  empleados: ['']
+});
+
 
   // Estados para datos relacionados
-  const [ciudadesDestino, setCiudadesDestino] = useState([]);
-  const [mostrarModalCiudad, setMostrarModalCiudad] = useState(false);
+ 
   const [clientesDisponibles, setClientesDisponibles] = useState([]);
   const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
   const [cargando, setCargando] = useState(false);
@@ -48,7 +45,7 @@ const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado }) => {
   useEffect(() => {
     if (mostrar) {
       cargarDatosRelacionados();
-      cargarCiudadesDestino();
+      
     }
   }, [mostrar]);
 
@@ -67,161 +64,18 @@ const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado }) => {
     }
   }, [formData.tipoTramite]);
 
-  const cargarCiudadesDestino = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get('http://localhost:5000/api/ciudades-destino', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Formatear la respuesta para asegurar consistencia en los nombres de campos
-      // En la función cargarCiudadesDestino
-      const ciudadesFormateadas = response.data.map(ciudad => ({
-        idCiudad: ciudad.idCiudad || ciudad.idciudad,
-        nombreCiudad: ciudad.nombreCiudad || ciudad.nombreciudad
-      }));
-      setCiudadesDestino(ciudadesFormateadas);
-    } catch (error) {
-      console.error('Error al cargar ciudades destino:', error);
-      setError('Error al cargar ciudades destino');
-    }
-  };
 
-  const ModalNuevaCiudad = ({ mostrar, cerrar, onGuardar }) => {
-    const [nombre, setNombre] = useState('');
-    const [cargando, setCargando] = useState(false);
-    const [error, setError] = useState(null);
 
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      e.stopPropagation(); // Evita la propagación del evento
-      setCargando(true);
-      setError(null);
-
-      if (!nombre.trim()) {
-        setError('El nombre de la ciudad es requerido.');
-        setCargando(false);
-        return;
-      }
-
-      try {
-        const token = localStorage.getItem('authToken');
-        const response = await axios.post(
-          'http://localhost:5000/api/ciudades-destino',
-          { nombreCiudad: nombre.trim() },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-
-        if (!response.data || (!response.data.idCiudad && !response.data.idciudad)) {
-          throw new Error('Respuesta del servidor inválida');
-        }
-
-        const ciudadCreada = {
-          idCiudad: response.data.idCiudad || response.data.idciudad,
-          nombreCiudad: response.data.nombreCiudad || response.data.nombreciudad || nombre.trim()
-        };
-
-        onGuardar(ciudadCreada);
-        setNombre(''); // Limpiar el campo
-        cerrar(); // Cierra solo este modal
-      } catch (err) {
-        console.error('Error al crear ciudad destino:', {
-          error: err,
-          response: err.response,
-          message: err.message,
-          stack: err.stack
-        });
-        
-        let errorMessage = 'Error al crear ciudad destino';
-        if (err.response) {
-          if (err.response.data && err.response.data.error) {
-            errorMessage = err.response.data.error;
-          } else {
-            errorMessage = `Error ${err.response.status}: ${err.response.statusText}`;
-          }
-        } else if (err.message) {
-          errorMessage = err.message;
-        }
-        
-        setError(errorMessage);
-      } finally {
-        setCargando(false);
-      }
-    };
-
-    if (!mostrar) return null;
-
-    return (
-      <div className="duo-modal-overlay" onClick={(e) => {
-        // Cierra solo al hacer clic en el overlay, no en el contenido del modal
-        if (e.target === e.currentTarget) {
-          cerrar();
-        }
-      }}>
-        <div className="duo-modal duo-modal-sm" onClick={(e) => e.stopPropagation()}>
-          <div className="duo-modal-header">
-            <h2 className="duo-modal-title">Nueva Ciudad Destino</h2>
-            <button className="duo-modal-close" onClick={(e) => {
-              e.stopPropagation();
-              cerrar();
-            }}><FaTimes /></button>
-          </div>
-
-          {error && <div className="duo-alert duo-alert-error">{error}</div>}
-
-          <form onSubmit={handleSubmit} className="duo-modal-form">
-            <div className="duo-form-group">
-              <label className="duo-form-label">Nombre de la Ciudad *</label>
-              <input
-                type="text"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                className="duo-form-input"
-                required
-              />
-            </div>
-
-            <div className="duo-modal-footer">
-              <button 
-                type="button" 
-                className="duo-btn duo-btn-secondary" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  cerrar();
-                }} 
-                disabled={cargando}
-              >
-                Cancelar
-              </button>
-              <button 
-                type="submit" 
-                className="duo-btn duo-btn-primary" 
-                disabled={cargando}
-              >
-                {cargando ? <FaSpinner className="duo-spinner" /> : <FaSave />}
-                {cargando ? 'Guardando...' : 'Guardar'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-};
-  // Función para cargar clientes y empleados
-  const cargarDatosRelacionados = async () => {
-    try {
-      setCargando(true);
-      setError(null);
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        setError('No se encontró el token de autenticación.');
-        setCargando(false);
-        return;
+// Función para cargar clientes y empleados
+const cargarDatosRelacionados = async () => {
+  try {
+    setCargando(true);
+    setError(null);
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      setError('No se encontró el token de autenticación.');
+      setCargando(false);
+      return;
       }
 
       const config = { 
@@ -317,7 +171,7 @@ const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado }) => {
   };
 
   // Enviar el formulario
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
     setCargando(true);
     setError(null);
@@ -330,20 +184,55 @@ const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado }) => {
         return;
       }
 
-      // Validación básica
+      // Validaciones básicas
       if (!formData.tipoTramite.trim()) {
         setError('El tipo de trámite es requerido');
         setCargando(false);
         return;
       }
 
+      if (!formData.plazo_estimado.trim()) {
+        setError('El plazo estimado es requerido');
+        setCargando(false);
+        return;
+      }
+
+      if (!formData.costo.trim()) {
+        setError('El costo es requerido');
+        setCargando(false);
+        return;
+      }
+
+      // Validar que haya al menos un cliente y un empleado seleccionado
+      const clientesSeleccionados = formData.clientes.filter(id => id !== '');
+      const empleadosSeleccionados = formData.empleados.filter(id => id !== '');
+
+      if (clientesSeleccionados.length === 0 || empleadosSeleccionados.length === 0) {
+        setError('Debe asignar al menos un cliente y un empleado');
+        setCargando(false);
+        return;
+      }
+
       // Preparar datos para enviar
       const datosParaEnviar = {
-        ...formData,
-        // Convertir arrays a strings separados por comas
-        idCliente: formData.clientes.filter(id => id !== '').join(','),
-        idEmpleado: formData.empleados.filter(id => id !== '').join(',')
+        tipoTramite: formData.tipoTramite.trim(),
+        descripcion: formData.descripcion?.trim() || null,
+        fecha_inicio: formData.fecha_inicio || null,
+        fecha_fin: formData.fecha_fin || null,
+        requisitos: formData.requisitos?.trim() || null,
+        plazo_estimado: formData.plazo_estimado.trim(),
+        costo: formData.costo.trim(),
+        clientes: clientesSeleccionados.map(Number),
+        empleados: empleadosSeleccionados.map(Number)
       };
+
+      // Opcional: Formatear fechas si es necesario
+      if (datosParaEnviar.fecha_inicio) {
+        datosParaEnviar.fecha_inicio = new Date(datosParaEnviar.fecha_inicio).toISOString().split('T')[0];
+      }
+      if (datosParaEnviar.fecha_fin) {
+        datosParaEnviar.fecha_fin = new Date(datosParaEnviar.fecha_fin).toISOString().split('T')[0];
+      }
 
       const response = await axios.post(
         'http://localhost:5000/api/tramites',
@@ -356,16 +245,36 @@ const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado }) => {
         }
       );
 
+      // Mostrar mensaje de éxito y cerrar modal
       onTramiteCreado(response.data);
       cerrar();
+      
     } catch (err) {
       console.error('Error al crear trámite:', err);
-      setError(err.response?.data?.error || 'Error al crear trámite');
+      
+      // Manejo mejorado de errores
+      let mensajeError = 'Error al crear trámite';
+      
+      if (err.response) {
+        // Error desde el backend
+        if (err.response.data && err.response.data.error) {
+          mensajeError = err.response.data.error;
+          if (err.response.data.details) {
+            mensajeError += ` (${err.response.data.details})`;
+          }
+        } else {
+          mensajeError = `Error ${err.response.status}: ${err.response.statusText}`;
+        }
+      } else if (err.request) {
+        // Error de conexión
+        mensajeError = 'No se pudo conectar con el servidor';
+      }
+      
+      setError(mensajeError);
     } finally {
       setCargando(false);
     }
   };
-
   if (!mostrar) return null;
 
   return (
@@ -558,52 +467,6 @@ const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado }) => {
             </button>
           </div>
 
-          {/* Ciudad Destino */}
-          <div className="duo-form-group">
-            <label className="duo-form-label">Ciudad Destino</label>
-            <div className="duo-form-row" style={{ alignItems: 'center' }}>
-              <select
-                name="idCiudad"
-                value={formData.idCiudad}
-                onChange={(e) => setFormData({...formData, idCiudad: e.target.value})}
-                className="duo-form-select"
-                style={{ flex: 1 }}
-              >
-                <option value="">Seleccionar ciudad destino</option>
-                {ciudadesDestino.map(ciudad => (
-                  <option key={ciudad.idCiudad} value={ciudad.idCiudad}>
-                    {ciudad.nombreCiudad}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => setMostrarModalCiudad(true)}
-                className="duo-btn duo-btn-secondary"
-                style={{ marginLeft: '0.5rem' }}
-              >
-                <FaPlus />
-              </button>
-            </div>
-          </div>
-
-          <ModalNuevaCiudad
-            mostrar={mostrarModalCiudad}
-            cerrar={() => setMostrarModalCiudad(false)}  // Esto solo afecta al modal de ciudad
-            onGuardar={(nuevaCiudad) => {
-              if (nuevaCiudad && nuevaCiudad.idCiudad && nuevaCiudad.nombreCiudad) {
-                setCiudadesDestino(prev => [...prev, {
-                  idCiudad: nuevaCiudad.idCiudad,
-                  nombreCiudad: nuevaCiudad.nombreCiudad
-                }]);
-                setFormData(prev => ({ 
-                  ...prev, 
-                  idCiudad: nuevaCiudad.idCiudad 
-                }));
-              }
-              // No llamar a cerrar() aquí, ya que el modal de ciudad se cierra en su propio handleSubmit
-            }}
-          />
 
           {/* Botones del formulario */}
           <div className="duo-modal-footer">
