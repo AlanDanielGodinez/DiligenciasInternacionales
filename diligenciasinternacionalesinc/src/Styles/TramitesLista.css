@@ -1,16 +1,4 @@
-/* Variables específicas para trámites */
-:root {
-  --tramites-primary: #6e48aa;
-  --tramites-secondary: #9d50bb;
-  --tramites-accent: #4776e6;
-  --tramites-text: #f0f0f0;
-  --tramites-bg: #121212;
-  --tramites-card-bg: rgba(30, 30, 40, 0.7);
-  --tramites-card-border: rgba(255, 255, 255, 0.1);
-  --tramites-glow: rgba(110, 72, 170, 0.4);
-  --tramites-active: #4caf50;
-  --tramites-completed: #f44336;
-}
+
 
 /* Estilos base para el módulo de trámites */
 .tramites-main-container {

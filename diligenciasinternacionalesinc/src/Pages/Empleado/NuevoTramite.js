@@ -64,6 +64,24 @@ const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado }) => {
     }
   }, [formData.tipoTramite]);
 
+  useEffect(() => {
+  if (!mostrar) {
+    setFormData({
+      tipoTramite: '',
+      descripcion: '',
+      fecha_inicio: new Date().toISOString().split('T')[0],
+      fecha_fin: '',
+      requisitos: '',
+      plazo_estimado: '',
+      costo: '',
+      clientes: [''],
+      empleados: ['']
+    });
+    setError(null);
+  }
+}, [mostrar]);
+
+
 
 
 // Función para cargar clientes y empleados
@@ -204,8 +222,9 @@ const cargarDatosRelacionados = async () => {
       }
 
       // Validar que haya al menos un cliente y un empleado seleccionado
-      const clientesSeleccionados = formData.clientes.filter(id => id !== '');
-      const empleadosSeleccionados = formData.empleados.filter(id => id !== '');
+      const clientesSeleccionados = formData.clientes.map(c => c.trim()).filter(id => id !== '');
+const empleadosSeleccionados = formData.empleados.map(e => e.trim()).filter(id => id !== '');
+
 
       if (clientesSeleccionados.length === 0 || empleadosSeleccionados.length === 0) {
         setError('Debe asignar al menos un cliente y un empleado');
@@ -232,6 +251,11 @@ const cargarDatosRelacionados = async () => {
       }
       if (datosParaEnviar.fecha_fin) {
         datosParaEnviar.fecha_fin = new Date(datosParaEnviar.fecha_fin).toISOString().split('T')[0];
+      }
+      if (formData.fecha_fin && formData.fecha_inicio && formData.fecha_fin < formData.fecha_inicio) {
+        setError('La fecha de fin no puede ser anterior a la fecha de inicio');
+        setCargando(false);
+        return;
       }
 
       const response = await axios.post(
