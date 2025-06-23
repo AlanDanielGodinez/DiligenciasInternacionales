@@ -244,6 +244,51 @@ ALTER TABLE Cliente
 DROP COLUMN IF EXISTS idCiudad,
 ADD COLUMN idCiudad INT REFERENCES Ciudad(idCiudad);
 
+ALTER TABLE Tramite DROP COLUMN idCliente;
+ALTER TABLE Tramite DROP COLUMN idEmpleado;
+
+CREATE TABLE Tramite_Cliente (
+  idTramite INT REFERENCES Tramite(idTramite) ON DELETE CASCADE,
+  idCliente INT REFERENCES Cliente(idCliente) ON DELETE CASCADE,
+  PRIMARY KEY (idTramite, idCliente)
+);
+
+CREATE TABLE Tramite_Empleado (
+  idTramite INT REFERENCES Tramite(idTramite) ON DELETE CASCADE,
+  idEmpleado INT REFERENCES Empleado(idEmpleado) ON DELETE CASCADE,
+  PRIMARY KEY (idTramite, idEmpleado)
+);
+
+-- Eliminar la referencia en Tramite (si no lo hiciste aún)
+ALTER TABLE Tramite DROP COLUMN IF EXISTS idGrupo;
+
+-- Eliminar tabla Grupo
+DROP TABLE IF EXISTS Grupo CASCADE;
+
+-- Asegurar que no haya datos inconsistentes
+DELETE FROM Tramite_Cliente WHERE idCliente NOT IN (SELECT idCliente FROM Cliente);
+DELETE FROM Tramite_Empleado WHERE idEmpleado NOT IN (SELECT idEmpleado FROM Empleado);
+
+-- Agregar constraints adicionales
+ALTER TABLE Tramite ALTER COLUMN tipoTramite SET NOT NULL;
+ALTER TABLE Tramite ALTER COLUMN plazo_estimado SET NOT NULL;
+ALTER TABLE Tramite ALTER COLUMN costo SET NOT NULL;
+
+-- Cambiar tipo de fecha a DATE (opcional pero recomendado)
+ALTER TABLE Tramite 
+ALTER COLUMN fecha_inicio TYPE DATE USING fecha_inicio::DATE,
+ALTER COLUMN fecha_fin TYPE DATE USING fecha_fin::DATE;
+
+UPDATE Tramite SET costo = '' WHERE costo IS NULL;
+UPDATE Tramite SET plazo_estimado = '' WHERE plazo_estimado IS NULL;
+ALTER TABLE Tramite ALTER COLUMN costo SET NOT NULL;
+ALTER TABLE Tramite ALTER COLUMN plazo_estimado SET NOT NULL;
+
+ALTER TABLE Tramite ALTER COLUMN plazo_estimado DROP NOT NULL;
+ALTER TABLE Tramite ALTER COLUMN costo DROP NOT NULL;
+
+
+
 
 -- Índices para mejorar el rendimiento
 CREATE INDEX idx_cliente_id ON Cliente(idCliente);
@@ -253,5 +298,4 @@ CREATE INDEX idx_tramite_id ON Tramite(idTramite);
 CREATE INDEX idx_producto_id ON Producto(idProducto);
 CREATE INDEX idx_cliente_identificacion ON Cliente(identificacionunicanacional);
 CREATE INDEX idx_empleado_identificacion ON Empleado(identificacionunicanacional);
-
 

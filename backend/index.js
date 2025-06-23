@@ -251,24 +251,6 @@ app.get('/api/auth/current-user', authenticateToken, async (req, res) => {
 });
 
 
-// Crear nuevo trámite
-app.post('/api/tramites', authenticateToken, async (req, res) => {
-  const { tipoTramite, descripcion, requisitos } = req.body;
-
-  try {
-    const result = await pool.query(
-      `INSERT INTO Tramite (
-        tipoTramite, descripcion, requisitos
-      ) VALUES ($1, $2, $3) RETURNING idTramite, tipoTramite, descripcion`,
-      [tipoTramite, descripcion, requisitos || '']
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error('Error al crear trámite:', error);
-    res.status(500).json({ error: 'Error al crear trámite' });
-  }
-});
-
 
 // ==============================================
 // RUTAS PARA EL FORMULARIO DE SOLICITUDES
@@ -1914,434 +1896,156 @@ app.delete('/api/ciudades/:id', authenticateToken, async (req, res) => {
 });
 
 // ==============================================
-// RUTAS PARA TRAMITES
+// RUTAS PARA TRÁMITES (VERSIÓN CORREGIDA)
 // ==============================================
 
-// Obtener todos los trámites con información relacionada
-app.get('/api/tramites-completos', authenticateToken, async (req, res) => {
+// Configuración adicional para manejo de fechas
+const formatDate = (dateString) => {
+  if (!dateString) return null;
   try {
-    const result = await pool.query(`
-      SELECT 
-        t.idTramite,
-        t.tipoTramite,
-        t.descripcion,
-        t.fecha_inicio,
-        t.fecha_fin,
-        t.requisitos,
-        t.plazo_estimado,
-        t.costo,
-        c.idCliente,
-        c.nombreCliente || ' ' || c.apellidoPaternoCliente AS "nombreCliente",
-        e.idEmpleado,
-        e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS "nombreEmpleado",
-        g.idGrupo,
-        g.nombreGrupo,
-        cd.idCiudad AS "idCiudadDestino",
-        cd.nombreCiudad AS "nombreCiudadDestino"
-      FROM Tramite t
-      LEFT JOIN Cliente c ON t.idCliente = c.idCliente
-      LEFT JOIN Empleado e ON t.idEmpleado = e.idEmpleado
-      LEFT JOIN Grupo g ON t.idGrupo = g.idGrupo
-      LEFT JOIN Ciudad_Destino cd ON t.idCiudad = cd.idCiudad
-      ORDER BY t.tipoTramite
-    `);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error al obtener trámites completos:', error);
-    res.status(500).json({ error: 'Error al obtener trámites completos' });
+    return new Date(dateString).toISOString().split('T')[0];
+  } catch (e) {
+    return null;
   }
-});
+};
 
-// Obtener un trámite específico por ID
-app.get('/api/tramites/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  
-  try {
-    const result = await pool.query(`
-      SELECT 
-        t.*,
-        c.nombreCliente || ' ' || c.apellidoPaternoCliente AS "nombreCliente",
-        e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS "nombreEmpleado",
-        g.nombreGrupo,
-        cd.nombreCiudad AS "nombreCiudadDestino"
-      FROM Tramite t
-      LEFT JOIN Cliente c ON t.idCliente = c.idCliente
-      LEFT JOIN Empleado e ON t.idEmpleado = e.idEmpleado
-      LEFT JOIN Grupo g ON t.idGrupo = g.idGrupo
-      LEFT JOIN Ciudad_Destino cd ON t.idCiudad = cd.idCiudad
-      WHERE t.idTramite = $1
-    `, [id]);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Trámite no encontrado' });
-    }
-    
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Error al obtener trámite:', error);
-    res.status(500).json({ error: 'Error al obtener trámite' });
-  }
-});
-
-// Crear nuevo trámite (versión mejorada)
 app.post('/api/tramites', authenticateToken, async (req, res) => {
-  const { 
+  const {
     tipoTramite, 
     descripcion, 
     fecha_inicio, 
-    fecha_fin, 
+    fecha_fin,
     requisitos, 
     plazo_estimado, 
-    costo, 
-    idCliente, 
-    idEmpleado, 
-    idGrupo, 
-    idCiudad 
+    costo,
+    clientes = [], 
+    empleados = []
   } = req.body;
 
-  // Validación básica
-  if (!tipoTramite?.trim()) {
-    return res.status(400).json({ error: 'El tipo de trámite es requerido' });
+  const errors = [];
+
+  if (!tipoTramite?.trim()) errors.push('El tipo de trámite es requerido');
+  if (!plazo_estimado?.trim()) errors.push('El plazo estimado es requerido');
+  if (!costo?.trim()) errors.push('El costo es requerido');
+
+  const fechaInicioFormateada = fecha_inicio ? new Date(fecha_inicio).toISOString().split('T')[0] : null;
+  const fechaFinFormateada = fecha_fin ? new Date(fecha_fin).toISOString().split('T')[0] : null;
+
+  const clienteIds = Array.isArray(clientes) ? clientes.map(Number).filter(Boolean) : [];
+  const empleadoIds = Array.isArray(empleados) ? empleados.map(Number).filter(Boolean) : [];
+
+  if (clienteIds.length === 0) errors.push('Debe seleccionar al menos un cliente');
+  if (empleadoIds.length === 0) errors.push('Debe seleccionar al menos un empleado');
+
+  if (errors.length > 0) {
+    return res.status(400).json({ error: 'Error de validación', details: errors });
   }
 
+  const client = await pool.connect();
   try {
-    // Verificar relaciones si se proporcionan
-    if (idCliente) {
-      const clienteExists = await pool.query('SELECT idCliente FROM Cliente WHERE idCliente = $1', [idCliente]);
-      if (clienteExists.rows.length === 0) {
-        return res.status(400).json({ error: 'El cliente especificado no existe' });
-      }
-    }
+    await client.query('BEGIN');
 
-    if (idEmpleado) {
-      const empleadoExists = await pool.query('SELECT idEmpleado FROM Empleado WHERE idEmpleado = $1', [idEmpleado]);
-      if (empleadoExists.rows.length === 0) {
-        return res.status(400).json({ error: 'El empleado especificado no existe' });
-      }
-    }
-
-    if (idGrupo) {
-      const grupoExists = await pool.query('SELECT idGrupo FROM Grupo WHERE idGrupo = $1', [idGrupo]);
-      if (grupoExists.rows.length === 0) {
-        return res.status(400).json({ error: 'El grupo especificado no existe' });
-      }
-    }
-
-    if (idCiudad) {
-      const ciudadExists = await pool.query('SELECT idCiudad FROM Ciudad_Destino WHERE idCiudad = $1', [idCiudad]);
-      if (ciudadExists.rows.length === 0) {
-        return res.status(400).json({ error: 'La ciudad destino especificada no existe' });
-      }
-    }
-
-    const result = await pool.query(
+    const tramiteResult = await client.query(
       `INSERT INTO Tramite (
         tipoTramite, descripcion, fecha_inicio, fecha_fin,
-        requisitos, plazo_estimado, costo, idCliente,
-        idEmpleado, idGrupo, idCiudad
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      RETURNING *`,
+        requisitos, plazo_estimado, costo
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING idTramite`,
       [
         tipoTramite.trim(),
-        descripcion?.trim() || null,
-        fecha_inicio || null,
-        fecha_fin || null,
-        requisitos?.trim() || null,
-        plazo_estimado?.trim() || null,
-        costo?.trim() || null,
-        idCliente || null,
-        idEmpleado || null,
-        idGrupo || null,
-        idCiudad || null
+        descripcion?.trim() || '',
+        fechaInicioFormateada,
+        fechaFinFormateada,
+        requisitos?.trim() || '',
+        plazo_estimado.trim(),
+        costo.trim()
       ]
     );
-    
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error('Error al crear trámite:', error);
-    
-    let mensaje = 'Error al crear trámite';
-    if (error.code === '23503') { // Violación de llave foránea
-      mensaje = 'Error en alguna de las relaciones (cliente, empleado, grupo o ciudad)';
-    } else if (error.code === '22008') { // Error de formato de fecha
-      mensaje = 'Formato de fecha inválido (use YYYY-MM-DD)';
-    }
-    
-    res.status(500).json({ 
-      error: mensaje,
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
 
-// Actualizar trámite
-app.put('/api/tramites/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  const { 
-    tipoTramite, 
-    descripcion, 
-    fecha_inicio, 
-    fecha_fin, 
-    requisitos, 
-    plazo_estimado, 
-    costo, 
-    idCliente, 
-    idEmpleado, 
-    idGrupo, 
-    idCiudad 
-  } = req.body;
+    const idTramite = tramiteResult.rows[0].idtramite;
 
-  // Validación básica
-  if (!tipoTramite?.trim()) {
-    return res.status(400).json({ error: 'El tipo de trámite es requerido' });
-  }
-
-  try {
-    // Verificar que el trámite existe
-    const tramiteExists = await pool.query('SELECT idTramite FROM Tramite WHERE idTramite = $1', [id]);
-    if (tramiteExists.rows.length === 0) {
-      return res.status(404).json({ error: 'Trámite no encontrado' });
+    for (const idCliente of clienteIds) {
+      await client.query(
+        `INSERT INTO Tramite_Cliente (idTramite, idCliente) VALUES ($1, $2)`,
+        [idTramite, idCliente]
+      );
     }
 
-    // Verificar relaciones si se proporcionan
-    if (idCliente) {
-      const clienteExists = await pool.query('SELECT idCliente FROM Cliente WHERE idCliente = $1', [idCliente]);
-      if (clienteExists.rows.length === 0) {
-        return res.status(400).json({ error: 'El cliente especificado no existe' });
-      }
+    for (const idEmpleado of empleadoIds) {
+      await client.query(
+        `INSERT INTO Tramite_Empleado (idTramite, idEmpleado) VALUES ($1, $2)`,
+        [idTramite, idEmpleado]
+      );
     }
 
-    if (idEmpleado) {
-      const empleadoExists = await pool.query('SELECT idEmpleado FROM Empleado WHERE idEmpleado = $1', [idEmpleado]);
-      if (empleadoExists.rows.length === 0) {
-        return res.status(400).json({ error: 'El empleado especificado no existe' });
-      }
-    }
+    await client.query('COMMIT');
 
-    if (idGrupo) {
-      const grupoExists = await pool.query('SELECT idGrupo FROM Grupo WHERE idGrupo = $1', [idGrupo]);
-      if (grupoExists.rows.length === 0) {
-        return res.status(400).json({ error: 'El grupo especificado no existe' });
-      }
-    }
-
-    if (idCiudad) {
-      const ciudadExists = await pool.query('SELECT idCiudad FROM Ciudad_Destino WHERE idCiudad = $1', [idCiudad]);
-      if (ciudadExists.rows.length === 0) {
-        return res.status(400).json({ error: 'La ciudad destino especificada no existe' });
-      }
-    }
-
-    const result = await pool.query(
-      `UPDATE Tramite SET
-        tipoTramite = $1,
-        descripcion = $2,
-        fecha_inicio = $3,
-        fecha_fin = $4,
-        requisitos = $5,
-        plazo_estimado = $6,
-        costo = $7,
-        idCliente = $8,
-        idEmpleado = $9,
-        idGrupo = $10,
-        idCiudad = $11
-      WHERE idTramite = $12
-      RETURNING *`,
-      [
-        tipoTramite.trim(),
-        descripcion?.trim() || null,
-        fecha_inicio || null,
-        fecha_fin || null,
-        requisitos?.trim() || null,
-        plazo_estimado?.trim() || null,
-        costo?.trim() || null,
-        idCliente || null,
-        idEmpleado || null,
-        idGrupo || null,
-        idCiudad || null,
-        id
-      ]
-    );
-    
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Error al actualizar trámite:', error);
-    
-    let mensaje = 'Error al actualizar trámite';
-    if (error.code === '23503') { // Violación de llave foránea
-      mensaje = 'Error en alguna de las relaciones (cliente, empleado, grupo o ciudad)';
-    } else if (error.code === '22008') { // Error de formato de fecha
-      mensaje = 'Formato de fecha inválido (use YYYY-MM-DD)';
-    }
-    
-    res.status(500).json({ 
-      error: mensaje,
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
-
-// Eliminar trámite
-app.delete('/api/tramites/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    // Verificar si el trámite existe
-    const tramiteExists = await pool.query('SELECT idTramite FROM Tramite WHERE idTramite = $1', [id]);
-    if (tramiteExists.rows.length === 0) {
-      return res.status(404).json({ error: 'Trámite no encontrado' });
-    }
-
-    // Verificar si tiene solicitudes asociadas
-    const solicitudesCount = await pool.query(
-      'SELECT COUNT(*) FROM Solicitud WHERE idTramite = $1',
-      [id]
-    );
-    
-    if (parseInt(solicitudesCount.rows[0].count) > 0) {
-      return res.status(400).json({
-        error: 'No se puede eliminar el trámite',
-        details: 'Hay solicitudes asociadas a este trámite. Elimine las solicitudes primero.'
-      });
-    }
-
-    const result = await pool.query(
-      'DELETE FROM Tramite WHERE idTramite = $1 RETURNING idTramite, tipoTramite',
-      [id]
-    );
-
-    res.json({
-      success: true,
-      message: 'Trámite eliminado correctamente',
-      tramite: result.rows[0]
-    });
-  } catch (error) {
-    console.error('Error al eliminar trámite:', error);
-    res.status(500).json({ 
-      error: 'Error al eliminar trámite',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
-
-// Buscar trámites por tipo o descripción
-app.get('/api/tramites/buscar', authenticateToken, async (req, res) => {
-  const { query } = req.query;
-
-  if (!query?.trim()) {
-    return res.status(400).json({ error: 'Término de búsqueda requerido' });
-  }
-
-  try {
-    const searchTerm = `%${query.trim().toLowerCase()}%`;
-    const result = await pool.query(`
-      SELECT 
-        idTramite, 
-        tipoTramite, 
-        descripcion,
-        fecha_inicio
-      FROM Tramite
-      WHERE LOWER(tipoTramite) LIKE $1 OR LOWER(descripcion) LIKE $1
-      ORDER BY tipoTramite
-      LIMIT 20
-    `, [searchTerm]);
-    
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error al buscar trámites:', error);
-    res.status(500).json({ error: 'Error al buscar trámites' });
-  }
-});
-
-// Obtener trámites por cliente
-app.get('/api/clientes/:idCliente/tramites', authenticateToken, async (req, res) => {
-  const { idCliente } = req.params;
-
-  try {
-    // Verificar que el cliente existe
-    const clienteExists = await pool.query('SELECT idCliente FROM Cliente WHERE idCliente = $1', [idCliente]);
-    if (clienteExists.rows.length === 0) {
-      return res.status(404).json({ error: 'Cliente no encontrado' });
-    }
-
-    const result = await pool.query(`
-      SELECT 
-        t.idTramite,
-        t.tipoTramite,
-        t.descripcion,
-        t.fecha_inicio,
-        t.fecha_fin,
-        t.plazo_estimado,
-        t.costo,
-        e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS "nombreEmpleado"
+    const tramiteCompleto = await client.query(`
+      SELECT t.*, 
+        (
+          SELECT json_agg(json_build_object(
+            'idCliente', c.idCliente,
+            'nombre', c.nombreCliente || ' ' || c.apellidoPaternoCliente
+          )) FROM Tramite_Cliente tc
+          JOIN Cliente c ON tc.idCliente = c.idCliente
+          WHERE tc.idTramite = t.idTramite
+        ) AS clientes,
+        (
+          SELECT json_agg(json_build_object(
+            'idEmpleado', e.idEmpleado,
+            'nombre', e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado
+          )) FROM Tramite_Empleado te
+          JOIN Empleado e ON te.idEmpleado = e.idEmpleado
+          WHERE te.idTramite = t.idTramite
+        ) AS empleados
       FROM Tramite t
-      LEFT JOIN Empleado e ON t.idEmpleado = e.idEmpleado
-      WHERE t.idCliente = $1
-      ORDER BY t.fecha_inicio DESC
-    `, [idCliente]);
-    
-    res.json(result.rows);
+      WHERE t.idTramite = $1
+    `, [idTramite]);
+
+    res.status(201).json(tramiteCompleto.rows[0]);
   } catch (error) {
-    console.error('Error al obtener trámites por cliente:', error);
-    res.status(500).json({ error: 'Error al obtener trámites por cliente' });
+    await client.query('ROLLBACK');
+    console.error('Error al crear trámite:', error);
+    res.status(500).json({ error: 'Error al crear trámite', details: error.message });
+  } finally {
+    client.release();
   }
 });
 
-// ==============================================
-// RUTAS PARA ciudad destino
-// ==============================================
-app.get('/api/ciudades-destino', authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query(
-      'SELECT idCiudad, nombreCiudad FROM Ciudad_Destino ORDER BY nombreCiudad'
-    );
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error al obtener ciudades destino:', error);
-    res.status(500).json({ error: 'Error al obtener ciudades destino' });
-  }
-});
 
-app.post('/api/ciudades-destino', authenticateToken, async (req, res) => {
-  const { nombreCiudad } = req.body;
+// Función auxiliar para obtener trámite completo
+async function getTramiteCompleto(idTramite) {
+  const query = `
+    SELECT 
+      t.*,
+      (
+        SELECT json_agg(json_build_object(
+          'idCliente', c.idCliente,
+          'nombre', c.nombreCliente || ' ' || c.apellidoPaternoCliente
+        ))
+        FROM Tramite_Cliente tc
+        JOIN Cliente c ON c.idCliente = tc.idCliente
+        WHERE tc.idTramite = t.idTramite
+      ) AS clientes,
+      (
+        SELECT json_agg(json_build_object(
+          'idEmpleado', e.idEmpleado,
+          'nombre', e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado
+        ))
+        FROM Tramite_Empleado te
+        JOIN Empleado e ON e.idEmpleado = te.idEmpleado
+        WHERE te.idTramite = t.idTramite
+      ) AS empleados
+    FROM Tramite t
+    WHERE t.idTramite = $1
+  `;
+  
+  const result = await pool.query(query, [idTramite]);
+  return result.rows[0];
+}
 
-  if (!nombreCiudad?.trim()) {
-    return res.status(400).json({ 
-      error: 'El nombre de la ciudad es requerido',
-      details: 'Debe proporcionar un nombre válido para la ciudad'
-    });
-  }
 
-  try {
-    // Verificar si ya existe
-    const existe = await pool.query(
-      'SELECT idCiudad FROM Ciudad_Destino WHERE LOWER(nombreCiudad) = LOWER($1)',
-      [nombreCiudad.trim()]
-    );
-    
-    if (existe.rows.length > 0) {
-      return res.status(400).json({ 
-        error: 'Ciudad ya existe',
-        details: 'Ya existe una ciudad con ese nombre'
-      });
-    }
 
-    const result = await pool.query(
-      `INSERT INTO Ciudad_Destino (nombreCiudad)
-       VALUES ($1)
-       RETURNING idCiudad AS "idCiudad", nombreCiudad AS "nombreCiudad"`,
-      [nombreCiudad.trim()]
-    );
-    
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error('Error al crear ciudad destino:', error);
-    res.status(500).json({ 
-      error: 'Error al crear ciudad destino',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
 
 // ==============================================
 // INICIO DEL SERVIDOR
