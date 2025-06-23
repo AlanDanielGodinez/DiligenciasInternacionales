@@ -880,21 +880,6 @@ app.delete('/api/roles/:id', authenticateToken, async (req, res) => {
 });
 
 
-// Obtener todos los trámites
-app.get('/api/tramites', authenticateToken, async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT idTramite, tipoTramite, descripcion 
-      FROM Tramite
-      ORDER BY tipoTramite
-    `);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error al obtener trámites:', error);
-    res.status(500).json({ error: 'Error al obtener trámites' });
-  }
-});
-
 
 // ==============================================
 // RUTAS PARA CLIENTES
@@ -1909,6 +1894,7 @@ const formatDate = (dateString) => {
   }
 };
 
+// Crear un nuevo trámite
 app.post('/api/tramites', authenticateToken, async (req, res) => {
   const {
     tipoTramite, 
@@ -2012,6 +1998,42 @@ app.post('/api/tramites', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/tramites
+app.get('/api/tramites', async (req, res) => {
+  try {
+    const { rows: tramites } = await pool.query(`
+      SELECT 
+        t.idtramite,
+        t.tipotramite,
+        t.descripcion,
+        t.fecha_inicio,
+        t.fecha_fin,
+        t.requisitos,
+        t.plazo_estimado,
+        t.costo,
+        COALESCE(json_agg(DISTINCT jsonb_build_object(
+          'idCliente', c.idcliente,
+          'nombre', c.nombrecliente || ' ' || c.apellidopaternocliente
+        )) FILTER (WHERE c.idcliente IS NOT NULL), '[]') AS clientes,
+        COALESCE(json_agg(DISTINCT jsonb_build_object(
+          'idEmpleado', e.idempleado,
+          'nombre', e.nombreempleado || ' ' || e.apellidopaternoempleado
+        )) FILTER (WHERE e.idempleado IS NOT NULL), '[]') AS empleados
+      FROM tramite t
+      LEFT JOIN tramite_cliente tc ON t.idtramite = tc.idtramite
+      LEFT JOIN cliente c ON tc.idcliente = c.idcliente
+      LEFT JOIN tramite_empleado te ON t.idtramite = te.idtramite
+      LEFT JOIN empleado e ON te.idempleado = e.idempleado
+      GROUP BY t.idtramite
+      ORDER BY t.fecha_inicio DESC;
+    `);
+
+    res.json(tramites);
+  } catch (err) {
+    console.error('Error al obtener trámites:', err);
+    res.status(500).json({ error: 'Error al obtener la lista de trámites' });
+  }
+});
 
 // Función auxiliar para obtener trámite completo
 async function getTramiteCompleto(idTramite) {

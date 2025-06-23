@@ -34,7 +34,7 @@ const Tramites = () => {
     
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('http://localhost:5000/api/tramites-completos', {
+      const response = await axios.get('http://localhost:5000/api/tramites', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -71,11 +71,12 @@ const Tramites = () => {
       const terminoLower = state.terminoBusqueda.toLowerCase();
       filtrados = filtrados.filter(tramite => {
         const camposBusqueda = [
-          tramite.tipoTramite,
-          tramite.descripcion,
-          tramite.nombreCliente,
-          tramite.nombreEmpleado
-        ].map(campo => campo?.toLowerCase() || '');
+        tramite.tipoTramite,
+        tramite.descripcion,
+        ...(tramite.clientes?.map(c => c.nombre) || []),
+        ...(tramite.empleados?.map(e => e.nombre) || [])
+      ];
+
         
         return camposBusqueda.some(campo => campo.includes(terminoLower));
       });
@@ -218,13 +219,21 @@ const Tramites = () => {
                 
                 <div className="duo-card-meta">
                   <div className="duo-meta-item">
-                    <span className="duo-meta-label">Cliente:</span>
-                    <span className="duo-meta-value">{tramite.nombreCliente || 'N/A'}</span>
-                  </div>
-                  <div className="duo-meta-item">
-                    <span className="duo-meta-label">Responsable:</span>
-                    <span className="duo-meta-value">{tramite.nombreEmpleado || 'N/A'}</span>
-                  </div>
+                  <span className="duo-meta-label">Clientes:</span>
+                  <span className="duo-meta-value">
+                    {tramite.clientes && tramite.clientes.length > 0
+                      ? tramite.clientes.map(c => c.nombre).join(', ')
+                      : 'N/A'}
+                  </span>
+                </div>
+                <div className="duo-meta-item">
+                  <span className="duo-meta-label">Responsables:</span>
+                  <span className="duo-meta-value">
+                    {tramite.empleados && tramite.empleados.length > 0
+                      ? tramite.empleados.map(e => e.nombre).join(', ')
+                      : 'N/A'}
+                  </span>
+                </div>
                   <div className="duo-meta-item">
                     <span className="duo-meta-label">Inicio:</span>
                     <span className="duo-meta-value">{formatearFecha(tramite.fecha_inicio)}</span>
