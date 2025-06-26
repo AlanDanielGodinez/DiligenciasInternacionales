@@ -16,7 +16,7 @@ import Clientes from "./Pages/Empleado/Clientes";
 import Antecendentes from "./Pages/Empleado/Antecedentes";
 import PaisesCiudades from "./Pages/Empleado/PaisesCiudades";
 import TramitesLista from "./Pages/Empleado/TramitesLista";
-
+import EditarTramite from "./Pages/Empleado/ActualizarTramite"; // Asegúrate de que esta ruta sea correcta
 import "./App.css";
 
 // Importaciones de estilos
@@ -78,6 +78,7 @@ function App() {
               <Route path="/empleado/clientes" element={<Clientes />} />
               <Route path="/empleado/tramiteslista" element={<TramitesLista />} />
               <Route path="/empleado/paisesciudades" element={<PaisesCiudades />} />
+              <Route path="/empleado/tramites/editar/:id" element={<EditarTramite />} />
               {/* Aquí puedes agregar más rutas protegidas */}
             </Route>
             
