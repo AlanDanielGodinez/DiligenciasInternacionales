@@ -2066,6 +2066,181 @@ async function getTramiteCompleto(idTramite) {
   return result.rows[0];
 }
 
+// GET cierto trámite por ID
+app.get('/api/tramites/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  // Validación del ID
+  if (!id || isNaN(parseInt(id))) {
+    return res.status(400).json({ 
+      error: 'ID de trámite inválido',
+      details: `El ID proporcionado (${id}) no es válido`
+    });
+  }
+
+  try {
+    console.log(`Intentando obtener trámite con ID: ${id}`); // Log para depuración
+    
+    const tramite = await getTramiteCompleto(id);
+    
+    if (!tramite) {
+      console.log(`Trámite con ID ${id} no encontrado`);
+      return res.status(404).json({ 
+        error: 'Trámite no encontrado',
+        details: `No existe un trámite con el ID ${id}`
+      });
+    }
+
+    console.log(`Trámite encontrado:`, tramite); // Log para depuración
+    return res.json(tramite);
+
+  } catch (error) {
+    console.error('Error al obtener trámite por ID:', error);
+    
+    // Distinguir entre diferentes tipos de errores
+    if (error.message.includes('timeout')) {
+      return res.status(504).json({ 
+        error: 'Timeout al consultar la base de datos',
+        details: error.message
+      });
+    }
+    
+    return res.status(500).json({ 
+      error: 'Error interno al obtener trámite',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// PUT /api/tramites/:id - Versión corregida
+app.put('/api/tramites/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  
+  // Validar que el ID sea un número
+  if (isNaN(parseInt(id))) {
+    return res.status(400).json({ error: 'ID de trámite inválido' });
+  }
+
+  const {
+    tipoTramite, 
+    descripcion, 
+    fecha_inicio, 
+    fecha_fin,
+    requisitos, 
+    plazo_estimado, 
+    costo,
+    clientes = [], 
+    empleados = []
+  } = req.body;
+
+  // Validaciones mejoradas
+  const errors = [];
+  if (!tipoTramite?.trim()) errors.push('El tipo de trámite es requerido');
+  if (!plazo_estimado?.trim()) errors.push('El plazo estimado es requerido');
+  if (!costo?.trim()) errors.push('El costo es requerido');
+
+  // Validación y conversión segura de IDs
+  const clienteIds = Array.isArray(clientes) 
+    ? clientes.map(id => parseInt(id)).filter(id => !isNaN(id))
+    : [];
+  
+  const empleadoIds = Array.isArray(empleados) 
+    ? empleados.map(id => parseInt(id)).filter(id => !isNaN(id))
+    : [];
+
+  if (clienteIds.length === 0) errors.push('Debe seleccionar al menos un cliente válido');
+  if (empleadoIds.length === 0) errors.push('Debe seleccionar al menos un empleado válido');
+
+  if (errors.length > 0) {
+    return res.status(400).json({ 
+      error: 'Error de validación', 
+      details: errors 
+    });
+  }
+
+  // Formateo de fechas
+  const fechaInicioFormateada = fecha_inicio 
+    ? new Date(fecha_inicio).toISOString().split('T')[0] 
+    : null;
+  const fechaFinFormateada = fecha_fin 
+    ? new Date(fecha_fin).toISOString().split('T')[0] 
+    : null;
+
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    // 1. Actualizar trámite principal
+    const updateQuery = `
+      UPDATE Tramite SET
+        tipoTramite = $1,
+        descripcion = $2,
+        fecha_inicio = $3,
+        fecha_fin = $4,
+        requisitos = $5,
+        plazo_estimado = $6,
+        costo = $7
+      WHERE idTramite = $8
+      RETURNING *`;
+    
+    const updateResult = await client.query(updateQuery, [
+      tipoTramite.trim(),
+      descripcion?.trim() || '',
+      fechaInicioFormateada,
+      fechaFinFormateada,
+      requisitos?.trim() || '',
+      plazo_estimado.trim(),
+      costo.trim(),
+      parseInt(id) // Asegurar que es número
+    ]);
+
+    if (updateResult.rowCount === 0) {
+      throw new Error('No se encontró el trámite para actualizar');
+    }
+
+    // 2. Eliminar relaciones anteriores
+    await client.query('DELETE FROM Tramite_Cliente WHERE idTramite = $1', [id]);
+    await client.query('DELETE FROM Tramite_Empleado WHERE idTramite = $1', [id]);
+
+    // 3. Insertar nuevas relaciones
+    if (clienteIds.length > 0) {
+      const clienteValues = clienteIds.map(idCliente => `(${id}, ${idCliente})`).join(',');
+      await client.query(
+        `INSERT INTO Tramite_Cliente (idTramite, idCliente) VALUES ${clienteValues}`
+      );
+    }
+
+    if (empleadoIds.length > 0) {
+      const empleadoValues = empleadoIds.map(idEmpleado => `(${id}, ${idEmpleado})`).join(',');
+      await client.query(
+        `INSERT INTO Tramite_Empleado (idTramite, idEmpleado) VALUES ${empleadoValues}`
+      );
+    }
+
+    await client.query('COMMIT');
+
+    // Obtener el trámite actualizado con sus relaciones
+    const tramiteActualizado = await getTramiteCompleto(id);
+    res.json(tramiteActualizado);
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error al actualizar trámite:', error);
+    
+    let errorMessage = 'Error al actualizar trámite';
+    if (error.message.includes('violates foreign key constraint')) {
+      errorMessage = 'Error: Uno de los clientes o empleados no existe';
+    }
+    
+    res.status(500).json({ 
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    client.release();
+  }
+});
 
 
 
