@@ -1,260 +1,257 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import AnadirClienteModal from './AnadirCliente';
-import AnadirTramiteModal from './AnadirTramite';
 
 const SolicitudForm = () => {
-  // Estados principales
-  const [formData, setFormData] = useState({
-    idCliente: '',
-    idTramite: '',
-    idEmpleado: '',
-    fechaSolicitud: new Date().toISOString().split('T')[0],
-    estado_actual: 'Pendiente'
-  });
-
-  // Estados para los datos
-  const [clientes, setClientes] = useState([]);
   const [tramites, setTramites] = useState([]);
-  const [empleadoActual, setEmpleadoActual] = useState(null);
-  const [paises, setPaises] = useState([]);
-  
-  // Estados para los modales
-  const [showClienteModal, setShowClienteModal] = useState(false);
-  const [showTramiteModal, setShowTramiteModal] = useState(false);
+  const [clientes, setClientes] = useState([]);
+  const [empleados, setEmpleados] = useState([]);
+  const [idTramite, setIdTramite] = useState('');
+  const [idCliente, setIdCliente] = useState('');
+  const [idEmpleado, setIdEmpleado] = useState('');
+  const [fechaSolicitud, setFechaSolicitud] = useState(new Date().toISOString().slice(0, 10));
+  const [estadoActual, setEstadoActual] = useState('Pendiente');
+  const [loading, setLoading] = useState(false);
+  const [mensaje, setMensaje] = useState('');
+  const [error, setError] = useState('');
 
-  // Estados de UI
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const token = localStorage.getItem('token');
 
-  // Cargar datos iniciales
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const config = {
-          headers: { 'Authorization': `Bearer ${token}` }
-        };
-
-        // Obtener datos en paralelo
-        const [clientesRes, tramitesRes, empleadoRes, paisesRes] = await Promise.all([
-          axios.get('/api/clientes', config),
-          axios.get('/api/tramites', config),
-          axios.get('/api/auth/current-user', config),
-          axios.get('/api/paises', config)
-        ]);
-
-        setClientes(clientesRes.data);
-        setTramites(tramitesRes.data);
-        setEmpleadoActual(empleadoRes.data);
-        setPaises(paisesRes.data);
+        setLoading(true);
+        setError('');
         
-        // Auto-seleccionar empleado actual
-        if (empleadoRes.data) {
-          setFormData(prev => ({
-            ...prev,
-            idEmpleado: empleadoRes.data.idEmpleado
-          }));
+        const [tramitesRes, clientesRes, empleadosRes] = await Promise.all([
+          axios.get('http://localhost:5000/api/tramites', {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get('http://localhost:5000/api/clientes', {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get('http://localhost:5000/api/empleados', {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        ]);
+        
+        console.log('Datos recibidos:', {
+          tramites: tramitesRes.data,
+          clientes: clientesRes.data,
+          empleados: empleadosRes.data
+        });
+
+        // Verificar que los datos tengan la estructura esperada
+        if (!Array.isArray(tramitesRes.data) || !Array.isArray(clientesRes.data) || !Array.isArray(empleadosRes.data)) {
+          throw new Error('Los datos recibidos no tienen el formato esperado');
         }
 
-        setLoading(false);
+        setTramites(tramitesRes.data);
+        setClientes(clientesRes.data);
+        setEmpleados(empleadosRes.data);
       } catch (err) {
-        console.error('Error:', err.response);
-        setError(err.response?.data?.error || 'Error al cargar datos');
+        console.error('Error cargando datos:', err);
+        let errorMsg = 'Error cargando datos';
+        
+        if (err.response) {
+          if (err.response.status === 401) {
+            errorMsg = 'No autorizado - por favor inicie sesión nuevamente';
+          } else if (err.response.data && err.response.data.error) {
+            errorMsg = err.response.data.error;
+          }
+        } else if (err.message) {
+          errorMsg = err.message;
+        }
+        
+        setError(errorMsg);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [token]);
 
-  // Manejador de cambios
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Enviar solicitud
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post('/api/solicitudes', formData, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+    setError('');
+    setMensaje('');
 
-      if (response.status === 201) {
-        setSuccess(true);
-        // Resetear formulario (excepto empleado y fecha)
-        setFormData(prev => ({
-          idCliente: '',
-          idTramite: '',
-          idEmpleado: prev.idEmpleado,
-          fechaSolicitud: new Date().toISOString().split('T')[0],
-          estado_actual: 'Pendiente'
-        }));
-        setTimeout(() => setSuccess(false), 3000);
-      }
+    if (!idTramite || !idCliente || !idEmpleado) {
+      setError('Todos los campos son obligatorios');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        'http://localhost:5000/api/solicitudes',
+        {
+          idTramite,
+          idCliente,
+          idEmpleado,
+          fechaSolicitud,
+          estado_actual: estadoActual
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      setMensaje('Solicitud creada correctamente');
+      // Resetear formulario
+      setIdTramite('');
+      setIdCliente('');
+      setIdEmpleado('');
+      setEstadoActual('Pendiente');
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al crear solicitud');
+      console.error('Error al crear solicitud:', err);
+      let errorMsg = 'Ocurrió un error al crear la solicitud';
+      
+      if (err.response) {
+        if (err.response.data && err.response.data.error) {
+          errorMsg = err.response.data.error;
+          if (err.response.data.details) {
+            errorMsg += `: ${JSON.stringify(err.response.data.details)}`;
+          }
+        }
+      }
+      
+      setError(errorMsg);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return (
-    <div className="loading-container">
-      <div className="loading-spinner"></div>
-      <p>Cargando datos...</p>
-    </div>
-  );
+  if (loading && tramites.length === 0 && clientes.length === 0 && empleados.length === 0) {
+    return <div className="text-center py-8">Cargando datos...</div>;
+  }
 
   return (
-    <div className="solicitud-form-container">
-      <h2>Nueva Solicitud</h2>
-      
+    <div className="max-w-xl mx-auto bg-white shadow-md p-6 rounded-xl mt-8 border border-gray-200">
+      <h2 className="text-2xl font-bold mb-4 text-gray-800">Crear Solicitud</h2>
+
       {error && (
-        <div className="error-message">
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
-          <button onClick={() => window.location.reload()} className="retry-btn">
-            Reintentar
-          </button>
         </div>
       )}
       
-      {success && (
-        <div className="success-message">
-          Solicitud creada exitosamente!
+      {mensaje && (
+        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+          {mensaje}
         </div>
       )}
-      
-      <form onSubmit={handleSubmit}>
-        {/* Campo Cliente con botón para agregar nuevo */}
-        <div className="form-group">
-          <label htmlFor="idCliente">Cliente:</label>
-          <div className="combo-with-button">
-            <select
-              id="idCliente"
-              name="idCliente"
-              value={formData.idCliente}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Seleccione un cliente</option>
-              {clientes.map(cliente => (
-                <option key={cliente.idCliente} value={cliente.idCliente}>
-                  {cliente.nombreCliente} {cliente.apellidoPaternoCliente}
-                </option>
-              ))}
-            </select>
-            <button 
-              type="button" 
-              className="add-button"
-              onClick={() => setShowClienteModal(true)}
-            >
-              +
-            </button>
-          </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Trámite */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Selecciona el trámite:
+          </label>
+          <select
+            value={idTramite}
+            onChange={(e) => setIdTramite(e.target.value)}
+            className="w-full mt-1 p-2 border border-gray-300 rounded"
+            disabled={tramites.length === 0}
+          >
+            <option value="">-- Selecciona un trámite --</option>
+            {tramites.map((t) => (
+              <option key={t.idTramite} value={t.idTramite}>
+                {t.tipoTramite}
+              </option>
+            ))}
+          </select>
+          {tramites.length === 0 && !loading && (
+            <p className="text-sm text-red-500 mt-1">No hay trámites disponibles</p>
+          )}
         </div>
-        
-        {/* Campo Trámite con botón para agregar nuevo */}
-        <div className="form-group">
-          <label htmlFor="idTramite">Trámite:</label>
-          <div className="combo-with-button">
-            <select
-              id="idTramite"
-              name="idTramite"
-              value={formData.idTramite}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Seleccione un trámite</option>
-              {tramites.map(tramite => (
-                <option key={tramite.idTramite} value={tramite.idTramite}>
-                  {tramite.tipoTramite} - {tramite.descripcion}
-                </option>
-              ))}
-            </select>
-            <button 
-              type="button" 
-              className="add-button"
-              onClick={() => setShowTramiteModal(true)}
-            >
-              +
-            </button>
-          </div>
+
+        {/* Cliente */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Selecciona el cliente:
+          </label>
+          <select
+            value={idCliente}
+            onChange={(e) => setIdCliente(e.target.value)}
+            className="w-full mt-1 p-2 border border-gray-300 rounded"
+            disabled={clientes.length === 0}
+          >
+            <option value="">-- Selecciona un cliente --</option>
+            {clientes.map((c) => (
+              <option key={c.idCliente} value={c.idCliente}>
+                {c.nombreCliente} {c.apellidoPaternoCliente}
+              </option>
+            ))}
+          </select>
+          {clientes.length === 0 && !loading && (
+            <p className="text-sm text-red-500 mt-1">No hay clientes disponibles</p>
+          )}
         </div>
-        
-        {/* Campo Empleado (auto-seleccionado) */}
-        <div className="form-group">
-          <label htmlFor="idEmpleado">Empleado asignado:</label>
-          <input
-            type="text"
-            id="idEmpleado"
-            value={empleadoActual ? 
-              `${empleadoActual.nombreEmpleado} ${empleadoActual.apellidoPaternoEmpleado}` : 
-              'Cargando...'}
-            readOnly
-          />
+
+        {/* Empleado */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Selecciona el empleado:
+          </label>
+          <select
+            value={idEmpleado}
+            onChange={(e) => setIdEmpleado(e.target.value)}
+            className="w-full mt-1 p-2 border border-gray-300 rounded"
+            disabled={empleados.length === 0}
+          >
+            <option value="">-- Selecciona un empleado --</option>
+            {empleados.map((e) => (
+              <option key={e.idEmpleado} value={e.idEmpleado}>
+                {e.nombreEmpleado} {e.apellidoPaternoEmpleado}
+              </option>
+            ))}
+          </select>
+          {empleados.length === 0 && !loading && (
+            <p className="text-sm text-red-500 mt-1">No hay empleados disponibles</p>
+          )}
         </div>
-        
-        {/* Fecha y Estado */}
-        <div className="form-group">
-          <label htmlFor="fechaSolicitud">Fecha de solicitud:</label>
+
+        {/* Fecha de solicitud */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Fecha de Solicitud:
+          </label>
           <input
             type="date"
-            id="fechaSolicitud"
-            name="fechaSolicitud"
-            value={formData.fechaSolicitud}
-            onChange={handleChange}
-            required
+            value={fechaSolicitud}
+            onChange={(e) => setFechaSolicitud(e.target.value)}
+            className="w-full mt-1 p-2 border border-gray-300 rounded"
           />
         </div>
-        
-        <div className="form-group">
-          <label htmlFor="estado_actual">Estado inicial:</label>
+
+        {/* Estado actual */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Estado Actual:
+          </label>
           <select
-            id="estado_actual"
-            name="estado_actual"
-            value={formData.estado_actual}
-            onChange={handleChange}
-            required
+            value={estadoActual}
+            onChange={(e) => setEstadoActual(e.target.value)}
+            className="w-full mt-1 p-2 border border-gray-300 rounded"
           >
             <option value="Pendiente">Pendiente</option>
             <option value="En proceso">En proceso</option>
-            <option value="Completado">Completado</option>
-            <option value="Rechazado">Rechazado</option>
+            <option value="Finalizado">Finalizado</option>
           </select>
         </div>
-        
-        <button type="submit" className="submit-btn">
-          Crear Solicitud
-        </button>
+
+        {/* Botón */}
+        <div className="text-right">
+          <button
+            type="submit"
+            disabled={loading || tramites.length === 0 || clientes.length === 0 || empleados.length === 0}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? 'Creando...' : 'Crear Solicitud'}
+          </button>
+        </div>
       </form>
-
-      {/* Modal para nuevo Cliente */}
-      {showClienteModal && (
-        <AnadirClienteModal 
-          onClose={() => setShowClienteModal(false)}
-          onClienteCreado={(cliente) => {
-            setClientes(prev => [...prev, cliente]);
-            setFormData(prev => ({ ...prev, idCliente: cliente.idCliente }));
-          }}
-          paises={paises}
-        />
-      )}
-
-      {/* Modal para nuevo Trámite */}
-      {showTramiteModal && (
-        <AnadirTramiteModal 
-          onClose={() => setShowTramiteModal(false)}
-          onTramiteCreado={(tramite) => {
-            setTramites(prev => [...prev, tramite]);
-            setFormData(prev => ({ ...prev, idTramite: tramite.idTramite }));
-          }}
-        />
-      )}
     </div>
   );
 };

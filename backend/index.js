@@ -251,12 +251,534 @@ app.get('/api/auth/current-user', authenticateToken, async (req, res) => {
 });
 
 
-
 // ==============================================
-// RUTAS PARA EL FORMULARIO DE SOLICITUDES
+// RUTAS PARA SOLICITUDES (COMPLETO)
 // ==============================================
 
-// Crear una nueva solicitud
+app.post('/api/solicitudes', authenticateToken, async (req, res) => {
+  const { idTramite, idCliente, observaciones } = req.body;
+  const idEmpleado = req.user.id; // Obtenido del token JWT
+
+  // Validación de campos obligatorios
+  if (!idTramite || !idCliente) {
+    return res.status(400).json({ 
+      error: 'Campos obligatorios faltantes',
+      detalles: {
+        requeridos: {
+          idTramite: 'ID del trámite es requerido',
+          idCliente: 'ID del cliente es requerido'
+        },
+        recibidos: req.body
+      }
+    });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Verificar que existen todos los recursos necesarios
+    const [tramite, cliente, empleado] = await Promise.all([
+      client.query('SELECT idTramite FROM Tramite WHERE idTramite = $1', [idTramite]),
+      client.query('SELECT idCliente FROM Cliente WHERE idCliente = $1', [idCliente]),
+      client.query('SELECT idEmpleado FROM Empleado WHERE idEmpleado = $1', [idEmpleado])
+    ]);
+
+    // Validar que todos los recursos existen
+    if (tramite.rows.length === 0 || cliente.rows.length === 0 || empleado.rows.length === 0) {
+      throw {
+        code: 'RECURSOS_NO_ENCONTRADOS',
+        detalles: {
+          tramite: tramite.rows.length > 0,
+          cliente: cliente.rows.length > 0,
+          empleado: empleado.rows.length > 0
+        }
+      };
+    }
+
+    // 2. Crear la solicitud (con todos los campos requeridos)
+    const solicitudResult = await client.query(
+      `INSERT INTO Solicitud (
+        idTramite, 
+        idCliente, 
+        idEmpleado, 
+        fechaSolicitud, 
+        estado_actual
+      ) VALUES ($1, $2, $3, NOW(), 'Pendiente')
+      RETURNING idSolicitud`,
+      [idTramite, idCliente, idEmpleado]
+    );
+
+    const idSolicitud = solicitudResult.rows[0].idsolicitud;
+
+    // 3. Crear registro de seguimiento inicial
+    await client.query(
+      `INSERT INTO Seguimiento (
+        idSolicitud, 
+        idEmpleado, 
+        descripcion, 
+        fecha_actualizacion, 
+        estado
+      ) VALUES ($1, $2, $3, NOW(), $4)`,
+      [
+        idSolicitud,
+        idEmpleado,
+        observaciones ? `Solicitud creada. Observaciones: ${observaciones}` : 'Solicitud creada',
+        'Pendiente'
+      ]
+    );
+
+    await client.query('COMMIT');
+
+    // 4. Obtener y devolver la solicitud completa
+    const solicitudCompleta = await getSolicitudCompleta(idSolicitud);
+    res.status(201).json({
+      mensaje: 'Solicitud creada exitosamente',
+      solicitud: solicitudCompleta
+    });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    
+    // Manejo específico de errores
+    if (error.code === 'RECURSOS_NO_ENCONTRADOS') {
+      return res.status(404).json({
+        error: 'Recursos no encontrados',
+        detalles: {
+          tramite: error.detalles.tramite ? 'Encontrado' : 'No encontrado',
+          cliente: error.detalles.cliente ? 'Encontrado' : 'No encontrado',
+          empleado: error.detalles.empleado ? 'Encontrado' : 'No encontrado'
+        },
+        solucion: 'Verifique que existen el trámite, cliente y empleado con los IDs proporcionados'
+      });
+    }
+
+    console.error('Error al crear solicitud:', error);
+    res.status(500).json({ 
+      error: 'Error interno al crear solicitud',
+      detalles: process.env.NODE_ENV === 'development' ? {
+        mensaje: error.message,
+        stack: error.stack
+      } : undefined
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// Función auxiliar mejorada
+async function getSolicitudCompleta(idSolicitud) {
+  const query = `
+    SELECT 
+      s.idSolicitud,
+      s.fechaSolicitud,
+      s.estado_actual,
+      t.idTramite,
+      t.tipoTramite,
+      c.idCliente,
+      c.nombreCliente || ' ' || c.apellidoPaternoCliente AS nombre_cliente,
+      e.idEmpleado,
+      e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS nombre_empleado,
+      (
+        SELECT json_agg(json_build_object(
+          'idSeguimiento', sg.idSeguimiento,
+          'fecha', sg.fecha_actualizacion,
+          'estado', sg.estado,
+          'descripcion', sg.descripcion,
+          'empleado', emp.nombreEmpleado || ' ' || emp.apellidoPaternoEmpleado
+        ))
+        FROM Seguimiento sg
+        JOIN Empleado emp ON sg.idEmpleado = emp.idEmpleado
+        WHERE sg.idSolicitud = s.idSolicitud
+        ORDER BY sg.fecha_actualizacion DESC
+      ) AS historial_seguimiento
+    FROM Solicitud s
+    JOIN Tramite t ON s.idTramite = t.idTramite
+    JOIN Cliente c ON s.idCliente = c.idCliente
+    JOIN Empleado e ON s.idEmpleado = e.idEmpleado
+    WHERE s.idSolicitud = $1
+  `;
+  
+  const result = await pool.query(query, [idSolicitud]);
+  return result.rows[0];
+}
+
+// 2. Obtener todas las solicitudes (con filtros)
+app.get('/api/solicitudes', authenticateToken, async (req, res) => {
+  const { estado, fechaDesde, fechaHasta, idCliente } = req.query;
+
+  try {
+    let query = `
+      SELECT 
+        s.idSolicitud,
+        s.fechaSolicitud,
+        s.estado_actual,
+        t.tipoTramite,
+        c.nombreCliente || ' ' || c.apellidoPaternoCliente AS cliente,
+        e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS empleado,
+        (
+          SELECT estado 
+          FROM Seguimiento 
+          WHERE idSolicitud = s.idSolicitud 
+          ORDER BY fecha_actualizacion DESC 
+          LIMIT 1
+        ) AS ultimoEstado
+      FROM Solicitud s
+      JOIN Tramite t ON s.idTramite = t.idTramite
+      JOIN Cliente c ON s.idCliente = c.idCliente
+      JOIN Empleado e ON s.idEmpleado = e.idEmpleado
+    `;
+
+    const conditions = [];
+    const params = [];
+    let paramIndex = 1;
+
+    if (estado) {
+      conditions.push(`s.estado_actual = $${paramIndex}`);
+      params.push(estado);
+      paramIndex++;
+    }
+
+    if (fechaDesde) {
+      conditions.push(`s.fechaSolicitud >= $${paramIndex}`);
+      params.push(fechaDesde);
+      paramIndex++;
+    }
+
+    if (fechaHasta) {
+      conditions.push(`s.fechaSolicitud <= $${paramIndex}`);
+      params.push(fechaHasta);
+      paramIndex++;
+    }
+
+    if (idCliente) {
+      conditions.push(`s.idCliente = $${paramIndex}`);
+      params.push(idCliente);
+      paramIndex++;
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query += ' ORDER BY s.fechaSolicitud DESC';
+
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener solicitudes:', error);
+    res.status(500).json({ error: 'Error al obtener solicitudes' });
+  }
+});
+
+// 3. Obtener una solicitud específica con todos sus datos
+app.get('/api/solicitudes/:id/completa', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const solicitud = await getSolicitudCompleta(id);
+    
+    if (!solicitud) {
+      return res.status(404).json({ error: 'Solicitud no encontrada' });
+    }
+
+    // Obtener documentos asociados
+    const documentos = await pool.query(
+      'SELECT * FROM Documento WHERE idSolicitud = $1',
+      [id]
+    );
+
+    // Obtener pagos asociados
+    const pagos = await pool.query(
+      `SELECT p.*, m.nombreMetodo 
+       FROM Pago p
+       JOIN MetodoPago m ON p.idMetodopago = m.idMetodopago
+       WHERE p.idSolicitud = $1`,
+      [id]
+    );
+
+    // Obtener itinerario si existe
+    const itinerario = await pool.query(
+      `SELECT i.*, a.nombreAerolinea
+       FROM Itinerario i
+       LEFT JOIN Aerolinea a ON i.idAerolinea = a.idAerolinea
+       WHERE i.idSolicitud = $1`,
+      [id]
+    );
+
+    // Obtener historial de seguimiento
+    const seguimiento = await pool.query(
+      `SELECT s.*, e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS empleado
+       FROM Seguimiento s
+       JOIN Empleado e ON s.idEmpleado = e.idEmpleado
+       WHERE s.idSolicitud = $1
+       ORDER BY s.fecha_actualizacion DESC`,
+      [id]
+    );
+
+    res.json({
+      ...solicitud,
+      documentos: documentos.rows,
+      pagos: pagos.rows,
+      itinerario: itinerario.rows[0] || null,
+      historial: seguimiento.rows
+    });
+
+  } catch (error) {
+    console.error('Error al obtener solicitud:', error);
+    res.status(500).json({ error: 'Error al obtener solicitud' });
+  }
+});
+
+// 4. Actualizar estado de una solicitud
+app.put('/api/solicitudes/:id/estado', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { estado, comentario } = req.body;
+  const idEmpleado = req.user.id;
+
+  if (!estado) {
+    return res.status(400).json({ error: 'El nuevo estado es requerido' });
+  }
+
+  const estadosPermitidos = ['Pendiente', 'En revisión', 'Aprobado', 'Rechazado', 'Completado'];
+  if (!estadosPermitidos.includes(estado)) {
+    return res.status(400).json({ 
+      error: 'Estado no válido',
+      estadosPermitidos
+    });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Actualizar estado principal
+    await client.query(
+      'UPDATE Solicitud SET estado_actual = $1 WHERE idSolicitud = $2',
+      [estado, id]
+    );
+
+    // Registrar en seguimiento
+    await client.query(
+      `INSERT INTO Seguimiento (
+        idSolicitud, idEmpleado, descripcion, 
+        fecha_actualizacion, estado
+      ) VALUES ($1, $2, $3, NOW(), $4)`,
+      [id, idEmpleado, comentario || `Estado cambiado a: ${estado}`, estado]
+    );
+
+    await client.query('COMMIT');
+    res.json({ success: true, nuevoEstado: estado });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error al actualizar estado:', error);
+    res.status(500).json({ error: 'Error al actualizar estado' });
+  } finally {
+    client.release();
+  }
+});
+
+// 5. Agregar documento a solicitud
+app.post('/api/solicitudes/:id/documentos', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { nombreDocumento, tipoDocumento, archivo } = req.body; // Asume que el archivo viene como base64
+
+  if (!nombreDocumento || !tipoDocumento || !archivo) {
+    return res.status(400).json({ 
+      error: 'Nombre, tipo y archivo son requeridos' 
+    });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO Documento (
+        idSolicitud, nombreDocumento, tipoDocumento, 
+        archivo, fechasubida, estado
+      ) VALUES ($1, $2, $3, $4, NOW(), 'Pendiente de revisión')
+      RETURNING *`,
+      [id, nombreDocumento, tipoDocumento, archivo]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al agregar documento:', error);
+    res.status(500).json({ error: 'Error al agregar documento' });
+  }
+});
+
+// 6. Registrar pago para solicitud
+app.post('/api/solicitudes/:id/pagos', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { idMetodopago, monto, fechaPago } = req.body;
+  const idEmpleado = req.user.id;
+
+  if (!idMetodopago || !monto) {
+    return res.status(400).json({ 
+      error: 'Método de pago y monto son requeridos' 
+    });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Verificar que la solicitud existe
+    const solicitud = await client.query(
+      'SELECT idSolicitud FROM Solicitud WHERE idSolicitud = $1',
+      [id]
+    );
+
+    if (solicitud.rows.length === 0) {
+      throw { code: 'NOT_FOUND' };
+    }
+
+    // Registrar pago
+    const pagoResult = await client.query(
+      `INSERT INTO Pago (
+        idSolicitud, idMetodopago, monto, 
+        fechaPago, estadoPago
+      ) VALUES ($1, $2, $3, $4, 'Pendiente')
+      RETURNING *`,
+      [id, idMetodopago, monto, fechaPago || new Date().toISOString()]
+    );
+
+    // Actualizar seguimiento
+    await client.query(
+      `INSERT INTO Seguimiento (
+        idSolicitud, idEmpleado, descripcion, 
+        fecha_actualizacion, estado
+      ) VALUES ($1, $2, $3, NOW(), 'Pago registrado')`,
+      [id, idEmpleado, `Pago de $${monto} registrado`]
+    );
+
+    await client.query('COMMIT');
+    res.status(201).json(pagoResult.rows[0]);
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    
+    if (error.code === 'NOT_FOUND') {
+      return res.status(404).json({ error: 'Solicitud no encontrada' });
+    }
+
+    console.error('Error al registrar pago:', error);
+    res.status(500).json({ error: 'Error al registrar pago' });
+  } finally {
+    client.release();
+  }
+});
+
+// 7. Crear/Actualizar itinerario
+app.post('/api/solicitudes/:id/itinerario', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { 
+    fecha_salida, 
+    fecha_regreso, 
+    idAerolinea, 
+    numero_vuelo, 
+    hotel, 
+    direccion_hotel, 
+    contacto_hotel 
+  } = req.body;
+
+  if (!fecha_salida || !fecha_regreso) {
+    return res.status(400).json({ 
+      error: 'Fechas de salida y regreso son requeridas' 
+    });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Verificar si ya existe itinerario
+    const existe = await client.query(
+      'SELECT idItinerario FROM Itinerario WHERE idSolicitud = $1',
+      [id]
+    );
+
+    let resultado;
+    if (existe.rows.length > 0) {
+      // Actualizar
+      resultado = await client.query(
+        `UPDATE Itinerario SET
+          fecha_salida = $1,
+          fecha_regreso = $2,
+          idAerolinea = $3,
+          numero_vuelo = $4,
+          hotel = $5,
+          direccion_hotel = $6,
+          contacto_hotel = $7
+        WHERE idSolicitud = $8
+        RETURNING *`,
+        [
+          fecha_salida,
+          fecha_regreso,
+          idAerolinea || null,
+          numero_vuelo || null,
+          hotel || null,
+          direccion_hotel || null,
+          contacto_hotel || null,
+          id
+        ]
+      );
+    } else {
+      // Crear nuevo
+      resultado = await client.query(
+        `INSERT INTO Itinerario (
+          idSolicitud, fecha_salida, fecha_regreso,
+          idAerolinea, numero_vuelo, hotel,
+          direccion_hotel, contacto_hotel
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING *`,
+        [
+          id,
+          fecha_salida,
+          fecha_regreso,
+          idAerolinea || null,
+          numero_vuelo || null,
+          hotel || null,
+          direccion_hotel || null,
+          contacto_hotel || null
+        ]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.status(201).json(resultado.rows[0]);
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error al guardar itinerario:', error);
+    res.status(500).json({ error: 'Error al guardar itinerario' });
+  } finally {
+    client.release();
+  }
+});
+
+// 8. Obtener seguimiento de solicitud
+app.get('/api/solicitudes/:id/seguimiento', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+        s.*,
+        e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS empleado
+       FROM Seguimiento s
+       JOIN Empleado e ON s.idEmpleado = e.idEmpleado
+       WHERE s.idSolicitud = $1
+       ORDER BY s.fecha_actualizacion DESC`,
+      [id]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener seguimiento:', error);
+    res.status(500).json({ error: 'Error al obtener seguimiento' });
+  }
+});
 
 
 
