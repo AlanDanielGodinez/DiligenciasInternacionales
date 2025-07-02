@@ -49,6 +49,7 @@ import "../src/Styles/Antecedentes.css";
 import "../src/Styles/CrearAntecedente.css";
 import "../src/Styles/TramitesLista.css";
 import "../src/Styles/Nuevotramite.css";
+
 import EditarArea from "./Pages/Empleado/EditarArea";
 
 
