@@ -46,7 +46,7 @@ const SidebarNavigation = () => {
       items: [
         { name: "Trámites", path: "/empleado/tramiteslista" },
         { name: "Nueva Solicitud", path: "/empleado/CrearSolicitud" },
-        { name: "Solicitudes Activas", path: "/empleado/tramiteslista" },
+        { name: "Solicitudes", path: "/empleado/versolicitudes" },
         { name: "Calendario de Plazos", path: "/calendario" },
       ]
     },

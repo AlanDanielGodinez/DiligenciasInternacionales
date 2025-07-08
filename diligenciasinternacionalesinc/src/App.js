@@ -17,6 +17,7 @@ import PaisesCiudades from "./Pages/Empleado/PaisesCiudades";
 import TramitesLista from "./Pages/Empleado/TramitesLista";
 import EditarTramite from "./Pages/Empleado/ActualizarTramite"; // Asegúrate de que esta ruta sea correcta
 import CrearSolicitud from "./Pages/Empleado/CrearSolicitud";
+import VerSolicitudes from "./Pages/Empleado/VerSolicitudes";
 import "./App.css";
 
 // Importaciones de estilos
@@ -83,6 +84,7 @@ function App() {
               <Route path="/empleado/tramites/editar/:id" element={<EditarTramite />} />
               <Route path="/empleado/crear-solicitud" element={<CrearSolicitud />} />
               <Route path="/empleado/crearSolicitud" element={<CrearSolicitud />} />
+              <Route path="/empleado/versolicitudes" element={<VerSolicitudes />} />
               {/* Aquí puedes agregar más rutas protegidas */}
             </Route>
             
