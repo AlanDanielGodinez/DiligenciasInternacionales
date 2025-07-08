@@ -5,7 +5,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 
-// Configuración inicial
 const app = express();
 const PORT = process.env.PORT || 5000;
 const SERVER_TOKEN_VERSION = Date.now(); // Cambia cada vez que el servidor se reinicia
@@ -19,13 +18,48 @@ const pool = new Pool({
   port: process.env.DB_PORT || 5432,
 });
 
-// Middlewares
+// Middleware de CORS y JSON
 app.use(cors({
   origin: 'http://localhost:3000', // URL de tu frontend
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+
+// ===============================================
+// Middleware para proteger rutas con token (excepto públicas)
+// ===============================================
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader?.split(' ')[1];
+
+  if (!token) {
+    console.warn(`[Auth Error] Intento de acceso sin token a: ${req.path}`);
+    return res.status(401).json({ error: 'Token no proporcionado' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET || 'secret', (err, user) => {
+    if (err) {
+      console.warn(`[Auth Error] Token inválido en ruta: ${req.path}`);
+      return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    req.user = user;
+    next();
+  });
+}
+
+// ✅ APLICAR middleware solo a rutas protegidas
+app.use((req, res, next) => {
+  const publicPaths = [
+    '/api/login',
+    '/api/registro',
+    '/api/tramites/lista-simple'
+  ];
+
+  if (publicPaths.includes(req.path)) return next();
+  return authenticateToken(req, res, next);
+});
 
 // ==============================================
 // FUNCIONES DE UTILIDAD
@@ -251,534 +285,6 @@ app.get('/api/auth/current-user', authenticateToken, async (req, res) => {
 });
 
 
-// ==============================================
-// RUTAS PARA SOLICITUDES (COMPLETO)
-// ==============================================
-
-app.post('/api/solicitudes', authenticateToken, async (req, res) => {
-  const { idTramite, idCliente, observaciones } = req.body;
-  const idEmpleado = req.user.id; // Obtenido del token JWT
-
-  // Validación de campos obligatorios
-  if (!idTramite || !idCliente) {
-    return res.status(400).json({ 
-      error: 'Campos obligatorios faltantes',
-      detalles: {
-        requeridos: {
-          idTramite: 'ID del trámite es requerido',
-          idCliente: 'ID del cliente es requerido'
-        },
-        recibidos: req.body
-      }
-    });
-  }
-
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-
-    // 1. Verificar que existen todos los recursos necesarios
-    const [tramite, cliente, empleado] = await Promise.all([
-      client.query('SELECT idTramite FROM Tramite WHERE idTramite = $1', [idTramite]),
-      client.query('SELECT idCliente FROM Cliente WHERE idCliente = $1', [idCliente]),
-      client.query('SELECT idEmpleado FROM Empleado WHERE idEmpleado = $1', [idEmpleado])
-    ]);
-
-    // Validar que todos los recursos existen
-    if (tramite.rows.length === 0 || cliente.rows.length === 0 || empleado.rows.length === 0) {
-      throw {
-        code: 'RECURSOS_NO_ENCONTRADOS',
-        detalles: {
-          tramite: tramite.rows.length > 0,
-          cliente: cliente.rows.length > 0,
-          empleado: empleado.rows.length > 0
-        }
-      };
-    }
-
-    // 2. Crear la solicitud (con todos los campos requeridos)
-    const solicitudResult = await client.query(
-      `INSERT INTO Solicitud (
-        idTramite, 
-        idCliente, 
-        idEmpleado, 
-        fechaSolicitud, 
-        estado_actual
-      ) VALUES ($1, $2, $3, NOW(), 'Pendiente')
-      RETURNING idSolicitud`,
-      [idTramite, idCliente, idEmpleado]
-    );
-
-    const idSolicitud = solicitudResult.rows[0].idsolicitud;
-
-    // 3. Crear registro de seguimiento inicial
-    await client.query(
-      `INSERT INTO Seguimiento (
-        idSolicitud, 
-        idEmpleado, 
-        descripcion, 
-        fecha_actualizacion, 
-        estado
-      ) VALUES ($1, $2, $3, NOW(), $4)`,
-      [
-        idSolicitud,
-        idEmpleado,
-        observaciones ? `Solicitud creada. Observaciones: ${observaciones}` : 'Solicitud creada',
-        'Pendiente'
-      ]
-    );
-
-    await client.query('COMMIT');
-
-    // 4. Obtener y devolver la solicitud completa
-    const solicitudCompleta = await getSolicitudCompleta(idSolicitud);
-    res.status(201).json({
-      mensaje: 'Solicitud creada exitosamente',
-      solicitud: solicitudCompleta
-    });
-
-  } catch (error) {
-    await client.query('ROLLBACK');
-    
-    // Manejo específico de errores
-    if (error.code === 'RECURSOS_NO_ENCONTRADOS') {
-      return res.status(404).json({
-        error: 'Recursos no encontrados',
-        detalles: {
-          tramite: error.detalles.tramite ? 'Encontrado' : 'No encontrado',
-          cliente: error.detalles.cliente ? 'Encontrado' : 'No encontrado',
-          empleado: error.detalles.empleado ? 'Encontrado' : 'No encontrado'
-        },
-        solucion: 'Verifique que existen el trámite, cliente y empleado con los IDs proporcionados'
-      });
-    }
-
-    console.error('Error al crear solicitud:', error);
-    res.status(500).json({ 
-      error: 'Error interno al crear solicitud',
-      detalles: process.env.NODE_ENV === 'development' ? {
-        mensaje: error.message,
-        stack: error.stack
-      } : undefined
-    });
-  } finally {
-    client.release();
-  }
-});
-
-// Función auxiliar mejorada
-async function getSolicitudCompleta(idSolicitud) {
-  const query = `
-    SELECT 
-      s.idSolicitud,
-      s.fechaSolicitud,
-      s.estado_actual,
-      t.idTramite,
-      t.tipoTramite,
-      c.idCliente,
-      c.nombreCliente || ' ' || c.apellidoPaternoCliente AS nombre_cliente,
-      e.idEmpleado,
-      e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS nombre_empleado,
-      (
-        SELECT json_agg(json_build_object(
-          'idSeguimiento', sg.idSeguimiento,
-          'fecha', sg.fecha_actualizacion,
-          'estado', sg.estado,
-          'descripcion', sg.descripcion,
-          'empleado', emp.nombreEmpleado || ' ' || emp.apellidoPaternoEmpleado
-        ))
-        FROM Seguimiento sg
-        JOIN Empleado emp ON sg.idEmpleado = emp.idEmpleado
-        WHERE sg.idSolicitud = s.idSolicitud
-        ORDER BY sg.fecha_actualizacion DESC
-      ) AS historial_seguimiento
-    FROM Solicitud s
-    JOIN Tramite t ON s.idTramite = t.idTramite
-    JOIN Cliente c ON s.idCliente = c.idCliente
-    JOIN Empleado e ON s.idEmpleado = e.idEmpleado
-    WHERE s.idSolicitud = $1
-  `;
-  
-  const result = await pool.query(query, [idSolicitud]);
-  return result.rows[0];
-}
-
-// 2. Obtener todas las solicitudes (con filtros)
-app.get('/api/solicitudes', authenticateToken, async (req, res) => {
-  const { estado, fechaDesde, fechaHasta, idCliente } = req.query;
-
-  try {
-    let query = `
-      SELECT 
-        s.idSolicitud,
-        s.fechaSolicitud,
-        s.estado_actual,
-        t.tipoTramite,
-        c.nombreCliente || ' ' || c.apellidoPaternoCliente AS cliente,
-        e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS empleado,
-        (
-          SELECT estado 
-          FROM Seguimiento 
-          WHERE idSolicitud = s.idSolicitud 
-          ORDER BY fecha_actualizacion DESC 
-          LIMIT 1
-        ) AS ultimoEstado
-      FROM Solicitud s
-      JOIN Tramite t ON s.idTramite = t.idTramite
-      JOIN Cliente c ON s.idCliente = c.idCliente
-      JOIN Empleado e ON s.idEmpleado = e.idEmpleado
-    `;
-
-    const conditions = [];
-    const params = [];
-    let paramIndex = 1;
-
-    if (estado) {
-      conditions.push(`s.estado_actual = $${paramIndex}`);
-      params.push(estado);
-      paramIndex++;
-    }
-
-    if (fechaDesde) {
-      conditions.push(`s.fechaSolicitud >= $${paramIndex}`);
-      params.push(fechaDesde);
-      paramIndex++;
-    }
-
-    if (fechaHasta) {
-      conditions.push(`s.fechaSolicitud <= $${paramIndex}`);
-      params.push(fechaHasta);
-      paramIndex++;
-    }
-
-    if (idCliente) {
-      conditions.push(`s.idCliente = $${paramIndex}`);
-      params.push(idCliente);
-      paramIndex++;
-    }
-
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
-    }
-
-    query += ' ORDER BY s.fechaSolicitud DESC';
-
-    const result = await pool.query(query, params);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error al obtener solicitudes:', error);
-    res.status(500).json({ error: 'Error al obtener solicitudes' });
-  }
-});
-
-// 3. Obtener una solicitud específica con todos sus datos
-app.get('/api/solicitudes/:id/completa', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const solicitud = await getSolicitudCompleta(id);
-    
-    if (!solicitud) {
-      return res.status(404).json({ error: 'Solicitud no encontrada' });
-    }
-
-    // Obtener documentos asociados
-    const documentos = await pool.query(
-      'SELECT * FROM Documento WHERE idSolicitud = $1',
-      [id]
-    );
-
-    // Obtener pagos asociados
-    const pagos = await pool.query(
-      `SELECT p.*, m.nombreMetodo 
-       FROM Pago p
-       JOIN MetodoPago m ON p.idMetodopago = m.idMetodopago
-       WHERE p.idSolicitud = $1`,
-      [id]
-    );
-
-    // Obtener itinerario si existe
-    const itinerario = await pool.query(
-      `SELECT i.*, a.nombreAerolinea
-       FROM Itinerario i
-       LEFT JOIN Aerolinea a ON i.idAerolinea = a.idAerolinea
-       WHERE i.idSolicitud = $1`,
-      [id]
-    );
-
-    // Obtener historial de seguimiento
-    const seguimiento = await pool.query(
-      `SELECT s.*, e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS empleado
-       FROM Seguimiento s
-       JOIN Empleado e ON s.idEmpleado = e.idEmpleado
-       WHERE s.idSolicitud = $1
-       ORDER BY s.fecha_actualizacion DESC`,
-      [id]
-    );
-
-    res.json({
-      ...solicitud,
-      documentos: documentos.rows,
-      pagos: pagos.rows,
-      itinerario: itinerario.rows[0] || null,
-      historial: seguimiento.rows
-    });
-
-  } catch (error) {
-    console.error('Error al obtener solicitud:', error);
-    res.status(500).json({ error: 'Error al obtener solicitud' });
-  }
-});
-
-// 4. Actualizar estado de una solicitud
-app.put('/api/solicitudes/:id/estado', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  const { estado, comentario } = req.body;
-  const idEmpleado = req.user.id;
-
-  if (!estado) {
-    return res.status(400).json({ error: 'El nuevo estado es requerido' });
-  }
-
-  const estadosPermitidos = ['Pendiente', 'En revisión', 'Aprobado', 'Rechazado', 'Completado'];
-  if (!estadosPermitidos.includes(estado)) {
-    return res.status(400).json({ 
-      error: 'Estado no válido',
-      estadosPermitidos
-    });
-  }
-
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-
-    // Actualizar estado principal
-    await client.query(
-      'UPDATE Solicitud SET estado_actual = $1 WHERE idSolicitud = $2',
-      [estado, id]
-    );
-
-    // Registrar en seguimiento
-    await client.query(
-      `INSERT INTO Seguimiento (
-        idSolicitud, idEmpleado, descripcion, 
-        fecha_actualizacion, estado
-      ) VALUES ($1, $2, $3, NOW(), $4)`,
-      [id, idEmpleado, comentario || `Estado cambiado a: ${estado}`, estado]
-    );
-
-    await client.query('COMMIT');
-    res.json({ success: true, nuevoEstado: estado });
-
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Error al actualizar estado:', error);
-    res.status(500).json({ error: 'Error al actualizar estado' });
-  } finally {
-    client.release();
-  }
-});
-
-// 5. Agregar documento a solicitud
-app.post('/api/solicitudes/:id/documentos', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  const { nombreDocumento, tipoDocumento, archivo } = req.body; // Asume que el archivo viene como base64
-
-  if (!nombreDocumento || !tipoDocumento || !archivo) {
-    return res.status(400).json({ 
-      error: 'Nombre, tipo y archivo son requeridos' 
-    });
-  }
-
-  try {
-    const result = await pool.query(
-      `INSERT INTO Documento (
-        idSolicitud, nombreDocumento, tipoDocumento, 
-        archivo, fechasubida, estado
-      ) VALUES ($1, $2, $3, $4, NOW(), 'Pendiente de revisión')
-      RETURNING *`,
-      [id, nombreDocumento, tipoDocumento, archivo]
-    );
-
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error('Error al agregar documento:', error);
-    res.status(500).json({ error: 'Error al agregar documento' });
-  }
-});
-
-// 6. Registrar pago para solicitud
-app.post('/api/solicitudes/:id/pagos', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  const { idMetodopago, monto, fechaPago } = req.body;
-  const idEmpleado = req.user.id;
-
-  if (!idMetodopago || !monto) {
-    return res.status(400).json({ 
-      error: 'Método de pago y monto son requeridos' 
-    });
-  }
-
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-
-    // Verificar que la solicitud existe
-    const solicitud = await client.query(
-      'SELECT idSolicitud FROM Solicitud WHERE idSolicitud = $1',
-      [id]
-    );
-
-    if (solicitud.rows.length === 0) {
-      throw { code: 'NOT_FOUND' };
-    }
-
-    // Registrar pago
-    const pagoResult = await client.query(
-      `INSERT INTO Pago (
-        idSolicitud, idMetodopago, monto, 
-        fechaPago, estadoPago
-      ) VALUES ($1, $2, $3, $4, 'Pendiente')
-      RETURNING *`,
-      [id, idMetodopago, monto, fechaPago || new Date().toISOString()]
-    );
-
-    // Actualizar seguimiento
-    await client.query(
-      `INSERT INTO Seguimiento (
-        idSolicitud, idEmpleado, descripcion, 
-        fecha_actualizacion, estado
-      ) VALUES ($1, $2, $3, NOW(), 'Pago registrado')`,
-      [id, idEmpleado, `Pago de $${monto} registrado`]
-    );
-
-    await client.query('COMMIT');
-    res.status(201).json(pagoResult.rows[0]);
-
-  } catch (error) {
-    await client.query('ROLLBACK');
-    
-    if (error.code === 'NOT_FOUND') {
-      return res.status(404).json({ error: 'Solicitud no encontrada' });
-    }
-
-    console.error('Error al registrar pago:', error);
-    res.status(500).json({ error: 'Error al registrar pago' });
-  } finally {
-    client.release();
-  }
-});
-
-// 7. Crear/Actualizar itinerario
-app.post('/api/solicitudes/:id/itinerario', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  const { 
-    fecha_salida, 
-    fecha_regreso, 
-    idAerolinea, 
-    numero_vuelo, 
-    hotel, 
-    direccion_hotel, 
-    contacto_hotel 
-  } = req.body;
-
-  if (!fecha_salida || !fecha_regreso) {
-    return res.status(400).json({ 
-      error: 'Fechas de salida y regreso son requeridas' 
-    });
-  }
-
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-
-    // Verificar si ya existe itinerario
-    const existe = await client.query(
-      'SELECT idItinerario FROM Itinerario WHERE idSolicitud = $1',
-      [id]
-    );
-
-    let resultado;
-    if (existe.rows.length > 0) {
-      // Actualizar
-      resultado = await client.query(
-        `UPDATE Itinerario SET
-          fecha_salida = $1,
-          fecha_regreso = $2,
-          idAerolinea = $3,
-          numero_vuelo = $4,
-          hotel = $5,
-          direccion_hotel = $6,
-          contacto_hotel = $7
-        WHERE idSolicitud = $8
-        RETURNING *`,
-        [
-          fecha_salida,
-          fecha_regreso,
-          idAerolinea || null,
-          numero_vuelo || null,
-          hotel || null,
-          direccion_hotel || null,
-          contacto_hotel || null,
-          id
-        ]
-      );
-    } else {
-      // Crear nuevo
-      resultado = await client.query(
-        `INSERT INTO Itinerario (
-          idSolicitud, fecha_salida, fecha_regreso,
-          idAerolinea, numero_vuelo, hotel,
-          direccion_hotel, contacto_hotel
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING *`,
-        [
-          id,
-          fecha_salida,
-          fecha_regreso,
-          idAerolinea || null,
-          numero_vuelo || null,
-          hotel || null,
-          direccion_hotel || null,
-          contacto_hotel || null
-        ]
-      );
-    }
-
-    await client.query('COMMIT');
-    res.status(201).json(resultado.rows[0]);
-
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Error al guardar itinerario:', error);
-    res.status(500).json({ error: 'Error al guardar itinerario' });
-  } finally {
-    client.release();
-  }
-});
-
-// 8. Obtener seguimiento de solicitud
-app.get('/api/solicitudes/:id/seguimiento', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const result = await pool.query(
-      `SELECT 
-        s.*,
-        e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS empleado
-       FROM Seguimiento s
-       JOIN Empleado e ON s.idEmpleado = e.idEmpleado
-       WHERE s.idSolicitud = $1
-       ORDER BY s.fecha_actualizacion DESC`,
-      [id]
-    );
-
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error al obtener seguimiento:', error);
-    res.status(500).json({ error: 'Error al obtener seguimiento' });
-  }
-});
 
 
 
@@ -1429,9 +935,6 @@ app.get('/api/clientes', authenticateToken, async (req, res) => {
 });
 
 // Obtener un cliente con todos sus datos (para edición)
-
-// Endpoint para obtener cliente completo (manteniendo fecha como string)
-// En tu backend (index.js)
 app.get('/api/clientes/:id/completo', authenticateToken, async (req, res) => {
   const { id } = req.params;
 
@@ -2764,6 +2267,975 @@ app.put('/api/tramites/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Agrega esto en tu backend si no lo tienes:
+app.get('/api/tramites/lista-simple', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT idTramite, tipoTramite 
+      FROM Tramite 
+      ORDER BY tipoTramite
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener lista de trámites:', error);
+    res.status(500).json({ error: 'Error al obtener trámites' });
+  }
+});
+
+
+
+
+// ==============================================
+// RUTAS PARA SOLICITUDES (CRUD COMPLETO)
+// ==============================================
+
+/**
+ * Obtener todas las solicitudes con información básica
+ */
+app.get('/api/solicitudes', authenticateToken, async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        s.idSolicitud,
+        s.fechaSolicitud,
+        s.estado_actual AS estado,
+        c.idCliente,
+        c.nombreCliente || ' ' || c.apellidoPaternoCliente AS nombreCliente,
+        t.idTramite,
+        t.tipoTramite,
+        e.idEmpleado,
+        e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS nombreEmpleado
+      FROM Solicitud s
+      JOIN Cliente c ON s.idCliente = c.idCliente
+      JOIN Tramite t ON s.idTramite = t.idTramite
+      JOIN Empleado e ON s.idEmpleado = e.idEmpleado
+      ORDER BY s.fechaSolicitud DESC
+    `;
+    
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener solicitudes:', error);
+    res.status(500).json({ error: 'Error al obtener solicitudes' });
+  }
+});
+
+/**
+ * Obtener una solicitud completa con todos sus datos relacionados
+ */
+app.get('/api/solicitudes/:id/completo', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // 1. Obtener información básica de la solicitud
+    const solicitudQuery = `
+      SELECT 
+        s.*,
+        c.idCliente,
+        c.nombreCliente || ' ' || c.apellidoPaternoCliente AS nombreCliente,
+        t.idTramite,
+        t.tipoTramite,
+        e.idEmpleado,
+        e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS nombreEmpleado
+      FROM Solicitud s
+      JOIN Cliente c ON s.idCliente = c.idCliente
+      JOIN Tramite t ON s.idTramite = t.idTramite
+      JOIN Empleado e ON s.idEmpleado = e.idEmpleado
+      WHERE s.idSolicitud = $1
+    `;
+    
+    const solicitudResult = await pool.query(solicitudQuery, [id]);
+    
+    if (solicitudResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Solicitud no encontrada' });
+    }
+
+    const solicitud = solicitudResult.rows[0];
+
+    // 2. Obtener seguimientos
+    const seguimientosQuery = `
+      SELECT 
+        sg.idSeguimiento,
+        sg.descripcion,
+        sg.fecha_actualizacion AS fecha,
+        sg.estado,
+        e.idEmpleado,
+        e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS nombreEmpleado
+      FROM Seguimiento sg
+      JOIN Empleado e ON sg.idEmpleado = e.idEmpleado
+      WHERE sg.idSolicitud = $1
+      ORDER BY sg.fecha_actualizacion DESC
+    `;
+    const seguimientosResult = await pool.query(seguimientosQuery, [id]);
+    
+    // 3. Obtener pagos
+    const pagosQuery = `
+      SELECT 
+        p.idPago,
+        p.monto,
+        p.fechaPago AS fecha,
+        p.estadoPago AS estado,
+        mp.idMetodopago,
+        mp.nombreMetodo AS metodoPago
+      FROM Pago p
+      JOIN MetodoPago mp ON p.idMetodopago = mp.idMetodopago
+      WHERE p.idSolicitud = $1
+      ORDER BY p.fechaPago DESC
+    `;
+    const pagosResult = await pool.query(pagosQuery, [id]);
+    
+    // 4. Obtener itinerario (si existe)
+    const itinerarioQuery = `
+      SELECT 
+        i.idItinerario,
+        i.fecha_salida,
+        i.fecha_regreso,
+        a.idAerolinea,
+        a.nombreAerolinea,
+        i.numero_vuelo,
+        i.hotel,
+        i.direccion_hotel,
+        i.contacto_hotel
+      FROM Itinerario i
+      LEFT JOIN Aerolinea a ON i.idAerolinea = a.idAerolinea
+      WHERE i.idSolicitud = $1
+    `;
+    const itinerarioResult = await pool.query(itinerarioQuery, [id]);
+    
+    // 5. Obtener documentos
+    const documentosQuery = `
+      SELECT 
+        idDocumento,
+        nombreDocumento,
+        tipoDocumento,
+        archivo,
+        fechasubida AS fecha,
+        estado
+      FROM Documento
+      WHERE idSolicitud = $1
+      ORDER BY fechasubida DESC
+    `;
+    const documentosResult = await pool.query(documentosQuery, [id]);
+
+    // Construir respuesta final
+    const respuesta = {
+      ...solicitud,
+      seguimientos: seguimientosResult.rows,
+      pagos: pagosResult.rows,
+      itinerario: itinerarioResult.rows[0] || null,
+      documentos: documentosResult.rows
+    };
+
+    res.json(respuesta);
+  } catch (error) {
+    console.error('Error al obtener solicitud completa:', error);
+    res.status(500).json({ error: 'Error al obtener solicitud completa' });
+  }
+});
+
+/**
+ * Crear una nueva solicitud
+ */
+app.post('/api/solicitudes', authenticateToken, async (req, res) => {
+  const { idCliente, idTramite, idEmpleado, fechaSolicitud, estado_actual } = req.body;
+
+  // Validaciones básicas
+  if (!idCliente || !idTramite || !idEmpleado || !fechaSolicitud || !estado_actual) {
+    return res.status(400).json({ 
+      error: 'Faltan campos requeridos',
+      details: 'idCliente, idTramite, idEmpleado, fechaSolicitud y estado_actual son obligatorios'
+    });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Verificar que existen cliente, trámite y empleado
+    const clienteExists = await client.query('SELECT idCliente FROM Cliente WHERE idCliente = $1', [idCliente]);
+    if (clienteExists.rows.length === 0) {
+      throw new Error('Cliente no encontrado');
+    }
+
+    const tramiteExists = await client.query('SELECT idTramite FROM Tramite WHERE idTramite = $1', [idTramite]);
+    if (tramiteExists.rows.length === 0) {
+      throw new Error('Trámite no encontrado');
+    }
+
+    const empleadoExists = await client.query('SELECT idEmpleado FROM Empleado WHERE idEmpleado = $1', [idEmpleado]);
+    if (empleadoExists.rows.length === 0) {
+      throw new Error('Empleado no encontrado');
+    }
+
+    // 2. Insertar la solicitud
+    const insertQuery = `
+      INSERT INTO Solicitud (
+        idCliente, idTramite, idEmpleado, fechaSolicitud, estado_actual
+      ) VALUES ($1, $2, $3, $4, $5)
+      RETURNING idSolicitud
+    `;
+    
+    const result = await client.query(insertQuery, [
+      idCliente, idTramite, idEmpleado, fechaSolicitud, estado_actual
+    ]);
+
+    const idSolicitud = result.rows[0].idsolicitud;
+
+    // 3. Crear primer seguimiento automático
+    const seguimientoQuery = `
+      INSERT INTO Seguimiento (
+        idSolicitud, idEmpleado, descripcion, fecha_actualizacion, estado
+      ) VALUES ($1, $2, $3, $4, $5)
+    `;
+    
+    await client.query(seguimientoQuery, [
+      idSolicitud,
+      idEmpleado,
+      'Solicitud creada',
+      new Date().toISOString(),
+      estado_actual
+    ]);
+
+    await client.query('COMMIT');
+
+    // Obtener la solicitud recién creada con todos sus datos
+    const nuevaSolicitud = await getSolicitudCompleta(idSolicitud);
+    res.status(201).json(nuevaSolicitud);
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error al crear solicitud:', error);
+    
+    let errorMessage = 'Error al crear solicitud';
+    if (error.message.includes('Cliente no encontrado')) {
+      errorMessage = 'El cliente especificado no existe';
+    } else if (error.message.includes('Trámite no encontrado')) {
+      errorMessage = 'El trámite especificado no existe';
+    } else if (error.message.includes('Empleado no encontrado')) {
+      errorMessage = 'El empleado especificado no existe';
+    }
+    
+    res.status(500).json({ 
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    client.release();
+  }
+});
+
+/**
+ * Actualizar una solicitud (solo campos básicos)
+ */
+app.put('/api/solicitudes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { estado_actual } = req.body;
+
+  if (!estado_actual) {
+    return res.status(400).json({ error: 'El estado actual es requerido' });
+  }
+
+  try {
+    // Verificar que la solicitud existe
+    const solicitudExists = await pool.query(
+      'SELECT idSolicitud FROM Solicitud WHERE idSolicitud = $1',
+      [id]
+    );
+    
+    if (solicitudExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Solicitud no encontrada' });
+    }
+
+    const updateQuery = `
+      UPDATE Solicitud 
+      SET estado_actual = $1
+      WHERE idSolicitud = $2
+      RETURNING *
+    `;
+    
+    const result = await pool.query(updateQuery, [estado_actual, id]);
+    res.json(result.rows[0]);
+    
+  } catch (error) {
+    console.error('Error al actualizar solicitud:', error);
+    res.status(500).json({ error: 'Error al actualizar solicitud' });
+  }
+});
+
+/**
+ * Eliminar una solicitud (y todos sus datos relacionados)
+ */
+app.delete('/api/solicitudes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Verificar que existe la solicitud
+    const solicitudExists = await client.query(
+      'SELECT idSolicitud FROM Solicitud WHERE idSolicitud = $1',
+      [id]
+    );
+    
+    if (solicitudExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Solicitud no encontrada' });
+    }
+
+    // 2. Eliminar documentos relacionados
+    await client.query('DELETE FROM Documento WHERE idSolicitud = $1', [id]);
+    
+    // 3. Eliminar itinerario relacionado
+    await client.query('DELETE FROM Itinerario WHERE idSolicitud = $1', [id]);
+    
+    // 4. Eliminar pagos relacionados
+    await client.query('DELETE FROM Pago WHERE idSolicitud = $1', [id]);
+    
+    // 5. Eliminar seguimientos relacionados
+    await client.query('DELETE FROM Seguimiento WHERE idSolicitud = $1', [id]);
+    
+    // 6. Finalmente eliminar la solicitud
+    const result = await client.query(
+      'DELETE FROM Solicitud WHERE idSolicitud = $1 RETURNING idSolicitud',
+      [id]
+    );
+
+    await client.query('COMMIT');
+    
+    res.json({ 
+      success: true,
+      message: 'Solicitud y todos sus datos relacionados eliminados',
+      idSolicitud: result.rows[0].idsolicitud
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error al eliminar solicitud:', error);
+    res.status(500).json({ error: 'Error al eliminar solicitud' });
+  } finally {
+    client.release();
+  }
+});
+
+// ==============================================
+// RUTAS PARA SEGUIMIENTOS DE SOLICITUDES
+// ==============================================
+
+/**
+ * Agregar un seguimiento a una solicitud
+ */
+app.post('/api/solicitudes/:idSolicitud/seguimientos', authenticateToken, async (req, res) => {
+  const { idSolicitud } = req.params;
+  const { idEmpleado, descripcion, estado } = req.body;
+
+  if (!idEmpleado || !descripcion?.trim() || !estado?.trim()) {
+    return res.status(400).json({ 
+      error: 'Faltan campos requeridos',
+      details: 'idEmpleado, descripcion y estado son obligatorios'
+    });
+  }
+
+  try {
+    // Verificar que existe la solicitud
+    const solicitudExists = await pool.query(
+      'SELECT idSolicitud FROM Solicitud WHERE idSolicitud = $1',
+      [idSolicitud]
+    );
+    
+    if (solicitudExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Solicitud no encontrada' });
+    }
+
+    // Verificar que existe el empleado
+    const empleadoExists = await pool.query(
+      'SELECT idEmpleado FROM Empleado WHERE idEmpleado = $1',
+      [idEmpleado]
+    );
+    
+    if (empleadoExists.rows.length === 0) {
+      return res.status(400).json({ error: 'Empleado no encontrado' });
+    }
+
+    // Insertar el seguimiento
+    const result = await pool.query(
+      `INSERT INTO Seguimiento (
+        idSolicitud, idEmpleado, descripcion, fecha_actualizacion, estado
+      ) VALUES ($1, $2, $3, $4, $5)
+      RETURNING *`,
+      [
+        idSolicitud,
+        idEmpleado,
+        descripcion.trim(),
+        new Date().toISOString(),
+        estado.trim()
+      ]
+    );
+
+    // Actualizar el estado actual de la solicitud
+    await pool.query(
+      'UPDATE Solicitud SET estado_actual = $1 WHERE idSolicitud = $2',
+      [estado.trim(), idSolicitud]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al agregar seguimiento:', error);
+    res.status(500).json({ error: 'Error al agregar seguimiento' });
+  }
+});
+
+/**
+ * Eliminar un seguimiento
+ */
+app.delete('/api/seguimientos/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Verificar que existe el seguimiento
+    const seguimientoExists = await pool.query(
+      'SELECT idSeguimiento FROM Seguimiento WHERE idSeguimiento = $1',
+      [id]
+    );
+    
+    if (seguimientoExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Seguimiento no encontrado' });
+    }
+
+    const result = await pool.query(
+      'DELETE FROM Seguimiento WHERE idSeguimiento = $1 RETURNING idSeguimiento, idSolicitud',
+      [id]
+    );
+
+    // Verificar si era el último seguimiento para actualizar el estado de la solicitud
+    const { idsolicitud } = result.rows[0];
+    const ultimoSeguimiento = await pool.query(
+      `SELECT estado FROM Seguimiento 
+       WHERE idSolicitud = $1
+       ORDER BY fecha_actualizacion DESC
+       LIMIT 1`,
+      [idsolicitud]
+    );
+
+    if (ultimoSeguimiento.rows.length > 0) {
+      await pool.query(
+        'UPDATE Solicitud SET estado_actual = $1 WHERE idSolicitud = $2',
+        [ultimoSeguimiento.rows[0].estado, idsolicitud]
+      );
+    }
+
+    res.json({ 
+      success: true,
+      message: 'Seguimiento eliminado',
+      idSeguimiento: id,
+      idSolicitud: idsolicitud
+    });
+  } catch (error) {
+    console.error('Error al eliminar seguimiento:', error);
+    res.status(500).json({ error: 'Error al eliminar seguimiento' });
+  }
+});
+
+// ==============================================
+// RUTAS PARA PAGOS DE SOLICITUDES
+// ==============================================
+
+/**
+ * Agregar un pago a una solicitud
+ */
+app.post('/api/solicitudes/:idSolicitud/pagos', authenticateToken, async (req, res) => {
+  const { idSolicitud } = req.params;
+  const { idMetodopago, monto, estadoPago } = req.body;
+
+  if (!idMetodopago || !monto || !estadoPago) {
+    return res.status(400).json({ 
+      error: 'Faltan campos requeridos',
+      details: 'idMetodopago, monto y estadoPago son obligatorios'
+    });
+  }
+
+  try {
+    // Verificar que existe la solicitud
+    const solicitudExists = await pool.query(
+      'SELECT idSolicitud FROM Solicitud WHERE idSolicitud = $1',
+      [idSolicitud]
+    );
+    
+    if (solicitudExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Solicitud no encontrada' });
+    }
+
+    // Verificar que existe el método de pago
+    const metodoExists = await pool.query(
+      'SELECT idMetodopago FROM MetodoPago WHERE idMetodopago = $1',
+      [idMetodopago]
+    );
+    
+    if (metodoExists.rows.length === 0) {
+      return res.status(400).json({ error: 'Método de pago no encontrado' });
+    }
+
+    // Insertar el pago
+    const result = await pool.query(
+      `INSERT INTO Pago (
+        idSolicitud, idMetodopago, monto, fechaPago, estadoPago
+      ) VALUES ($1, $2, $3, $4, $5)
+      RETURNING *`,
+      [
+        idSolicitud,
+        idMetodopago,
+        monto,
+        new Date().toISOString(),
+        estadoPago
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al agregar pago:', error);
+    res.status(500).json({ error: 'Error al agregar pago' });
+  }
+});
+
+/**
+ * Actualizar un pago
+ */
+app.put('/api/pagos/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { estadoPago } = req.body;
+
+  if (!estadoPago) {
+    return res.status(400).json({ error: 'El estado del pago es requerido' });
+  }
+
+  try {
+    // Verificar que existe el pago
+    const pagoExists = await pool.query(
+      'SELECT idPago FROM Pago WHERE idPago = $1',
+      [id]
+    );
+    
+    if (pagoExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Pago no encontrado' });
+    }
+
+    const result = await pool.query(
+      `UPDATE Pago 
+       SET estadoPago = $1
+       WHERE idPago = $2
+       RETURNING *`,
+      [estadoPago, id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al actualizar pago:', error);
+    res.status(500).json({ error: 'Error al actualizar pago' });
+  }
+});
+
+/**
+ * Eliminar un pago
+ */
+app.delete('/api/pagos/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Verificar que existe el pago
+    const pagoExists = await pool.query(
+      'SELECT idPago FROM Pago WHERE idPago = $1',
+      [id]
+    );
+    
+    if (pagoExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Pago no encontrado' });
+    }
+
+    const result = await pool.query(
+      'DELETE FROM Pago WHERE idPago = $1 RETURNING idPago',
+      [id]
+    );
+
+    res.json({ 
+      success: true,
+      message: 'Pago eliminado',
+      idPago: result.rows[0].idpago
+    });
+  } catch (error) {
+    console.error('Error al eliminar pago:', error);
+    res.status(500).json({ error: 'Error al eliminar pago' });
+  }
+});
+
+// ==============================================
+// RUTAS PARA ITINERARIOS DE SOLICITUDES
+// ==============================================
+
+/**
+ * Crear o actualizar itinerario para una solicitud
+ */
+app.post('/api/solicitudes/:idSolicitud/itinerario', authenticateToken, async (req, res) => {
+  const { idSolicitud } = req.params;
+  const {
+    fecha_salida,
+    fecha_regreso,
+    idAerolinea,
+    numero_vuelo,
+    hotel,
+    direccion_hotel,
+    contacto_hotel
+  } = req.body;
+
+  if (!fecha_salida || !fecha_regreso) {
+    return res.status(400).json({ 
+      error: 'Faltan campos requeridos',
+      details: 'fecha_salida y fecha_regreso son obligatorios'
+    });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Verificar que existe la solicitud
+    const solicitudExists = await client.query(
+      'SELECT idSolicitud FROM Solicitud WHERE idSolicitud = $1',
+      [idSolicitud]
+    );
+    
+    if (solicitudExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Solicitud no encontrada' });
+    }
+
+    // Verificar si ya existe un itinerario para esta solicitud
+    const itinerarioExists = await client.query(
+      'SELECT idItinerario FROM Itinerario WHERE idSolicitud = $1',
+      [idSolicitud]
+    );
+
+    let result;
+    if (itinerarioExists.rows.length > 0) {
+      // Actualizar itinerario existente
+      result = await client.query(
+        `UPDATE Itinerario SET
+          fecha_salida = $1,
+          fecha_regreso = $2,
+          idAerolinea = $3,
+          numero_vuelo = $4,
+          hotel = $5,
+          direccion_hotel = $6,
+          contacto_hotel = $7
+        WHERE idSolicitud = $8
+        RETURNING *`,
+        [
+          fecha_salida,
+          fecha_regreso,
+          idAerolinea || null,
+          numero_vuelo?.trim() || null,
+          hotel?.trim() || null,
+          direccion_hotel?.trim() || null,
+          contacto_hotel?.trim() || null,
+          idSolicitud
+        ]
+      );
+    } else {
+      // Crear nuevo itinerario
+      result = await client.query(
+        `INSERT INTO Itinerario (
+          idSolicitud, fecha_salida, fecha_regreso, idAerolinea,
+          numero_vuelo, hotel, direccion_hotel, contacto_hotel
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING *`,
+        [
+          idSolicitud,
+          fecha_salida,
+          fecha_regreso,
+          idAerolinea || null,
+          numero_vuelo?.trim() || null,
+          hotel?.trim() || null,
+          direccion_hotel?.trim() || null,
+          contacto_hotel?.trim() || null
+        ]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error al guardar itinerario:', error);
+    res.status(500).json({ error: 'Error al guardar itinerario' });
+  } finally {
+    client.release();
+  }
+});
+
+/**
+ * Eliminar itinerario de una solicitud
+ */
+app.delete('/api/solicitudes/:idSolicitud/itinerario', authenticateToken, async (req, res) => {
+  const { idSolicitud } = req.params;
+
+  try {
+    // Verificar que existe el itinerario
+    const itinerarioExists = await pool.query(
+      'SELECT idItinerario FROM Itinerario WHERE idSolicitud = $1',
+      [idSolicitud]
+    );
+    
+    if (itinerarioExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Itinerario no encontrado para esta solicitud' });
+    }
+
+    const result = await pool.query(
+      'DELETE FROM Itinerario WHERE idSolicitud = $1 RETURNING idItinerario',
+      [idSolicitud]
+    );
+
+    res.json({ 
+      success: true,
+      message: 'Itinerario eliminado',
+      idItinerario: result.rows[0].iditinerario
+    });
+  } catch (error) {
+    console.error('Error al eliminar itinerario:', error);
+    res.status(500).json({ error: 'Error al eliminar itinerario' });
+  }
+});
+
+// ==============================================
+// RUTAS PARA DOCUMENTOS DE SOLICITUDES
+// ==============================================
+
+/**
+ * Agregar un documento a una solicitud
+ */
+app.post('/api/solicitudes/:idSolicitud/documentos', authenticateToken, async (req, res) => {
+  const { idSolicitud } = req.params;
+  const {
+    nombreDocumento,
+    tipoDocumento,
+    archivo,
+    estado
+  } = req.body;
+
+  if (!nombreDocumento || !tipoDocumento || !archivo) {
+    return res.status(400).json({ 
+      error: 'Faltan campos requeridos',
+      details: 'nombreDocumento, tipoDocumento y archivo son obligatorios'
+    });
+  }
+
+  try {
+    // Verificar que existe la solicitud
+    const solicitudExists = await pool.query(
+      'SELECT idSolicitud FROM Solicitud WHERE idSolicitud = $1',
+      [idSolicitud]
+    );
+    
+    if (solicitudExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Solicitud no encontrada' });
+    }
+
+    // Insertar el documento
+    const result = await pool.query(
+      `INSERT INTO Documento (
+        idSolicitud, nombreDocumento, tipoDocumento, archivo, fechasubida, estado
+      ) VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *`,
+      [
+        idSolicitud,
+        nombreDocumento,
+        tipoDocumento,
+        archivo,
+        new Date().toISOString(),
+        estado || 'pendiente'
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al agregar documento:', error);
+    res.status(500).json({ error: 'Error al agregar documento' });
+  }
+});
+
+/**
+ * Actualizar estado de un documento
+ */
+app.put('/api/documentos/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { estado } = req.body;
+
+  if (!estado) {
+    return res.status(400).json({ error: 'El estado del documento es requerido' });
+  }
+
+  try {
+    // Verificar que existe el documento
+    const docExists = await pool.query(
+      'SELECT idDocumento FROM Documento WHERE idDocumento = $1',
+      [id]
+    );
+    
+    if (docExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Documento no encontrado' });
+    }
+
+    const result = await pool.query(
+      `UPDATE Documento 
+       SET estado = $1
+       WHERE idDocumento = $2
+       RETURNING *`,
+      [estado, id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al actualizar documento:', error);
+    res.status(500).json({ error: 'Error al actualizar documento' });
+  }
+});
+
+/**
+ * Eliminar un documento
+ */
+app.delete('/api/documentos/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Verificar que existe el documento
+    const docExists = await pool.query(
+      'SELECT idDocumento FROM Documento WHERE idDocumento = $1',
+      [id]
+    );
+    
+    if (docExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Documento no encontrado' });
+    }
+
+    const result = await pool.query(
+      'DELETE FROM Documento WHERE idDocumento = $1 RETURNING idDocumento, archivo',
+      [id]
+    );
+
+    // Aquí podrías agregar lógica para eliminar el archivo físico si es necesario
+
+    res.json({ 
+      success: true,
+      message: 'Documento eliminado',
+      idDocumento: result.rows[0].iddocumento,
+      archivo: result.rows[0].archivo
+    });
+  } catch (error) {
+    console.error('Error al eliminar documento:', error);
+    res.status(500).json({ error: 'Error al eliminar documento' });
+  }
+});
+
+// ==============================================
+// FUNCIONES AUXILIARES
+// ==============================================
+
+/**
+ * Función para obtener una solicitud completa con todos sus datos relacionados
+ */
+async function getSolicitudCompleta(idSolicitud) {
+  const query = `
+    WITH solicitud_base AS (
+      SELECT 
+        s.*,
+        c.idCliente,
+        c.nombreCliente || ' ' || c.apellidoPaternoCliente AS nombreCliente,
+        t.idTramite,
+        t.tipoTramite,
+        e.idEmpleado,
+        e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS nombreEmpleado
+      FROM Solicitud s
+      JOIN Cliente c ON s.idCliente = c.idCliente
+      JOIN Tramite t ON s.idTramite = t.idTramite
+      JOIN Empleado e ON s.idEmpleado = e.idEmpleado
+      WHERE s.idSolicitud = $1
+    ),
+    seguimientos AS (
+      SELECT 
+        sg.idSolicitud,
+        json_agg(json_build_object(
+          'idSeguimiento', sg.idSeguimiento,
+          'descripcion', sg.descripcion,
+          'fecha', sg.fecha_actualizacion,
+          'estado', sg.estado,
+          'idEmpleado', sg_e.idEmpleado,
+          'nombreEmpleado', sg_e.nombreEmpleado || ' ' || sg_e.apellidoPaternoEmpleado
+        ) ORDER BY sg.fecha_actualizacion DESC) AS seguimientos
+      FROM Seguimiento sg
+      JOIN Empleado sg_e ON sg.idEmpleado = sg_e.idEmpleado
+      WHERE sg.idSolicitud = $1
+      GROUP BY sg.idSolicitud
+    ),
+    pagos AS (
+      SELECT 
+        p.idSolicitud,
+        json_agg(json_build_object(
+          'idPago', p.idPago,
+          'monto', p.monto,
+          'fecha', p.fechaPago,
+          'estado', p.estadoPago,
+          'idMetodopago', p.idMetodopago,
+          'metodoPago', mp.nombreMetodo
+        ) ORDER BY p.fechaPago DESC) AS pagos
+      FROM Pago p
+      JOIN MetodoPago mp ON p.idMetodopago = mp.idMetodopago
+      WHERE p.idSolicitud = $1
+      GROUP BY p.idSolicitud
+    ),
+    itinerario AS (
+      SELECT 
+        i.idSolicitud,
+        json_build_object(
+          'idItinerario', i.idItinerario,
+          'fecha_salida', i.fecha_salida,
+          'fecha_regreso', i.fecha_regreso,
+          'idAerolinea', i.idAerolinea,
+          'nombreAerolinea', a.nombreAerolinea,
+          'numero_vuelo', i.numero_vuelo,
+          'hotel', i.hotel,
+          'direccion_hotel', i.direccion_hotel,
+          'contacto_hotel', i.contacto_hotel
+        ) AS itinerario
+      FROM Itinerario i
+      LEFT JOIN Aerolinea a ON i.idAerolinea = a.idAerolinea
+      WHERE i.idSolicitud = $1
+    ),
+    documentos AS (
+      SELECT 
+        d.idSolicitud,
+        json_agg(json_build_object(
+          'idDocumento', d.idDocumento,
+          'nombreDocumento', d.nombreDocumento,
+          'tipoDocumento', d.tipoDocumento,
+          'archivo', d.archivo,
+          'fecha', d.fechasubida,
+          'estado', d.estado
+        ) ORDER BY d.fechasubida DESC) AS documentos
+      FROM Documento d
+      WHERE d.idSolicitud = $1
+      GROUP BY d.idSolicitud
+    )
+    SELECT 
+      sb.*,
+      COALESCE(sg.seguimientos, '[]'::json) AS seguimientos,
+      COALESCE(p.pagos, '[]'::json) AS pagos,
+      COALESCE(i.itinerario, 'null'::json) AS itinerario,
+      COALESCE(d.documentos, '[]'::json) AS documentos
+    FROM solicitud_base sb
+    LEFT JOIN seguimientos sg ON sb.idSolicitud = sg.idSolicitud
+    LEFT JOIN pagos p ON sb.idSolicitud = p.idSolicitud
+    LEFT JOIN itinerario i ON sb.idSolicitud = i.idSolicitud
+    LEFT JOIN documentos d ON sb.idSolicitud = d.idSolicitud
+  `;
+  
+  const result = await pool.query(query, [idSolicitud]);
+  return result.rows[0];
+}
 
 
 // ==============================================

@@ -7,7 +7,6 @@ import Login from "./Pages/Login";
 import Tramites from "./Pages/Tramites";
 import EmpleadoLayout from "./Components/Layouts/EmpleadoLayout"; // Nuevo layout
 import HomeEmpleado from "./Pages/Empleado/Home";
-import SolicitudForm from "./Pages/Empleado/SolicitudForm";
 import Areas from "./Pages/Empleado/Areas";
 import Empleados from "./Pages/Empleado/Empleados";
 import Roles from "./Pages/Empleado/Roles";
@@ -17,6 +16,7 @@ import Antecendentes from "./Pages/Empleado/Antecedentes";
 import PaisesCiudades from "./Pages/Empleado/PaisesCiudades";
 import TramitesLista from "./Pages/Empleado/TramitesLista";
 import EditarTramite from "./Pages/Empleado/ActualizarTramite"; // Asegúrate de que esta ruta sea correcta
+import CrearSolicitud from "./Pages/Empleado/CrearSolicitud";
 import "./App.css";
 
 // Importaciones de estilos
@@ -69,7 +69,7 @@ function App() {
             {/* Rutas protegidas con layout de empleado */}
             <Route element={<EmpleadoLayout />}>
               <Route path="/home" element={<HomeEmpleado />} />
-              <Route path="/empleado/solicitudform" element={<SolicitudForm />} />
+      
               <Route path="/empleado/areas" element={<Areas />} />
               <Route path="/empleado/areas/editar/:id" element={<EditarArea />} />
               <Route path="/empleado/empleados" element={<Empleados />} />
@@ -80,6 +80,8 @@ function App() {
               <Route path="/empleado/tramiteslista" element={<TramitesLista />} />
               <Route path="/empleado/paisesciudades" element={<PaisesCiudades />} />
               <Route path="/empleado/tramites/editar/:id" element={<EditarTramite />} />
+              <Route path="/empleado/crear-solicitud" element={<CrearSolicitud />} />
+              <Route path="/empleado/crearSolicitud" element={<CrearSolicitud />} />
               {/* Aquí puedes agregar más rutas protegidas */}
             </Route>
             
