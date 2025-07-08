@@ -1,6 +1,6 @@
 // src/components/CrearSolicitud.js
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axios from 'axios'; // Importamos el CSS profesional
 
 const CrearSolicitud = () => {
   const [tramites, setTramites] = useState([]);
@@ -12,6 +12,7 @@ const CrearSolicitud = () => {
   const [estadoActual, setEstadoActual] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [mensaje, setMensaje] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   const estados = [
     "Iniciado",
@@ -35,6 +36,7 @@ const CrearSolicitud = () => {
   useEffect(() => {
     const fetchTramitesYEmpleados = async () => {
       try {
+        setIsLoading(true);
         const token = localStorage.getItem('authToken');
         const [tramitesRes, empleadosRes] = await Promise.all([
           axios.get('http://localhost:5000/api/tramites', {
@@ -62,6 +64,9 @@ const CrearSolicitud = () => {
         setEmpleados(empleadosList);
       } catch (error) {
         console.error('Error al obtener datos:', error);
+        setMensaje('Error al cargar los datos. Intente recargar la página.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -91,7 +96,8 @@ const CrearSolicitud = () => {
       idTramite: tramiteSeleccionadoId,
       idEmpleado: empleadoSeleccionado,
       fechaSolicitud,
-      estado_actual: estadoActual
+      estado_actual: estadoActual,
+      observaciones: observaciones || null
     };
 
     try {
@@ -120,16 +126,17 @@ const CrearSolicitud = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.title}>Crear nueva solicitud</h2>
+    <div className="crear-solicitud-container">
+      <h2 className="crear-solicitud-title">Crear nueva solicitud</h2>
 
-      <div style={styles.formGroup}>
+      <div className="crear-solicitud-form-group">
         <label htmlFor="tramite">Seleccionar trámite activo:</label>
         <select
           id="tramite"
           value={tramiteSeleccionadoId}
           onChange={(e) => handleTramiteSeleccionado(e.target.value)}
-          style={styles.select}
+          className={`crear-solicitud-select ${isLoading ? 'loading' : ''}`}
+          disabled={isLoading}
         >
           <option value="">-- Selecciona un trámite --</option>
           {tramites.map((tramite) => (
@@ -141,9 +148,9 @@ const CrearSolicitud = () => {
       </div>
 
       {clientesDelTramite.length > 0 && (
-        <div style={styles.clientesBox}>
+        <div className="crear-solicitud-clientes-box">
           <h3>Clientes asociados:</h3>
-          <ul style={styles.lista}>
+          <ul className="crear-solicitud-lista">
             {clientesDelTramite.map((cliente, idx) => (
               <li key={idx}>
                 {cliente.nombre || cliente.nombrecliente || cliente.nombreCliente || 'Cliente sin nombre'}
@@ -153,13 +160,14 @@ const CrearSolicitud = () => {
         </div>
       )}
 
-      <div style={styles.formGroup}>
+      <div className="crear-solicitud-form-group">
         <label htmlFor="empleado">Seleccionar empleado responsable:</label>
         <select
           id="empleado"
           value={empleadoSeleccionado}
           onChange={(e) => setEmpleadoSeleccionado(e.target.value)}
-          style={styles.select}
+          className="crear-solicitud-select"
+          disabled={isLoading}
         >
           <option value="">-- Selecciona un empleado --</option>
           {empleados.map((empleado) => (
@@ -170,24 +178,25 @@ const CrearSolicitud = () => {
         </select>
       </div>
 
-      <div style={styles.formGroup}>
+      <div className="crear-solicitud-form-group">
         <label htmlFor="fecha">Fecha de solicitud:</label>
         <input
           type="date"
           id="fecha"
           value={fechaSolicitud}
           onChange={(e) => setFechaSolicitud(e.target.value)}
-          style={styles.input}
+          className="crear-solicitud-input"
+          max={new Date().toISOString().split('T')[0]} // No permitir fechas futuras
         />
       </div>
 
-      <div style={styles.formGroup}>
+      <div className="crear-solicitud-form-group">
         <label htmlFor="estado">Estado actual:</label>
         <select
           id="estado"
           value={estadoActual}
           onChange={(e) => setEstadoActual(e.target.value)}
-          style={styles.select}
+          className="crear-solicitud-select"
         >
           <option value="">-- Selecciona un estado --</option>
           {estados.map((estado, index) => (
@@ -198,93 +207,35 @@ const CrearSolicitud = () => {
         </select>
       </div>
 
-      <div style={styles.formGroup}>
+      <div className="crear-solicitud-form-group">
         <label htmlFor="observaciones">Observaciones:</label>
         <textarea
           id="observaciones"
           value={observaciones}
           onChange={(e) => setObservaciones(e.target.value)}
           rows={4}
-          style={styles.textarea}
+          className="crear-solicitud-textarea"
           placeholder="Escribe aquí cualquier comentario adicional..."
         />
       </div>
 
-      <div style={styles.formGroup}>
-        <button onClick={handleAgregarSolicitud} style={styles.button}>
-          Agregar Solicitud
+      <div className="crear-solicitud-form-group">
+        <button 
+          onClick={handleAgregarSolicitud} 
+          className="crear-solicitud-button"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Cargando...' : 'Agregar Solicitud'}
         </button>
       </div>
 
       {mensaje && (
-        <div style={{ marginTop: '1rem', color: mensaje.includes('✅') ? 'green' : 'red' }}>
+        <div className={`crear-solicitud-mensaje ${mensaje.includes('✅') ? 'success' : 'error'}`}>
           {mensaje}
         </div>
       )}
     </div>
   );
-};
-
-const styles = {
-  container: {
-    padding: '2rem',
-    maxWidth: '600px',
-    margin: '0 auto',
-    backgroundColor: '#f8f9fa',
-    borderRadius: '12px',
-    boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-  },
-  title: {
-    color: '#2c3e50',
-    textAlign: 'center',
-    marginBottom: '1.5rem',
-  },
-  formGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-    marginTop: '1.5rem',
-  },
-  select: {
-    padding: '0.5rem',
-    borderRadius: '6px',
-    border: '1px solid #ccc',
-  },
-  input: {
-    padding: '0.5rem',
-    borderRadius: '6px',
-    border: '1px solid #ccc',
-  },
-  clientesBox: {
-    marginTop: '2rem',
-    backgroundColor: '#ffffff',
-    padding: '1rem',
-    border: '1px solid #dee2e6',
-    borderRadius: '8px',
-  },
-  lista: {
-    listStyleType: 'disc',
-    paddingLeft: '1.5rem',
-    marginTop: '0.5rem',
-  },
-  textarea: {
-    padding: '0.75rem',
-    borderRadius: '6px',
-    border: '1px solid #ccc',
-    resize: 'vertical',
-    fontFamily: 'inherit',
-    fontSize: '1rem',
-  },
-  button: {
-    marginTop: '1rem',
-    padding: '0.75rem',
-    backgroundColor: '#2c3e50',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '1rem',
-  }
 };
 
 export default CrearSolicitud;
