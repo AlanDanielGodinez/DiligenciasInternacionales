@@ -1,0 +1,57 @@
+.crear-solicitud {
+  padding: 30px;
+  background-color: var(--color-background);
+  min-height: 100vh;
+}
+
+.contenedor-clientes {
+  padding: 20px;
+}
+
+.clientes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.card-cliente {
+  border: 2px solid var(--color-border);
+  padding: 15px;
+  border-radius: 12px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+
+.card-cliente:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-cliente.seleccionado {
+  border-color: var(--color-accent);
+  background-color: var(--color-secondary);
+  color: var(--color-text-light);
+}
+
+.btn-siguiente {
+  margin-top: 20px;
+  padding: 10px 30px;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-siguiente:hover {
+  background-color: var(--color-accent);
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+}

@@ -1,238 +1,221 @@
-// src/components/CrearSolicitud.js
-import React, { useEffect, useState } from 'react';
-import axios from 'axios'; // Importamos el CSS profesional
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import CrearCliente from './CrearCliente';
 
 const CrearSolicitud = () => {
-  const [tramites, setTramites] = useState([]);
-  const [tramiteSeleccionadoId, setTramiteSeleccionadoId] = useState('');
-  const [clientesDelTramite, setClientesDelTramite] = useState([]);
-  const [empleados, setEmpleados] = useState([]);
-  const [empleadoSeleccionado, setEmpleadoSeleccionado] = useState('');
-  const [fechaSolicitud, setFechaSolicitud] = useState('');
-  const [estadoActual, setEstadoActual] = useState('');
-  const [observaciones, setObservaciones] = useState('');
-  const [mensaje, setMensaje] = useState('');
+  const navigate = useNavigate();
+  const [clientes, setClientes] = useState([]);
+  const [selectedClientes, setSelectedClientes] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const estados = [
-    "Iniciado",
-    "En espera de documentos",
-    "Documentos entregados",
-    "En espera de anticipo pago",
-    "Anticipo realizado",
-    "Pendiente de perfil de aplicación",
-    "Falta de información",
-    "En espera de pago",
-    "Pago completado",
-    "En proceso llenado de formulario DS-160",
-    "Pendiente de pago de derecho a visa",
-    "Cita programada",
-    "Confirmación de datos",
-    "Capacitación realizada",
-    "Documentos entregados",
-    "Finalizado"
-  ];
-
+  // Obtener lista de clientes
   useEffect(() => {
-    const fetchTramitesYEmpleados = async () => {
+    const fetchClientes = async () => {
       try {
-        setIsLoading(true);
         const token = localStorage.getItem('authToken');
-        const [tramitesRes, empleadosRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/tramites', {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          axios.get('http://localhost:5000/api/empleados', {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-        ]);
-
-        const tramitesActivos = tramitesRes.data
-          .filter(t => !t.fecha_fin)
-          .map(t => ({
-            id: t.idTramite || t.idtramite,
-            nombre: t.tipotramite,
-            clientes: t.clientes || []
-          }));
-
-        const empleadosList = empleadosRes.data.map(e => ({
-          id: e.idEmpleado || e.idempleado,
-          nombre: `${e.nombreEmpleado || e.nombreempleado} ${e.apellidoPaternoEmpleado || e.apellidopaternoempleado}`
+        const response = await axios.get('http://localhost:5000/api/clientes', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // Asegurarnos de que los datos tengan la estructura correcta
+        const formattedClientes = response.data.map(cliente => ({
+          idCliente: cliente.idCliente || cliente.idcliente,
+          nombreCliente: cliente.nombreCliente || cliente.nombrecliente,
+          apellidoPaternoCliente: cliente.apellidoPaternoCliente || cliente.apellidopaternocliente,
+          apellidoMaternoCliente: cliente.apellidoMaternoCliente || cliente.apellidomaternocliente,
+          telefono: cliente.telefono,
+          identificacionunicanacional: cliente.identificacionunicanacional
         }));
-
-        setTramites(tramitesActivos);
-        setEmpleados(empleadosList);
-      } catch (error) {
-        console.error('Error al obtener datos:', error);
-        setMensaje('Error al cargar los datos. Intente recargar la página.');
-      } finally {
+        
+        setClientes(formattedClientes);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Error al obtener clientes:', err);
+        setError('Error al cargar clientes. Intente nuevamente.');
         setIsLoading(false);
       }
     };
 
-    fetchTramitesYEmpleados();
+    fetchClientes();
   }, []);
 
-  const handleTramiteSeleccionado = (idSeleccionado) => {
-    setTramiteSeleccionadoId(idSeleccionado);
-    const tramite = tramites.find(t => t.id.toString() === idSeleccionado);
-    if (tramite?.clientes) {
-      setClientesDelTramite(tramite.clientes);
-    } else {
-      setClientesDelTramite([]);
-    }
+  // Manejar selección/deselección de clientes
+  const toggleClienteSelection = (cliente) => {
+    setSelectedClientes(prev => {
+      // Usar el ID correcto (idCliente o idcliente)
+      const clienteId = cliente.idCliente || cliente.idcliente;
+      const isSelected = prev.some(c => (c.idCliente || c.idcliente) === clienteId);
+      
+      if (isSelected) {
+        return prev.filter(c => (c.idCliente || c.idcliente) !== clienteId);
+      } else {
+        return [...prev, cliente];
+      }
+    });
   };
 
-  const handleAgregarSolicitud = async () => {
-    setMensaje('');
-    if (!tramiteSeleccionadoId || !empleadoSeleccionado || !fechaSolicitud || !estadoActual || clientesDelTramite.length === 0) {
-      setMensaje('Por favor completa todos los campos requeridos.');
+  // Manejar creación de nuevo cliente
+  const handleClienteCreado = (nuevoCliente) => {
+    setClientes(prev => [...prev, nuevoCliente]);
+    setSelectedClientes(prev => [...prev, nuevoCliente]);
+    setShowCreateModal(false);
+  };
+
+  // Filtrar clientes basado en el término de búsqueda
+  const filteredClientes = clientes.filter(cliente => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    
+    // Acceder a las propiedades con ambos formatos (camelCase y snake_case)
+    const nombre = (cliente.nombreCliente || cliente.nombrecliente || '').toLowerCase();
+    const apellidoP = (cliente.apellidoPaternoCliente || cliente.apellidopaternocliente || '').toLowerCase();
+    const apellidoM = (cliente.apellidoMaternoCliente || cliente.apellidomaternocliente || '').toLowerCase();
+    const identificacion = (cliente.identificacionunicanacional || '').toLowerCase();
+    
+    return (
+      nombre.includes(searchLower) ||
+      apellidoP.includes(searchLower) ||
+      apellidoM.includes(searchLower) ||
+      identificacion.includes(searchLower)
+    );
+  });
+
+  // Ir al siguiente paso (selección de trámite)
+  const handleNextStep = () => {
+    if (selectedClientes.length === 0) {
+      alert('Debe seleccionar al menos un cliente');
       return;
     }
-
-    const idCliente = clientesDelTramite[0]?.idCliente || clientesDelTramite[0]?.idcliente || clientesDelTramite[0]?.id;
-    const payload = {
-      idCliente,
-      idTramite: tramiteSeleccionadoId,
-      idEmpleado: empleadoSeleccionado,
-      fechaSolicitud,
-      estado_actual: estadoActual,
-      observaciones: observaciones || null
-    };
-
-    try {
-      const token = localStorage.getItem('authToken');
-      const res = await axios.post('http://localhost:5000/api/solicitudes', payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      setMensaje('Solicitud creada correctamente ✅');
-      console.log('Solicitud creada:', res.data);
-
-      // Limpiar formulario
-      setTramiteSeleccionadoId('');
-      setClientesDelTramite([]);
-      setEmpleadoSeleccionado('');
-      setFechaSolicitud('');
-      setEstadoActual('');
-      setObservaciones('');
-    } catch (error) {
-      console.error('Error al crear solicitud:', error);
-      setMensaje(error.response?.data?.error || 'Error al crear solicitud');
-    }
+    
+    localStorage.setItem('solicitudClientes', JSON.stringify(selectedClientes));
+    navigate('/crear-solicitud/tramite');
   };
+
+  if (isLoading) {
+    return (
+      <div className="crear-solicitud-container">
+        <div className="loading-spinner"></div>
+        <p>Cargando clientes...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="crear-solicitud-container">
+        <div className="error-message">{error}</div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="btn-reload"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="crear-solicitud-container">
-      <h2 className="crear-solicitud-title">Crear nueva solicitud</h2>
-
-      <div className="crear-solicitud-form-group">
-        <label htmlFor="tramite">Seleccionar trámite activo:</label>
-        <select
-          id="tramite"
-          value={tramiteSeleccionadoId}
-          onChange={(e) => handleTramiteSeleccionado(e.target.value)}
-          className={`crear-solicitud-select ${isLoading ? 'loading' : ''}`}
-          disabled={isLoading}
-        >
-          <option value="">-- Selecciona un trámite --</option>
-          {tramites.map((tramite) => (
-            <option key={tramite.id} value={tramite.id}>
-              {tramite.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {clientesDelTramite.length > 0 && (
-        <div className="crear-solicitud-clientes-box">
-          <h3>Clientes asociados:</h3>
-          <ul className="crear-solicitud-lista">
-            {clientesDelTramite.map((cliente, idx) => (
-              <li key={idx}>
-                {cliente.nombre || cliente.nombrecliente || cliente.nombreCliente || 'Cliente sin nombre'}
-              </li>
-            ))}
-          </ul>
+      <h1 className="crear-solicitud-title">Crear solicitud - Clientes</h1>
+      
+      <div className="crear-solicitud-header">
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Buscar clientes..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+          <i className="search-icon">🔍</i>
         </div>
-      )}
-
-      <div className="crear-solicitud-form-group">
-        <label htmlFor="empleado">Seleccionar empleado responsable:</label>
-        <select
-          id="empleado"
-          value={empleadoSeleccionado}
-          onChange={(e) => setEmpleadoSeleccionado(e.target.value)}
-          className="crear-solicitud-select"
-          disabled={isLoading}
-        >
-          <option value="">-- Selecciona un empleado --</option>
-          {empleados.map((empleado) => (
-            <option key={empleado.id} value={empleado.id}>
-              {empleado.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="crear-solicitud-form-group">
-        <label htmlFor="fecha">Fecha de solicitud:</label>
-        <input
-          type="date"
-          id="fecha"
-          value={fechaSolicitud}
-          onChange={(e) => setFechaSolicitud(e.target.value)}
-          className="crear-solicitud-input"
-          max={new Date().toISOString().split('T')[0]} // No permitir fechas futuras
-        />
-      </div>
-
-      <div className="crear-solicitud-form-group">
-        <label htmlFor="estado">Estado actual:</label>
-        <select
-          id="estado"
-          value={estadoActual}
-          onChange={(e) => setEstadoActual(e.target.value)}
-          className="crear-solicitud-select"
-        >
-          <option value="">-- Selecciona un estado --</option>
-          {estados.map((estado, index) => (
-            <option key={index} value={estado}>
-              {estado}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="crear-solicitud-form-group">
-        <label htmlFor="observaciones">Observaciones:</label>
-        <textarea
-          id="observaciones"
-          value={observaciones}
-          onChange={(e) => setObservaciones(e.target.value)}
-          rows={4}
-          className="crear-solicitud-textarea"
-          placeholder="Escribe aquí cualquier comentario adicional..."
-        />
-      </div>
-
-      <div className="crear-solicitud-form-group">
+        
         <button 
-          onClick={handleAgregarSolicitud} 
-          className="crear-solicitud-button"
-          disabled={isLoading}
+          onClick={() => setShowCreateModal(true)}
+          className="btn-create-client"
         >
-          {isLoading ? 'Cargando...' : 'Agregar Solicitud'}
+          + Crear Cliente
         </button>
       </div>
 
-      {mensaje && (
-        <div className={`crear-solicitud-mensaje ${mensaje.includes('✅') ? 'success' : 'error'}`}>
-          {mensaje}
-        </div>
+      <div className="selected-clients-info">
+        {selectedClientes.length > 0 ? (
+          <p>
+            {selectedClientes.length} cliente(s) seleccionado(s):{' '}
+            {selectedClientes.map(c => (c.nombreCliente || c.nombrecliente || 'Cliente sin nombre')).join(', ')}
+          </p>
+        ) : (
+          <p>No hay clientes seleccionados</p>
+        )}
+      </div>
+
+      <div className="clientes-grid">
+        {filteredClientes.length > 0 ? (
+          filteredClientes.map(cliente => {
+            // Obtener el ID del cliente (manejar ambos formatos)
+            const clienteId = cliente.idCliente || cliente.idcliente;
+            // Verificar si está seleccionado
+            const isSelected = selectedClientes.some(c => (c.idCliente || c.idcliente) === clienteId);
+            
+            return (
+              <div 
+                key={clienteId}
+                className={`cliente-card ${isSelected ? 'selected' : ''}`}
+                onClick={() => toggleClienteSelection(cliente)}
+              >
+                <div className="cliente-card-header">
+                  <h3>
+                    {(cliente.nombreCliente || cliente.nombrecliente || 'Nombre no disponible')} {(cliente.apellidoPaternoCliente || cliente.apellidopaternocliente || '')}
+                  </h3>
+                  {isSelected && <span className="selected-check">✓</span>}
+                </div>
+                
+                <div className="cliente-card-body">
+                  <p><strong>Identificación:</strong> {cliente.identificacionunicanacional || 'No disponible'}</p>
+                  <p><strong>Teléfono:</strong> {cliente.telefono || 'No disponible'}</p>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="no-results">
+            {searchTerm ? (
+              <p>No se encontraron clientes que coincidan con "{searchTerm}"</p>
+            ) : (
+              <p>No hay clientes registrados</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="crear-solicitud-footer">
+        <button 
+          onClick={() => navigate('/solicitudes')}
+          className="btn-cancel"
+        >
+          Cancelar
+        </button>
+        
+        <button 
+          onClick={handleNextStep}
+          disabled={selectedClientes.length === 0}
+          className={`btn-next ${selectedClientes.length === 0 ? 'disabled' : ''}`}
+        >
+          Siguiente → Seleccionar Trámite
+        </button>
+      </div>
+
+      {showCreateModal && (
+        <CrearCliente
+          mostrar={showCreateModal}
+          cerrar={() => setShowCreateModal(false)}
+          onClienteCreado={handleClienteCreado}
+        />
       )}
     </div>
   );
