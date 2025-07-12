@@ -2616,6 +2616,9 @@ app.delete('/api/solicitudes/:id', authenticateToken, async (req, res) => {
   }
 });
 
+
+
+
 // ==============================================
 // RUTAS PARA SEGUIMIENTOS DE SOLICITUDES
 // ==============================================

@@ -51,6 +51,7 @@ import "../src/Styles/CrearAntecedente.css";
 import "../src/Styles/TramitesLista.css";
 import "../src/Styles/CrearSolicitud.css";
 import "../src/Styles/Nuevotramite.css";
+import "../src/Styles/VerSolicitudes.css";
 
 import EditarArea from "./Pages/Empleado/EditarArea";
 
