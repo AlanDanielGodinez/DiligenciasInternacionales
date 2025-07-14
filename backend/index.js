@@ -29,25 +29,6 @@ app.use(express.json());
 // ===============================================
 // Middleware para proteger rutas con token (excepto públicas)
 // ===============================================
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader?.split(' ')[1];
-
-  if (!token) {
-    console.warn(`[Auth Error] Intento de acceso sin token a: ${req.path}`);
-    return res.status(401).json({ error: 'Token no proporcionado' });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET || 'secret', (err, user) => {
-    if (err) {
-      console.warn(`[Auth Error] Token inválido en ruta: ${req.path}`);
-      return res.status(403).json({ error: 'Token inválido' });
-    }
-
-    req.user = user;
-    next();
-  });
-}
 
 // ✅ APLICAR middleware solo a rutas protegidas
 app.use((req, res, next) => {
