@@ -2,15 +2,27 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import CrearCliente from './CrearCliente';
+import CrearTramite from './NuevoTramite';
+
 
 const CrearSolicitud = () => {
   const navigate = useNavigate();
   const [clientes, setClientes] = useState([]);
   const [selectedClientes, setSelectedClientes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Para el modal de trámite
+  const [showCreateModal, setShowCreateModal] = useState(false);
+const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
+
+  const [showTramiteModal, setShowTramiteModal] = useState(false);
+
+  const [tramiteCreado, setTramiteCreado] = useState(null);
+  const [estadoSolicitud, setEstadoSolicitud] = useState('Iniciado');
+  const [fechaSolicitud, setFechaSolicitud] = useState(new Date().toISOString().slice(0, 10));
+  const [observaciones, setObservaciones] = useState('');
+
 
   // Obtener lista de clientes
   useEffect(() => {
@@ -39,8 +51,14 @@ const CrearSolicitud = () => {
         setIsLoading(false);
       }
     };
-
     fetchClientes();
+
+    const token = localStorage.getItem('authToken');
+    axios.get('http://localhost:5000/api/empleados/coordinadores', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then(res => setEmpleadosDisponibles(res.data))
+  .catch(err => console.error('Error al obtener empleados:', err));
   }, []);
 
   // Manejar selección/deselección de clientes
@@ -87,14 +105,14 @@ const CrearSolicitud = () => {
 
   // Ir al siguiente paso (selección de trámite)
   const handleNextStep = () => {
-    if (selectedClientes.length === 0) {
-      alert('Debe seleccionar al menos un cliente');
-      return;
-    }
-    
-    localStorage.setItem('solicitudClientes', JSON.stringify(selectedClientes));
-    navigate('/crear-solicitud/tramite');
-  };
+  if (selectedClientes.length === 0) {
+    alert('Debe seleccionar al menos un cliente');
+    return;
+  }
+
+  localStorage.setItem('solicitudClientes', JSON.stringify(selectedClientes));
+  setShowTramiteModal(true);
+};
 
   if (isLoading) {
     return (
@@ -201,8 +219,11 @@ const CrearSolicitud = () => {
           Cancelar
         </button>
         
-        <button 
-          onClick={handleNextStep}
+       <button 
+          onClick={() => {
+            console.log('Botón presionado');
+            handleNextStep();
+          }}
           disabled={selectedClientes.length === 0}
           className={`btn-next ${selectedClientes.length === 0 ? 'disabled' : ''}`}
         >
@@ -210,14 +231,112 @@ const CrearSolicitud = () => {
         </button>
       </div>
 
-      {showCreateModal && (
-        <CrearCliente
-          mostrar={showCreateModal}
-          cerrar={() => setShowCreateModal(false)}
-          onClienteCreado={handleClienteCreado}
+            {showCreateModal && (
+        <div className="modal">
+          <div className="modal-content modal-content-crear-cliente">
+            <CrearCliente
+              mostrar={showCreateModal}
+              onClienteCreado={handleClienteCreado}
+              cerrar={() => setShowCreateModal(false)} // ✅ ahora sí coinciden los nombres
+            />
+
+          </div>
+        </div>
+      )}
+
+     
+
+      {showTramiteModal && (
+        <CrearTramite
+          mostrar={showTramiteModal}
+          cerrar={() => setShowTramiteModal(false)}
+          clientesSeleccionados={selectedClientes}
+          onTramiteCreado={(nuevoTramite) => {
+            setTramiteCreado(nuevoTramite);
+            setShowTramiteModal(false);
+          }}
         />
       )}
+
+
+      {tramiteCreado && (
+      <div className="tramite-creado-info">
+        <h2>Trámite creado correctamente</h2>
+        <p><strong>Tipo:</strong> {tramiteCreado.tipo_tramite || tramiteCreado.tipoTramite}</p>
+        <p><strong>Descripción:</strong> {tramiteCreado.descripcion}</p>
+        <p><strong>Fechas:</strong> {tramiteCreado.fecha_inicio} - {tramiteCreado.fecha_fin}</p>
+        <p><strong>Plazo estimado:</strong> {tramiteCreado.plazo_estimado} días</p>
+        <p><strong>Costo:</strong> ${tramiteCreado.costo}</p>
+
+        <h3>Clientes vinculados</h3>
+        <ul>
+          {selectedClientes.map(cliente => (
+            <li key={cliente.idCliente}>
+              ✅ {cliente.nombreCliente} {cliente.apellidoPaternoCliente}
+            </li>
+          ))}
+        </ul>
+
+        <h3>Finalizar Solicitud</h3>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+
+            const token = localStorage.getItem('authToken');
+            const body = {
+              idTramite: tramiteCreado.idTramite,
+              estado: estadoSolicitud,
+              fecha: fechaSolicitud,
+              observaciones
+            };
+
+            try {
+              await axios.post('http://localhost:5000/api/solicitudes', body, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+
+              alert('Solicitud creada correctamente');
+              navigate('/solicitudes');
+            } catch (error) {
+              console.error('Error al crear la solicitud:', error);
+              alert('Error al crear la solicitud');
+            }
+          }}
+        >
+          <label>
+            Estado:
+            <input
+              type="text"
+              value={estadoSolicitud}
+              onChange={e => setEstadoSolicitud(e.target.value)}
+              readOnly
+            />
+          </label>
+
+          <label>
+            Fecha:
+            <input
+              type="date"
+              value={fechaSolicitud}
+              onChange={e => setFechaSolicitud(e.target.value)}
+            />
+          </label>
+
+          <label>
+            Observaciones:
+            <textarea
+              value={observaciones}
+              onChange={e => setObservaciones(e.target.value)}
+            />
+          </label>
+
+          <button type="submit">Finalizar Solicitud</button>
+        </form>
+      </div>
+    )}
+
     </div>
+
   );
 };
 
