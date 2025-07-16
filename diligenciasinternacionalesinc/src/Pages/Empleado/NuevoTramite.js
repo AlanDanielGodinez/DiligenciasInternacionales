@@ -2,23 +2,21 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaTimes, FaSave, FaSpinner, FaPlus, FaMinus } from 'react-icons/fa';
 
-const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado }) => {
+const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado, clientesSeleccionados }) => {
   // Estado principal del formulario
   const [formData, setFormData] = useState({
-  tipoTramite: '',
-  descripcion: '',
-  fecha_inicio: new Date().toISOString().split('T')[0],
-  fecha_fin: '',
-  requisitos: '',
-  plazo_estimado: '',
-  costo: '',
-  clientes: [''],
-  empleados: ['']
-});
-
+    tipoTramite: '',
+    descripcion: '',
+    fecha_inicio: new Date().toISOString().split('T')[0],
+    fecha_fin: '',
+    requisitos: '',
+    plazo_estimado: '',
+    costo: '',
+    clientes: [''],
+    empleados: ['']
+  });
 
   // Estados para datos relacionados
- 
   const [clientesDisponibles, setClientesDisponibles] = useState([]);
   const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
   const [cargando, setCargando] = useState(false);
@@ -39,7 +37,6 @@ const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado }) => {
   useEffect(() => {
     if (mostrar) {
       cargarDatosRelacionados();
-      
     }
   }, [mostrar]);
 
@@ -59,35 +56,48 @@ const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado }) => {
   }, [formData.tipoTramite]);
 
   useEffect(() => {
-  if (!mostrar) {
-    setFormData({
-      tipoTramite: '',
-      descripcion: '',
-      fecha_inicio: new Date().toISOString().split('T')[0],
-      fecha_fin: '',
-      requisitos: '',
-      plazo_estimado: '',
-      costo: '',
-      clientes: [''],
-      empleados: ['']
-    });
-    setError(null);
+    if (!mostrar) {
+      setFormData({
+        tipoTramite: '',
+        descripcion: '',
+        fecha_inicio: new Date().toISOString().split('T')[0],
+        fecha_fin: '',
+        requisitos: '',
+        plazo_estimado: '',
+        costo: '',
+        clientes: [''],
+        empleados: ['']
+      });
+      setError(null);
+    }
+  }, [mostrar]);
+
+  useEffect(() => {
+  if (mostrar && clientesSeleccionados && clientesSeleccionados.length > 0) {
+    const idsValidos = clientesSeleccionados
+      .map(c => c.idCliente || c.idcliente)
+      .filter(id => Number.isInteger(id));
+
+    if (idsValidos.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        clientes: idsValidos.map(String) // aseguramos que sean strings para el select
+      }));
+    }
   }
-}, [mostrar]);
+}, [mostrar, clientesSeleccionados]);
 
 
-
-
-// Función para cargar clientes y empleados
-const cargarDatosRelacionados = async () => {
-  try {
-    setCargando(true);
-    setError(null);
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      setError('No se encontró el token de autenticación.');
-      setCargando(false);
-      return;
+  // Función para cargar clientes y empleados
+  const cargarDatosRelacionados = async () => {
+    try {
+      setCargando(true);
+      setError(null);
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        setError('No se encontró el token de autenticación.');
+        setCargando(false);
+        return;
       }
 
       const config = { 
@@ -183,7 +193,7 @@ const cargarDatosRelacionados = async () => {
   };
 
   // Enviar el formulario
-    const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setCargando(true);
     setError(null);
@@ -216,9 +226,11 @@ const cargarDatosRelacionados = async () => {
       }
 
       // Validar que haya al menos un cliente y un empleado seleccionado
-      const clientesSeleccionados = formData.clientes.map(c => c.trim()).filter(id => id !== '');
-const empleadosSeleccionados = formData.empleados.map(e => e.trim()).filter(id => id !== '');
+      const clientesSeleccionados = formData.clientes
+      .map(c => Number(c))
+      .filter(id => Number.isInteger(id) && id > 0);
 
+      const empleadosSeleccionados = formData.empleados.map(e => e.trim()).filter(id => id !== '');
 
       if (clientesSeleccionados.length === 0 || empleadosSeleccionados.length === 0) {
         setError('Debe asignar al menos un cliente y un empleado');
@@ -293,6 +305,7 @@ const empleadosSeleccionados = formData.empleados.map(e => e.trim()).filter(id =
       setCargando(false);
     }
   };
+
   if (!mostrar) return null;
 
   return (
@@ -317,20 +330,13 @@ const empleadosSeleccionados = formData.empleados.map(e => e.trim()).filter(id =
               required
             >
               <option value="">Seleccionar tipo</option>
-              <option value="Pasaporte Primera vez">Pasaporte Primera vez</option>
-              <option value="Pasaporte Renovación">Pasaporte Renovación</option>
+              <option value="Pasaporte Mexicano">Pasaporte Mexicano</option>
+              <option value="Pasaporte Guatemalteco">Pasaporte Guatemalteco</option>
+              <option value="Pasaporte EstadoUnidense">Pasaporte EstadoUnidense</option>
               <option value="Visa Americana">Visa Americana</option>
               <option value="Visa Canadiense">Visa Canadiense</option>
               <option value="Grupo AMA Mexico">Grupo AMA Mexico</option>
               <option value="Grupo AMA Guatemala">Grupo AMA Guatemala</option>
-              <option value="FOIA">FOIA</option>
-              <option value="Traduccion de documentos">Traduccion de documentos</option>
-              <option value="Apostilla">Apostilla</option>
-              <option value="CRBA Registro de hijos nacidos en el extranjero">CRBA Registro de hijos nacidos en el extranjero</option>
-              <option value="Residencia Americana">Residencia Americana</option>
-              <option value="Global Entry">Global Entry</option>
-              <option value="SENTRI">SENTRI</option>
-              <option value="Residencia Americana Requisitos">Residencia Americana Requisitos</option>
             </select>
           </div>
 
@@ -484,7 +490,6 @@ const empleadosSeleccionados = formData.empleados.map(e => e.trim()).filter(id =
               <FaPlus /> Agregar Empleado
             </button>
           </div>
-
 
           {/* Botones del formulario */}
           <div className="duo-modal-footer">

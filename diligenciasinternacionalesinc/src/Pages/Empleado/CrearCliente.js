@@ -3,6 +3,7 @@ import axios from 'axios';
 
 const CrearCliente = ({ mostrar, cerrar, onClienteCreado }) => {
   // Estados
+  
   const [formData, setFormData] = useState({
     nombreCliente: '',
     apellidoPaternoCliente: '',
@@ -21,6 +22,8 @@ const CrearCliente = ({ mostrar, cerrar, onClienteCreado }) => {
     idPais: '',
     idCiudad: ''
   });
+
+  
 
   const [validationErrors, setValidationErrors] = useState({});
   const [countries, setCountries] = useState([]);
