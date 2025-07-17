@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -1900,7 +1901,7 @@ const formatDate = (dateString) => {
   }
 };
 
-// Crear un nuevo trámite
+
 app.post('/api/tramites', authenticateToken, async (req, res) => {
   const {
     tipoTramite, 
@@ -2003,6 +2004,48 @@ app.post('/api/tramites', authenticateToken, async (req, res) => {
     client.release();
   }
 });
+
+
+
+// GET /api/tramites/grupo-ama
+app.get('/api/tramites/grupo-ama', async (req, res) => {
+  try {
+    const { rows: tramites } = await pool.query(`
+      SELECT 
+        t.idtramite,
+        t.tipotramite,
+        t.descripcion,
+        t.fecha_inicio,
+        t.fecha_fin,
+        t.requisitos,
+        t.plazo_estimado,
+        t.costo,
+        COALESCE(json_agg(DISTINCT jsonb_build_object(
+          'idCliente', c.idcliente,
+          'nombre', c.nombrecliente || ' ' || c.apellidopaternocliente
+        )) FILTER (WHERE c.idcliente IS NOT NULL), '[]') AS clientes,
+        COALESCE(json_agg(DISTINCT jsonb_build_object(
+          'idEmpleado', e.idempleado,
+          'nombre', e.nombreempleado || ' ' || e.apellidopaternoempleado
+        )) FILTER (WHERE e.idempleado IS NOT NULL), '[]') AS empleados
+      FROM tramite t
+      LEFT JOIN tramite_cliente tc ON t.idtramite = tc.idtramite
+      LEFT JOIN cliente c ON tc.idcliente = c.idcliente
+      LEFT JOIN tramite_empleado te ON t.idtramite = te.idtramite
+      LEFT JOIN empleado e ON te.idempleado = e.idempleado
+      WHERE LOWER(t.tipotramite) LIKE 'grupo ama%'
+      GROUP BY t.idtramite
+      ORDER BY t.fecha_inicio DESC;
+    `);
+
+    res.json(tramites);
+  } catch (err) {
+    console.error('Error al obtener trámites de Grupo AMA:', err);
+    res.status(500).json({ error: 'Error al obtener los trámites de Grupo AMA' });
+  }
+});
+
+
 
 // GET /api/tramites
 app.get('/api/tramites', async (req, res) => {
@@ -2261,6 +2304,47 @@ app.get('/api/tramites/lista-simple', async (req, res) => {
     console.error('Error al obtener lista de trámites:', error);
     res.status(500).json({ error: 'Error al obtener trámites' });
   }
+});
+
+
+/**
+ * Agregar clientes a un trámite existente
+ */
+app.patch('/api/tramites/:id/agregar-clientes', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { clientes } = req.body;
+
+  if (!Array.isArray(clientes) || clientes.length === 0) {
+    return res.status(400).json({ error: 'Debe proporcionar al menos un cliente' });
+  }
+
+  try {
+    // Verificar que el trámite existe
+    const tramite = await pool.query('SELECT * FROM tramite WHERE idTramite = $1', [id]);
+
+    if (tramite.rows.length === 0) {
+      return res.status(404).json({ error: 'Trámite no encontrado' });
+    }
+
+    // Agregar solo clientes que aún no estén vinculados
+    for (const idCliente of clientes) {
+      await pool.query(`
+        INSERT INTO tramite_cliente (idTramite, idCliente)
+        SELECT $1, $2
+        WHERE NOT EXISTS (
+          SELECT 1 FROM tramite_cliente WHERE idTramite = $1 AND idCliente = $2
+        );
+      `, [id, idCliente]);
+    }
+
+    res.json({ mensaje: 'Clientes agregados correctamente al trámite' });
+
+  } catch (error) {
+    console.error('Error al agregar clientes al trámite:', error);
+    res.status(500).json({ error: 'Error al agregar clientes al trámite' });
+  }
+ 
+
 });
 
 
