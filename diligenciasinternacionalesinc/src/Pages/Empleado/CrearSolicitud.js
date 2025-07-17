@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import CrearCliente from './CrearCliente';
 import CrearTramite from './NuevoTramite';
+import SeleccionarTramiteModal from './SeleccionarTramiteModal';
 
 
 const CrearSolicitud = () => {
@@ -22,6 +23,8 @@ const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
   const [estadoSolicitud, setEstadoSolicitud] = useState('Iniciado');
   const [fechaSolicitud, setFechaSolicitud] = useState(new Date().toISOString().slice(0, 10));
   const [observaciones, setObservaciones] = useState('');
+  const [showSeleccionarTramiteModal, setShowSeleccionarTramiteModal] = useState(false);
+
 
 
   // Obtener lista de clientes
@@ -218,18 +221,55 @@ const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
         >
           Cancelar
         </button>
-        
-       <button 
+
+        {/* BOTÓN: CREAR NUEVO TRÁMITE */}
+        <button 
           onClick={() => {
-            console.log('Botón presionado');
-            handleNextStep();
+            if (selectedClientes.length === 0) {
+              alert('Debe seleccionar al menos un cliente');
+              return;
+            }
+            localStorage.setItem('solicitudClientes', JSON.stringify(selectedClientes));
+            setShowTramiteModal(true);
           }}
-          disabled={selectedClientes.length === 0}
           className={`btn-next ${selectedClientes.length === 0 ? 'disabled' : ''}`}
+          disabled={selectedClientes.length === 0}
         >
-          Siguiente → Seleccionar Trámite
+          Crear Trámite
+        </button>
+
+        {/* BOTÓN: SELECCIONAR TRÁMITE EXISTENTE */}
+        <button
+          onClick={() => {
+            if (selectedClientes.length === 0) {
+              alert('Debe seleccionar al menos un cliente');
+              return;
+            }
+            // Abrirá modal para seleccionar trámite (esto lo implementaremos en el paso B)
+            setShowSeleccionarTramiteModal(true);
+          }}
+          className={`btn-next btn-secondary ${selectedClientes.length === 0 ? 'disabled' : ''}`}
+          disabled={selectedClientes.length === 0}
+        >
+          Seleccionar Trámite
         </button>
       </div>
+      {showSeleccionarTramiteModal && (
+          <div className="modal">
+            <div className="modal-content">
+              {/* Aquí luego cargaremos el componente SeleccionarTramite */}
+              <p>Modal de seleccionar trámite (próximamente)</p>
+              <button
+                className="btn-cancel"
+                onClick={() => setShowSeleccionarTramiteModal(false)}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        )}
+
+
 
             {showCreateModal && (
         <div className="modal">
@@ -257,6 +297,19 @@ const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
           }}
         />
       )}
+
+      {showSeleccionarTramiteModal && (
+        <SeleccionarTramiteModal
+          mostrar={showSeleccionarTramiteModal}
+          cerrar={() => setShowSeleccionarTramiteModal(false)}
+          clientesSeleccionados={selectedClientes}
+          onTramiteActualizado={(tramite) => {
+            setTramiteCreado(tramite);
+            setShowSeleccionarTramiteModal(false);
+          }}
+        />
+      )}
+
 
 
       {tramiteCreado && (
