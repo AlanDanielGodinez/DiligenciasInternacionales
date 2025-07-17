@@ -22,7 +22,7 @@ const pool = new Pool({
 // Middleware de CORS y JSON
 app.use(cors({
   origin: 'http://localhost:3000', // URL de tu frontend
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
@@ -2008,7 +2008,7 @@ app.post('/api/tramites', authenticateToken, async (req, res) => {
 
 
 // GET /api/tramites/grupo-ama
-app.get('/api/tramites/grupo-ama', async (req, res) => {
+app.get('/api/tramites/grupo-ama', authenticateToken, async (req, res) => {
   try {
     const { rows: tramites } = await pool.query(`
       SELECT 
@@ -2310,23 +2310,20 @@ app.get('/api/tramites/lista-simple', async (req, res) => {
 /**
  * Agregar clientes a un trámite existente
  */
-app.patch('/api/tramites/:id/agregar-clientes', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  const { clientes } = req.body;
+app.patch('/api/tramites/agregar-clientes', authenticateToken, async (req, res) => {
+  const { idTramite, clientes } = req.body;
 
-  if (!Array.isArray(clientes) || clientes.length === 0) {
-    return res.status(400).json({ error: 'Debe proporcionar al menos un cliente' });
+  if (!idTramite || !Array.isArray(clientes) || clientes.length === 0) {
+    return res.status(400).json({ error: 'Debe proporcionar el id del trámite y al menos un cliente' });
   }
 
   try {
-    // Verificar que el trámite existe
-    const tramite = await pool.query('SELECT * FROM tramite WHERE idTramite = $1', [id]);
+    const tramite = await pool.query('SELECT * FROM tramite WHERE idTramite = $1', [idTramite]);
 
     if (tramite.rows.length === 0) {
       return res.status(404).json({ error: 'Trámite no encontrado' });
     }
 
-    // Agregar solo clientes que aún no estén vinculados
     for (const idCliente of clientes) {
       await pool.query(`
         INSERT INTO tramite_cliente (idTramite, idCliente)
@@ -2334,7 +2331,7 @@ app.patch('/api/tramites/:id/agregar-clientes', authenticateToken, async (req, r
         WHERE NOT EXISTS (
           SELECT 1 FROM tramite_cliente WHERE idTramite = $1 AND idCliente = $2
         );
-      `, [id, idCliente]);
+      `, [idTramite, idCliente]);
     }
 
     res.json({ mensaje: 'Clientes agregados correctamente al trámite' });
@@ -2343,9 +2340,8 @@ app.patch('/api/tramites/:id/agregar-clientes', authenticateToken, async (req, r
     console.error('Error al agregar clientes al trámite:', error);
     res.status(500).json({ error: 'Error al agregar clientes al trámite' });
   }
- 
-
 });
+
 
 
 
