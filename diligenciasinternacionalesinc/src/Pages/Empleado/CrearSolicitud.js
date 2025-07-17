@@ -254,20 +254,7 @@ const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
           Seleccionar Trámite
         </button>
       </div>
-      {showSeleccionarTramiteModal && (
-          <div className="modal">
-            <div className="modal-content">
-              {/* Aquí luego cargaremos el componente SeleccionarTramite */}
-              <p>Modal de seleccionar trámite (próximamente)</p>
-              <button
-                className="btn-cancel"
-                onClick={() => setShowSeleccionarTramiteModal(false)}
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        )}
+      
 
 
 
@@ -300,14 +287,16 @@ const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
 
       {showSeleccionarTramiteModal && (
         <SeleccionarTramiteModal
-          mostrar={showSeleccionarTramiteModal}
-          cerrar={() => setShowSeleccionarTramiteModal(false)}
+          isOpen={showSeleccionarTramiteModal}
+          onClose={() => setShowSeleccionarTramiteModal(false)}
           clientesSeleccionados={selectedClientes}
-          onTramiteActualizado={(tramite) => {
-            setTramiteCreado(tramite);
+          onTramiteActualizado={(idTramite) => {
+            // aquí podrías hacer un GET para traer los detalles del trámite completo
+            setTramiteCreado({ idTramite });
             setShowSeleccionarTramiteModal(false);
           }}
         />
+
       )}
 
 

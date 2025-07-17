@@ -18,6 +18,7 @@ import TramitesLista from "./Pages/Empleado/TramitesLista";
 import EditarTramite from "./Pages/Empleado/ActualizarTramite"; // Asegúrate de que esta ruta sea correcta
 import CrearSolicitud from "./Pages/Empleado/CrearSolicitud";
 import VerSolicitudes from "./Pages/Empleado/VerSolicitudes";
+import SeleccionarTramiteModal from "./Pages/Empleado/SeleccionarTramiteModal"; // Asegúrate de que esta ruta sea correcta
 import "./App.css";
 
 // Importaciones de estilos
@@ -52,7 +53,7 @@ import "../src/Styles/TramitesLista.css";
 import "../src/Styles/CrearSolicitud.css";
 import "../src/Styles/Nuevotramite.css";
 import "../src/Styles/VerSolicitudes.css";
-
+import "../src/Styles/SeleccionarTramiteModal.css";
 import EditarArea from "./Pages/Empleado/EditarArea";
 
 
@@ -86,6 +87,7 @@ function App() {
               <Route path="/empleado/crear-solicitud" element={<CrearSolicitud />} />
               <Route path="/empleado/crearSolicitud" element={<CrearSolicitud />} />
               <Route path="/empleado/versolicitudes" element={<VerSolicitudes />} />
+              <Route path="/empleado/seleccionartramite" element={<SeleccionarTramiteModal />} />
               {/* Aquí puedes agregar más rutas protegidas */}
             </Route>
             
