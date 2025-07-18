@@ -1,29 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+
 const SeleccionarTramiteModal = ({ isOpen, onClose, clientesSeleccionados, onTramiteActualizado }) => {
   const [tramites, setTramites] = useState([]);
   const [tramiteSeleccionado, setTramiteSeleccionado] = useState('');
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
+  const [exito, setExito] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       fetchTramitesGrupoAMA();
+      setMensaje('');
+      setError('');
+      setExito(false);
+      setTramiteSeleccionado('');
     }
   }, [isOpen]);
 
   const fetchTramitesGrupoAMA = async () => {
     try {
-      const token = localStorage.getItem('authToken'); // Asegúrate que este es el nombre correcto
-const res = await axios.get('http://localhost:5000/api/tramites/grupo-ama', {
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-});
-
-
+      const token = localStorage.getItem('authToken');
+      const res = await axios.get('http://localhost:5000/api/tramites/grupo-ama', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setTramites(res.data);
     } catch (err) {
       console.error('Error al obtener trámites:', err);
@@ -44,7 +48,6 @@ const res = await axios.get('http://localhost:5000/api/tramites/grupo-ama', {
 
       const token = localStorage.getItem('authToken');
 
-
       const res = await axios.patch(
         'http://localhost:5000/api/tramites/agregar-clientes',
         {
@@ -58,15 +61,16 @@ const res = await axios.get('http://localhost:5000/api/tramites/grupo-ama', {
         }
       );
 
-
       setMensaje(res.data.mensaje || 'Clientes agregados correctamente');
-      onTramiteActualizado(tramiteSeleccionado); // Notifica al padre
-      onClose(); // Cierra modal
+      setExito(true);
+      onTramiteActualizado(tramiteSeleccionado);
+
+      setTimeout(() => {
+        onClose();
+      }, 1500);
     } catch (err) {
       console.error('Error al agregar clientes:', err);
       setError('No se pudieron agregar los clientes al trámite');
-      console.error('Error al agregar clientes:', err.response?.data || err.message);
-
     } finally {
       setLoading(false);
     }
@@ -75,15 +79,16 @@ const res = await axios.get('http://localhost:5000/api/tramites/grupo-ama', {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h2>Seleccionar Trámite Grupo AMA</h2>
+    <div className="modal-tramite-overlay">
+      <div className="modal-tramite-content">
+        <h2 className="modal-tramite-title">Seleccionar Trámite Grupo AMA</h2>
 
-        <div>
-          <label>Trámite:</label>
+        <div className="modal-tramite-section">
+          <label className="modal-tramite-label">Trámite:</label>
           <select
             value={tramiteSeleccionado}
             onChange={e => setTramiteSeleccionado(e.target.value)}
+            className="modal-tramite-select"
           >
             <option value="">-- Selecciona un trámite --</option>
             {tramites.map(t => (
@@ -91,14 +96,13 @@ const res = await axios.get('http://localhost:5000/api/tramites/grupo-ama', {
                 {t.tipotramite} (ID: {t.idtramite})
               </option>
             ))}
-
           </select>
         </div>
 
-        <div style={{ marginTop: '1rem' }}>
+        <div className="modal-tramite-section">
           <h4>Clientes seleccionados:</h4>
           {clientesSeleccionados.length > 0 ? (
-            <ul>
+            <ul className="modal-tramite-client-list">
               {clientesSeleccionados.map(cliente => (
                 <li key={cliente.idCliente}>
                   {cliente.nombreCliente} {cliente.apellidoPaternoCliente} {cliente.apellidoMaternoCliente}
@@ -110,14 +114,24 @@ const res = await axios.get('http://localhost:5000/api/tramites/grupo-ama', {
           )}
         </div>
 
-        {error && <p className="error">{error}</p>}
-        {mensaje && <p className="success">{mensaje}</p>}
+        {error && <p className="modal-tramite-error">{error}</p>}
+        {mensaje && <p className="modal-tramite-success">{mensaje}</p>}
 
-        <div className="modal-actions">
-          <button onClick={onClose} disabled={loading}>Cancelar</button>
-          <button onClick={handleAgregarClientes} disabled={loading || !tramiteSeleccionado}>
-            {loading ? 'Agregando...' : 'Agregar Clientes al Trámite'}
+        <div className="modal-tramite-actions">
+          <button onClick={onClose} disabled={loading || exito} className="modal-tramite-btn cancel">
+            Cancelar
           </button>
+          {exito ? (
+            <button disabled className="modal-tramite-btn success">✅ Agregado</button>
+          ) : (
+            <button
+              onClick={handleAgregarClientes}
+              disabled={loading || !tramiteSeleccionado}
+              className="modal-tramite-btn primary"
+            >
+              {loading ? 'Agregando...' : 'Agregar Clientes al Trámite'}
+            </button>
+          )}
         </div>
       </div>
     </div>
