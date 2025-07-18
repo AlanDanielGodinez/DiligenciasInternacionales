@@ -290,11 +290,23 @@ const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
           isOpen={showSeleccionarTramiteModal}
           onClose={() => setShowSeleccionarTramiteModal(false)}
           clientesSeleccionados={selectedClientes}
-          onTramiteActualizado={(idTramite) => {
-            // aquí podrías hacer un GET para traer los detalles del trámite completo
-            setTramiteCreado({ idTramite });
-            setShowSeleccionarTramiteModal(false);
+          onTramiteActualizado={async (idTramite) => {
+            try {
+              const token = localStorage.getItem('authToken');
+              const res = await axios.get(`http://localhost:5000/api/tramites/${idTramite}`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+              setTramiteCreado(res.data);
+            } catch (err) {
+              console.error('Error al obtener los datos del trámite seleccionado:', err);
+              alert('No se pudo obtener el trámite seleccionado');
+            } finally {
+              setShowSeleccionarTramiteModal(false);
+            }
           }}
+
         />
 
       )}
@@ -304,7 +316,7 @@ const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
       {tramiteCreado && (
       <div className="tramite-creado-info">
         <h2>Trámite creado correctamente</h2>
-        <p><strong>Tipo:</strong> {tramiteCreado.tipo_tramite || tramiteCreado.tipoTramite}</p>
+        <p><strong>Tipo:</strong> {tramiteCreado.tipotramite || tramiteCreado.tipo_tramite || tramiteCreado.tipoTramite || 'No disponible'}</p>
         <p><strong>Descripción:</strong> {tramiteCreado.descripcion}</p>
         <p><strong>Fechas:</strong> {tramiteCreado.fecha_inicio} - {tramiteCreado.fecha_fin}</p>
         <p><strong>Plazo estimado:</strong> {tramiteCreado.plazo_estimado} días</p>
