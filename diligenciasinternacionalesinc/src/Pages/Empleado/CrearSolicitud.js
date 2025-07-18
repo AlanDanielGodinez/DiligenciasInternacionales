@@ -15,7 +15,8 @@ const CrearSolicitud = () => {
   const [error, setError] = useState(null);
   // Para el modal de trámite
   const [showCreateModal, setShowCreateModal] = useState(false);
-const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
+  const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
+  const [empleadoSeleccionado, setEmpleadoSeleccionado] = useState('');
 
   const [showTramiteModal, setShowTramiteModal] = useState(false);
 
@@ -57,11 +58,12 @@ const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
     fetchClientes();
 
     const token = localStorage.getItem('authToken');
-    axios.get('http://localhost:5000/api/empleados/coordinadores', {
+    axios.get('http://localhost:5000/api/empleados', {
       headers: { Authorization: `Bearer ${token}` },
-    })
+      })
     .then(res => setEmpleadosDisponibles(res.data))
-  .catch(err => console.error('Error al obtener empleados:', err));
+    .catch(err => console.error('Error al obtener empleados:', err));
+
   }, []);
 
   // Manejar selección/deselección de clientes
@@ -314,80 +316,104 @@ const [empleadosDisponibles, setEmpleadosDisponibles] = useState([]);
 
 
       {tramiteCreado && (
-      <div className="tramite-creado-info">
-        <h2>Trámite creado correctamente</h2>
-        <p><strong>Tipo:</strong> {tramiteCreado.tipotramite || tramiteCreado.tipo_tramite || tramiteCreado.tipoTramite || 'No disponible'}</p>
-        <p><strong>Descripción:</strong> {tramiteCreado.descripcion}</p>
-        <p><strong>Fechas:</strong> {tramiteCreado.fecha_inicio} - {tramiteCreado.fecha_fin}</p>
-        <p><strong>Plazo estimado:</strong> {tramiteCreado.plazo_estimado} días</p>
-        <p><strong>Costo:</strong> ${tramiteCreado.costo}</p>
+  <div className="tramite-creado-info">
+    <h2>Trámite creado correctamente</h2>
+    <p><strong>Tipo:</strong> {tramiteCreado.tipotramite || tramiteCreado.tipo_tramite || tramiteCreado.tipoTramite || 'No disponible'}</p>
+    <p><strong>Descripción:</strong> {tramiteCreado.descripcion}</p>
+    <p><strong>Fechas:</strong> {tramiteCreado.fecha_inicio} - {tramiteCreado.fecha_fin}</p>
+    <p><strong>Plazo estimado:</strong> {tramiteCreado.plazo_estimado} días</p>
+    <p><strong>Costo:</strong> ${tramiteCreado.costo}</p>
 
-        <h3>Clientes vinculados</h3>
-        <ul>
-          {selectedClientes.map(cliente => (
-            <li key={cliente.idCliente}>
-              ✅ {cliente.nombreCliente} {cliente.apellidoPaternoCliente}
-            </li>
-          ))}
-        </ul>
+    <h3>Clientes vinculados</h3>
+    <ul>
+      {selectedClientes.map(cliente => (
+        <li key={cliente.idCliente}>
+          ✅ {cliente.nombreCliente} {cliente.apellidoPaternoCliente}
+        </li>
+      ))}
+    </ul>
 
-        <h3>Finalizar Solicitud</h3>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
+    <h3>Asignar Empleado Responsable</h3>
+    <label>
+      Selecciona un empleado:
+      <select
+        value={empleadoSeleccionado || ''}
+        onChange={e => setEmpleadoSeleccionado(e.target.value)}
+      >
+        <option value="">-- Selecciona un empleado --</option>
+        {empleadosDisponibles.map(emp => (
+          <option key={emp.idEmpleado} value={emp.idEmpleado}>
+            {emp.nombreEmpleado} {emp.apellidoPaternoEmpleado} ({emp.nombreRol} - {emp.nombreArea})
+          </option>
+        ))}
+      </select>
+    </label>
 
-            const token = localStorage.getItem('authToken');
-            const body = {
-              idTramite: tramiteCreado.idTramite,
-              estado: estadoSolicitud,
-              fecha: fechaSolicitud,
-              observaciones
-            };
+    <h3>Finalizar Solicitud</h3>
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
 
-            try {
-              await axios.post('http://localhost:5000/api/solicitudes', body, {
-                headers: { Authorization: `Bearer ${token}` }
-              });
+        if (!empleadoSeleccionado) {
+          alert('Debes seleccionar un empleado antes de finalizar la solicitud');
+          return;
+        }
 
-              alert('Solicitud creada correctamente');
-              navigate('/solicitudes');
-            } catch (error) {
-              console.error('Error al crear la solicitud:', error);
-              alert('Error al crear la solicitud');
-            }
-          }}
-        >
-          <label>
-            Estado:
-            <input
-              type="text"
-              value={estadoSolicitud}
-              onChange={e => setEstadoSolicitud(e.target.value)}
-              readOnly
-            />
-          </label>
+        const token = localStorage.getItem('authToken');
+        const body = {
+          idCliente: selectedClientes[0]?.idCliente || selectedClientes[0]?.idcliente,
+          idTramite: tramiteCreado.idTramite || tramiteCreado.idtramite,
+          idEmpleado: empleadoSeleccionado,
+          fechaSolicitud,
+          estado_actual: estadoSolicitud,
+          observaciones: observaciones || ''
+        };
 
-          <label>
-            Fecha:
-            <input
-              type="date"
-              value={fechaSolicitud}
-              onChange={e => setFechaSolicitud(e.target.value)}
-            />
-          </label>
+        try {
+          await axios.post('http://localhost:5000/api/solicitudes', body, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
 
-          <label>
-            Observaciones:
-            <textarea
-              value={observaciones}
-              onChange={e => setObservaciones(e.target.value)}
-            />
-          </label>
+          alert('Solicitud creada correctamente');
+          navigate('/solicitudes');
+        } catch (error) {
+          console.error('Error al crear la solicitud:', error);
+          alert('Error al crear la solicitud');
+        }
+      }}
+    >
+      <label>
+        Estado:
+        <input
+          type="text"
+          value={estadoSolicitud}
+          onChange={e => setEstadoSolicitud(e.target.value)}
+          readOnly
+        />
+      </label>
 
-          <button type="submit">Finalizar Solicitud</button>
-        </form>
-      </div>
-    )}
+      <label>
+        Fecha:
+        <input
+          type="date"
+          value={fechaSolicitud}
+          onChange={e => setFechaSolicitud(e.target.value)}
+        />
+      </label>
+
+      <label>
+        Observaciones:
+        <textarea
+          value={observaciones}
+          onChange={e => setObservaciones(e.target.value)}
+        />
+      </label>
+
+      <button type="submit">Finalizar Solicitud</button>
+    </form>
+  </div>
+)}
+
 
     </div>
 
