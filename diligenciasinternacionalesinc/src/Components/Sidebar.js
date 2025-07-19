@@ -41,13 +41,13 @@ const SidebarNavigation = () => {
       ]
     },
     {
-      title: "Trámites",
+      title: "Solicitudes y Trámites",
       icon: "📋",
       items: [
-        { name: "Trámites", path: "/empleado/tramiteslista" },
-        { name: "Nueva Solicitud", path: "/empleado/CrearSolicitud" },
         { name: "Solicitudes", path: "/empleado/versolicitudes" },
-        { name: "Calendario de Plazos", path: "/calendario" },
+        { name: "Nueva Solicitud", path: "/empleado/CrearSolicitud" },
+        { name: "Trámites", path: "/empleado/tramiteslista" },
+        
       ]
     },
     {
