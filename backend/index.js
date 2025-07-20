@@ -2929,6 +2929,33 @@ app.delete('/api/pagos/:id', authenticateToken, async (req, res) => {
   }
 });
 
+app.get('/api/solicitudes/pendientes-pago', authenticateToken, async (req, res) => {
+  try {
+    const query = `
+      SELECT DISTINCT ON (s.idSolicitud) 
+        s.idSolicitud,
+        c.idCliente,
+        c.nombreCliente || ' ' || c.apellidoPaternoCliente || ' ' || c.apellidoMaternoCliente AS nombreCliente,
+        s.estado_actual,
+        sg.estado AS estadoSeguimiento,
+        sg.fecha_actualizacion
+      FROM Solicitud s
+      JOIN Cliente c ON s.idCliente = c.idCliente
+      JOIN Seguimiento sg ON s.idSolicitud = sg.idSolicitud
+      WHERE sg.estado IN ('pendiente de pago', 'pendiente de anticipo')
+      ORDER BY s.idSolicitud, sg.fecha_actualizacion DESC
+    `;
+
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener solicitudes pendientes de pago:', error);
+    res.status(500).json({ error: 'Error al obtener solicitudes pendientes de pago' });
+  }
+});
+
+
+
 // ==============================================
 // RUTAS PARA ITINERARIOS DE SOLICITUDES
 // ==============================================
@@ -3300,6 +3327,94 @@ async function getSolicitudCompleta(idSolicitud) {
   const result = await pool.query(query, [idSolicitud]);
   return result.rows[0];
 }
+
+// ==============================================
+// RUTAS PARA METODOS DE PAGO
+// ==============================================
+
+app.get('/api/metodos-pago', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM MetodoPago ORDER BY idMetodopago');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener métodos de pago:', error);
+    res.status(500).json({ error: 'Error al obtener métodos de pago' });
+  }
+});
+
+app.get('/api/metodos-pago/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM MetodoPago WHERE idMetodopago = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Método de pago no encontrado' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener método de pago:', error);
+    res.status(500).json({ error: 'Error al obtener método de pago' });
+  }
+});
+
+app.post('/api/metodos-pago', authenticateToken, async (req, res) => {
+  const { nombreMetodo } = req.body;
+  if (!nombreMetodo?.trim()) {
+    return res.status(400).json({ error: 'El nombre del método de pago es obligatorio' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO MetodoPago (nombreMetodo) VALUES ($1) RETURNING *',
+      [nombreMetodo.trim()]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al crear método de pago:', error);
+    res.status(500).json({ error: 'Error al crear método de pago' });
+  }
+});
+
+app.put('/api/metodos-pago/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { nombreMetodo } = req.body;
+
+  if (!nombreMetodo?.trim()) {
+    return res.status(400).json({ error: 'El nombre del método de pago es obligatorio' });
+  }
+
+  try {
+    const result = await pool.query(
+      'UPDATE MetodoPago SET nombreMetodo = $1 WHERE idMetodopago = $2 RETURNING *',
+      [nombreMetodo.trim(), id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Método de pago no encontrado' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al actualizar método de pago:', error);
+    res.status(500).json({ error: 'Error al actualizar método de pago' });
+  }
+});
+
+app.delete('/api/metodos-pago/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM MetodoPago WHERE idMetodopago = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Método de pago no encontrado' });
+    }
+
+    res.json({ mensaje: 'Método de pago eliminado', metodo: result.rows[0] });
+  } catch (error) {
+    console.error('Error al eliminar método de pago:', error);
+    res.status(500).json({ error: 'Error al eliminar método de pago' });
+  }
+});
+
+
 
 
 // ==============================================
