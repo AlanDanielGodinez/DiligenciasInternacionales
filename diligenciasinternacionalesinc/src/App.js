@@ -22,6 +22,7 @@ import SeleccionarTramiteModal from "./Pages/Empleado/SeleccionarTramiteModal"; 
 import AgregarSeguimientoModal from "./Pages/Empleado/AgregarSeguimientoModal"; // Asegúrate de que esta ruta sea correcta
 import DetallesSolicitudModal from "./Pages/Empleado/DetallesSolicitudModal"; // Asegúrate de que esta ruta sea correcta
 import MetodosPago from "./Pages/Empleado/MetodosPago"; // Asegúrate de que esta ruta sea correcta
+import PagosPendientes from "./Pages/Empleado/PagosPendientes"; // Asegúrate de que esta ruta sea correcta
 import "./App.css";
 
 // Importaciones de estilos
@@ -60,6 +61,7 @@ import "../src/Styles/SeleccionarTramiteModal.css";
 //import "../src/Styles/AgregarSeguimientoModal.css";
 import "../src/Styles/DetallesSolicitudModal.css";
 import "../src/Styles/MetodosPago.css";
+import "../src/Styles/PagosPendientes.css";
 
 import EditarArea from "./Pages/Empleado/EditarArea";
 
@@ -98,6 +100,7 @@ function App() {
               <Route path="/empleado/agregarseguimiento" element={<AgregarSeguimientoModal />} />
               <Route path="/empleado/detallesolicitud" element={<DetallesSolicitudModal />} />
               <Route path="/empleado/metodospago" element={<MetodosPago />} />
+              <Route path="/empleado/pagos-pendientes" element={<PagosPendientes />} />
               {/* Aquí puedes agregar más rutas protegidas */}
             </Route>
             
