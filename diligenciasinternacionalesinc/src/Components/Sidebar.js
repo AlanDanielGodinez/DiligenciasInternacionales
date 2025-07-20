@@ -63,7 +63,7 @@ const SidebarNavigation = () => {
       title: "Pagos",
       icon: "💳",
       items: [
-        { name: "Registro de Pagos", path: "/pagos" },
+        { name: "Registro de Pagos", path: "/empleado/pagos-pendientes" },
         { name: "Métodos de Pago", path: "/empleado/metodospago" },
         { name: "Reportes", path: "/reportes" }
       ]

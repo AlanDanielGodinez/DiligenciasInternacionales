@@ -2936,12 +2936,14 @@ app.get('/api/solicitudes/pendientes-pago', authenticateToken, async (req, res) 
         s.idSolicitud,
         c.idCliente,
         c.nombreCliente || ' ' || c.apellidoPaternoCliente || ' ' || c.apellidoMaternoCliente AS nombreCliente,
+        t.tipoTramite, -- ← Aquí se añade el tipo de trámite
         s.estado_actual,
         sg.estado AS estadoSeguimiento,
         sg.fecha_actualizacion
       FROM Solicitud s
       JOIN Cliente c ON s.idCliente = c.idCliente
       JOIN Seguimiento sg ON s.idSolicitud = sg.idSolicitud
+      JOIN Tramite t ON s.idTramite = t.idTramite -- ← JOIN para obtener el tipo de trámite
       WHERE sg.estado IN ('pendiente de pago', 'pendiente de anticipo')
       ORDER BY s.idSolicitud, sg.fecha_actualizacion DESC
     `;
@@ -2953,6 +2955,7 @@ app.get('/api/solicitudes/pendientes-pago', authenticateToken, async (req, res) 
     res.status(500).json({ error: 'Error al obtener solicitudes pendientes de pago' });
   }
 });
+
 
 
 
