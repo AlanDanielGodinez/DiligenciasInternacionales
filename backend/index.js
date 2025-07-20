@@ -28,6 +28,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
+
+
 // ===============================================
 // Middleware para proteger rutas con token (excepto públicas)
 // ===============================================
@@ -35,10 +37,12 @@ app.use(express.json());
 // ✅ APLICAR middleware solo a rutas protegidas
 app.use((req, res, next) => {
   const publicPaths = [
-    '/api/login',
-    '/api/registro',
-    '/api/tramites/lista-simple'
-  ];
+  '/api/login',
+  '/api/registro',
+  '/api/tramites/lista-simple',
+  '/api/clientes/login' // 👈 agrega esto
+];
+
 
   if (publicPaths.includes(req.path)) return next();
   return authenticateToken(req, res, next);
@@ -211,6 +215,46 @@ app.post('/api/login', async (req, res) => {
 
   } catch (error) {
     console.error('Error en login:', error);
+    res.status(500).json({ error: 'Error en el servidor' });
+  }
+});
+
+app.post('/api/clientes/login', async (req, res) => {
+  const { identificacionunicanacional, telefono } = req.body;
+
+  if (!identificacionunicanacional || !telefono) {
+    return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT idCliente, nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente 
+       FROM Cliente 
+       WHERE identificacionunicanacional = $1 AND telefono = $2`,
+      [identificacionunicanacional, telefono.replace(/\D/g, '')]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+
+    const cliente = result.rows[0];
+
+    const token = jwt.sign(
+      {
+        idCliente: cliente.idcliente,
+        nombre: `${cliente.nombrecliente} ${cliente.apellidopaternocliente}`,
+        rol: 'cliente',
+        version: SERVER_TOKEN_VERSION
+      },
+      process.env.JWT_SECRET || 'secret_key', // 👈 aquí está el respaldo
+      { expiresIn: '7d' }
+    );
+
+
+    res.json({ token });
+  } catch (error) {
+    console.error('Error en login de cliente:', error);
     res.status(500).json({ error: 'Error en el servidor' });
   }
 });
