@@ -5,6 +5,7 @@ const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,6 +47,8 @@ app.use((req, res, next) => {
 // ==============================================
 // FUNCIONES DE UTILIDAD
 // ==============================================
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 /**
  * Verifica y repara el usuario admin en la base de datos
