@@ -23,6 +23,7 @@ import AgregarSeguimientoModal from "./Pages/Empleado/AgregarSeguimientoModal"; 
 import DetallesSolicitudModal from "./Pages/Empleado/DetallesSolicitudModal"; // Asegúrate de que esta ruta sea correcta
 import MetodosPago from "./Pages/Empleado/MetodosPago"; // Asegúrate de que esta ruta sea correcta
 import PagosPendientes from "./Pages/Empleado/PagosPendientes"; // Asegúrate de que esta ruta sea correcta
+import InicioCliente from "./Pages/Cliente/InicioCliente";
 import "./App.css";
 
 // Importaciones de estilos
@@ -102,6 +103,10 @@ function App() {
               <Route path="/empleado/metodospago" element={<MetodosPago />} />
               <Route path="/empleado/pagos-pendientes" element={<PagosPendientes />} />
               {/* Aquí puedes agregar más rutas protegidas */}
+
+
+              <Route path="/cliente/inicio" element={<InicioCliente />} />
+
             </Route>
             
             <Route path="*" element={<h1>404 - Página no encontrada</h1>} />

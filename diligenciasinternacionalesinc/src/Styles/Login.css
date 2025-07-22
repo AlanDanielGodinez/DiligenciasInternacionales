@@ -302,6 +302,32 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
+.user-type-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.user-type-toggle button {
+  padding: 8px 16px;
+  background-color: #e0e0e0;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-type-toggle button.active {
+  background-color: var(--color-secondary);
+  color: white;
+}
+
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .auth-container {
