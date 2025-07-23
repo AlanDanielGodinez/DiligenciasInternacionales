@@ -228,7 +228,7 @@ app.post('/api/clientes/login', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT idCliente, nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente 
+      `SELECT idCliente, nombreCliente, apellidoPaternoCliente, apellidoMaternoCliente, telefono 
        FROM Cliente 
        WHERE identificacionunicanacional = $1 AND telefono = $2`,
       [identificacionunicanacional, telefono.replace(/\D/g, '')]
@@ -247,17 +247,27 @@ app.post('/api/clientes/login', async (req, res) => {
         rol: 'cliente',
         version: SERVER_TOKEN_VERSION
       },
-      process.env.JWT_SECRET || 'secret_key', // 👈 aquí está el respaldo
+      process.env.JWT_SECRET || 'secret_key',
       { expiresIn: '7d' }
     );
 
-
-    res.json({ token });
+    // 🔥 Aquí enviamos también los datos del cliente
+    res.json({
+      token,
+      userCliente: {
+        idCliente: cliente.idcliente,
+        nombreCliente: cliente.nombrecliente,
+        apellidoPaternoCliente: cliente.apellidopaternocliente,
+        apellidoMaternoCliente: cliente.apellidomaternocliente,
+        telefono: cliente.telefono
+      }
+    });
   } catch (error) {
     console.error('Error en login de cliente:', error);
     res.status(500).json({ error: 'Error en el servidor' });
   }
 });
+
 
 /**
  * Verificar estado del admin
@@ -2721,6 +2731,48 @@ app.delete('/api/solicitudes/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Error al eliminar solicitud' });
   } finally {
     client.release();
+  }
+});
+
+/**
+ * Obtener las solicitudes de un cliente específico
+ */
+app.get('/api/solicitudes/cliente/:idCliente', authenticateToken, async (req, res) => {
+  const { idCliente } = req.params;
+
+  try {
+    const query = `
+      SELECT 
+        s.idSolicitud,
+        s.estado_actual,
+        t.tipoTramite,
+        s.fechaSolicitud,
+        e.idEmpleado,
+        e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS nombreEmpleado
+      FROM Solicitud s
+      JOIN Tramite t ON s.idTramite = t.idTramite
+      JOIN Empleado e ON s.idEmpleado = e.idEmpleado
+      WHERE s.idCliente = $1
+      ORDER BY s.fechaSolicitud DESC
+      LIMIT 1
+    `;
+    
+    const result = await pool.query(query, [idCliente]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        error: 'No se encontraron solicitudes para este cliente',
+        details: 'El cliente no tiene solicitudes registradas'
+      });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener solicitudes del cliente:', error);
+    res.status(500).json({ 
+      error: 'Error al obtener solicitudes del cliente',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
