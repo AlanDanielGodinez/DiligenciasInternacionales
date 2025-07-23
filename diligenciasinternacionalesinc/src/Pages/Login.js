@@ -84,8 +84,9 @@ const Login = () => {
           nombre: 'Cliente',
         };
 
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('user', JSON.stringify(userData));
+       localStorage.setItem('authToken', token);
+      localStorage.setItem('userCliente', JSON.stringify(response.data.userCliente)); // o el nombre real que venga
+
         navigate('/cliente/inicio');
       }
 

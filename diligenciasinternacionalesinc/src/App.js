@@ -63,8 +63,11 @@ import "../src/Styles/SeleccionarTramiteModal.css";
 import "../src/Styles/DetallesSolicitudModal.css";
 import "../src/Styles/MetodosPago.css";
 import "../src/Styles/PagosPendientes.css";
+import "../src/Styles/InicioCliente.css";
+
 
 import EditarArea from "./Pages/Empleado/EditarArea";
+
 
 
 function App() {
@@ -79,7 +82,9 @@ function App() {
             <Route path="/contacto" element={<Contacto />} />
             <Route path="/login" element={<Login />} />
             <Route path="/login/register" element={<Login initialMode="register" />} />
+            <Route path="/cliente/inicio" element={<InicioCliente />} />
             
+
             {/* Rutas protegidas con layout de empleado */}
             <Route element={<EmpleadoLayout />}>
               <Route path="/home" element={<HomeEmpleado />} />
@@ -105,7 +110,7 @@ function App() {
               {/* Aquí puedes agregar más rutas protegidas */}
 
 
-              <Route path="/cliente/inicio" element={<InicioCliente />} />
+              
 
             </Route>
             
