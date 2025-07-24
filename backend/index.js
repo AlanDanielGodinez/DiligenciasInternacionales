@@ -33,123 +33,135 @@ app.use(cors({
 app.use(express.json());
 
 
+ app.use('/uploads/documentos', express.static(path.join(__dirname, 'uploads/documentos')));
+
+
+
 
 // ===============================================
 // Middleware para proteger rutas con token (excepto públicas)
 // ===============================================
 
-// ✅ APLICAR middleware solo a rutas protegidas
-app.use((req, res, next) => {
-  const publicPaths = [
-  '/api/login',
-  '/api/registro',
-  '/api/tramites/lista-simple',
-  '/api/clientes/login' // 👈 agrega esto
-];
+    // ✅ APLICAR middleware solo a rutas protegidas
+      app.use((req, res, next) => {
+        const publicPaths = [
+        '/api/login',
+        '/api/registro',
+        '/api/tramites/lista-simple',
+        '/api/clientes/login' // 👈 agrega esto
+      ];
 
 
-  if (publicPaths.includes(req.path)) return next();
-  return authenticateToken(req, res, next);
-});
+        // Permitir rutas públicas exactas
+        if (publicPaths.includes(req.path)) return next();
 
-// ==============================================
-// FUNCIONES DE UTILIDAD
-// ==============================================
+        // Permitir rutas que comiencen con /uploads/
+        if (req.path.startsWith('/uploads/')) return next();
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+        // Permitir /favicon.ico
+        if (req.path === '/favicon.ico') return next();
 
-/**
- * Verifica y repara el usuario admin en la base de datos
- */
-async function initializeAdmin() {
-  try {
-    // 1. Verificar/Crear rol Administrador
-    let rolQuery = await pool.query("SELECT idrol FROM rol WHERE nombrerol = 'Administrador'");
-    if (rolQuery.rows.length === 0) {
-      rolQuery = await pool.query("INSERT INTO rol (nombrerol) VALUES ('Administrador') RETURNING idrol");
-      console.log('[✓] Rol Administrador creado');
-    }
-    const idRol = rolQuery.rows[0].idrol;
+        return authenticateToken(req, res, next);
+      });
 
-    // 2. Verificar existencia del admin
-    const adminQuery = await pool.query(
-      "SELECT * FROM empleado WHERE correoempleado = 'admin@example.com' OR email = 'admin@example.com'"
-    );
+    // ==============================================
+    // FUNCIONES DE UTILIDAD
+    // ==============================================
 
-    // 3. Crear o actualizar admin
-    if (adminQuery.rows.length === 0) {
-      const hashedPassword = await bcrypt.hash('admin123', 10);
-      await pool.query(`
-        INSERT INTO empleado (
-          nombreempleado, apellidopaternoempleado, apellidomaternoempleado,
-          correoempleado, email, password, idrol
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-      `, ['Admin', 'System', 'User', 'admin@example.com', 'admin@example.com', hashedPassword, idRol]);
-      console.log('[✓] Usuario admin creado');
-    } else {
-      const admin = adminQuery.rows[0];
-      const needsUpdate = !(await bcrypt.compare('admin123', admin.password));
-      
-      if (needsUpdate) {
-        const newHashedPassword = await bcrypt.hash('admin123', 10);
-        await pool.query(
-          "UPDATE empleado SET password = $1 WHERE idempleado = $2",
-          [newHashedPassword, admin.idempleado]
-          
+   
+
+    /**
+     * Verifica y repara el usuario admin en la base de datos
+     */
+    async function initializeAdmin() {
+      try {
+        // 1. Verificar/Crear rol Administrador
+        let rolQuery = await pool.query("SELECT idrol FROM rol WHERE nombrerol = 'Administrador'");
+        if (rolQuery.rows.length === 0) {
+          rolQuery = await pool.query("INSERT INTO rol (nombrerol) VALUES ('Administrador') RETURNING idrol");
+          console.log('[✓] Rol Administrador creado');
+        }
+        const idRol = rolQuery.rows[0].idrol;
+
+        // 2. Verificar existencia del admin
+        const adminQuery = await pool.query(
+          "SELECT * FROM empleado WHERE correoempleado = 'admin@example.com' OR email = 'admin@example.com'"
         );
 
-        console.log('[✓] Contraseña de admin actualizada');
+        // 3. Crear o actualizar admin
+        if (adminQuery.rows.length === 0) {
+          const hashedPassword = await bcrypt.hash('admin123', 10);
+          await pool.query(`
+            INSERT INTO empleado (
+              nombreempleado, apellidopaternoempleado, apellidomaternoempleado,
+              correoempleado, email, password, idrol
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+          `, ['Admin', 'System', 'User', 'admin@example.com', 'admin@example.com', hashedPassword, idRol]);
+          console.log('[✓] Usuario admin creado');
+        } else {
+          const admin = adminQuery.rows[0];
+          const needsUpdate = !(await bcrypt.compare('admin123', admin.password));
+          
+          if (needsUpdate) {
+            const newHashedPassword = await bcrypt.hash('admin123', 10);
+            await pool.query(
+              "UPDATE empleado SET password = $1 WHERE idempleado = $2",
+              [newHashedPassword, admin.idempleado]
+              
+            );
+
+            console.log('[✓] Contraseña de admin actualizada');
+          }
+        }
+      } catch (error) {
+        console.error('[!] Error inicializando admin:', error.message);
       }
     }
-  } catch (error) {
-    console.error('[!] Error inicializando admin:', error.message);
-  }
-}
 
-/**
- * Middleware de autenticación JWT
- */
-function authenticateToken(req, res, next) {
-  const token = req.headers['authorization']?.split(' ')[1] || 
-                req.cookies?.token || 
-                req.query.token;
+    /**
+     * Middleware de autenticación JWT
+     */
+    function authenticateToken(req, res, next) {
+      const token = req.headers['authorization']?.split(' ')[1] || 
+                    req.cookies?.token || 
+                    req.query.token;
 
-  // Solo muestra logs para rutas importantes (opcional)
-  const shouldLog = !req.path.includes('/api/protected') && 
-                   !req.path.includes('/favicon.ico');
-  
-  if (shouldLog) {
-    console.log(`[Auth] Verificando token para ruta: ${req.path}`);
-  }
+      // Solo muestra logs para rutas importantes (opcional)
+      const shouldLog = !req.path.includes('/api/protected') && 
+                      !req.path.includes('/favicon.ico');
+      
+      if (shouldLog) {
+        console.log(`[Auth] Verificando token para ruta: ${req.path}`);
+      }
 
-  if (!token) {
-    console.error(`[Auth Error] Intento de acceso sin token a: ${req.path}`);
-    return res.status(401).json({ error: 'Token no proporcionado' });
-  }
+      if (!token) {
+        console.error(`[Auth Error] Intento de acceso sin token a: ${req.path}`);
+        return res.status(401).json({ error: 'Token no proporcionado' });
+      }
 
-  jwt.verify(token, process.env.JWT_SECRET || 'secret_key', (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Token inválido' });
+      jwt.verify(token, process.env.JWT_SECRET || 'secret_key', (err, user) => {
+        if (err) {
+          return res.status(403).json({ error: 'Token inválido' });
+        }
+        
+        // Verificar versión del token
+        if (user.version !== SERVER_TOKEN_VERSION) {
+          return res.status(403).json({ error: 'Sesión inválida. Por favor inicie sesión nuevamente.' });
+        }
+        
+        req.user = user;
+        next();
+      });
     }
-    
-    // Verificar versión del token
-    if (user.version !== SERVER_TOKEN_VERSION) {
-      return res.status(403).json({ error: 'Sesión inválida. Por favor inicie sesión nuevamente.' });
-    }
-    
-    req.user = user;
-    next();
-  });
-}
 
-// Añade esto en tus rutas de autenticación
-app.get('/api/verify-token', authenticateToken, (req, res) => {
-  res.json({
-    valid: true,
-    user: req.user,
-    expiresIn: new Date(req.user.exp * 1000)
-  });
-});
+    // Añade esto en tus rutas de autenticación
+    app.get('/api/verify-token', authenticateToken, (req, res) => {
+      res.json({
+        valid: true,
+        user: req.user,
+        expiresIn: new Date(req.user.exp * 1000)
+      });
+    });
 
 
 
@@ -3204,8 +3216,6 @@ app.delete('/api/solicitudes/:idSolicitud/itinerario', authenticateToken, async 
 // RUTAS PARA DOCUMENTOS DE SOLICITUDES
 // ==============================================
 
-
-
 /**
  * Agregar un documento a una solicitud
  */
@@ -3242,78 +3252,25 @@ app.post('/api/solicitudes/:idSolicitud/documentos', upload.single('archivo'), a
   }
 });
 
-/**
- * Actualizar estado de un documento
- */
-app.put('/api/documentos/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  const { estado } = req.body;
-
-  if (!estado) {
-    return res.status(400).json({ error: 'El estado del documento es requerido' });
-  }
+app.get('/api/documentos/solicitud/:idSolicitud', async (req, res) => {
+  const { idSolicitud } = req.params;
 
   try {
-    // Verificar que existe el documento
-    const docExists = await pool.query(
-      'SELECT idDocumento FROM Documento WHERE idDocumento = $1',
-      [id]
-    );
-    
-    if (docExists.rows.length === 0) {
-      return res.status(404).json({ error: 'Documento no encontrado' });
-    }
-
     const result = await pool.query(
-      `UPDATE Documento 
-       SET estado = $1
-       WHERE idDocumento = $2
-       RETURNING *`,
-      [estado, id]
+      `SELECT iddocumento, nombreDocumento, tipoDocumento, archivo, fechasubida, estado
+       FROM Documento
+       WHERE idSolicitud = $1`,
+      [idSolicitud]
     );
 
-    res.json(result.rows[0]);
+    res.json(result.rows);
   } catch (error) {
-    console.error('Error al actualizar documento:', error);
-    res.status(500).json({ error: 'Error al actualizar documento' });
+    console.error('Error al obtener documentos:', error);
+    res.status(500).json({ error: 'Error al obtener documentos' });
   }
 });
 
-/**
- * Eliminar un documento
- */
-app.delete('/api/documentos/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
 
-  try {
-    // Verificar que existe el documento
-    const docExists = await pool.query(
-      'SELECT idDocumento FROM Documento WHERE idDocumento = $1',
-      [id]
-    );
-    
-    if (docExists.rows.length === 0) {
-      return res.status(404).json({ error: 'Documento no encontrado' });
-    }
-
-    const result = await pool.query(
-      'DELETE FROM Documento WHERE idDocumento = $1 RETURNING idDocumento, archivo',
-      [id]
-    );
-
-    // Aquí podrías agregar lógica para eliminar el archivo físico si es necesario
-
-    res.json({ 
-      success: true,
-      message: 'Documento eliminado',
-      idDocumento: result.rows[0].iddocumento,
-      archivo: result.rows[0].archivo
-    });
-  } catch (error) {
-    console.error('Error al eliminar documento:', error);
-    res.status(500).json({ error: 'Error al eliminar documento' });
-  }
-});
 
 // ==============================================
 // FUNCIONES AUXILIARES
