@@ -261,17 +261,17 @@ const CrearSolicitud = () => {
 
 
             {showCreateModal && (
-        <div className="modal">
-          <div className="modal-content modal-content-crear-cliente">
-            <CrearCliente
-              mostrar={showCreateModal}
-              onClienteCreado={handleClienteCreado}
-              cerrar={() => setShowCreateModal(false)} // ✅ ahora sí coinciden los nombres
-            />
-
-          </div>
-        </div>
-      )}
+            <div className="modal">
+              <div className="modal-content modal-content-crear-cliente">
+                <CrearCliente
+                  mostrar={showCreateModal}
+                  onClienteCreado={handleClienteCreado}
+                  cerrar={() => setShowCreateModal(false)}
+                  // Asegúrate de pasar todas las props requeridas
+                />
+              </div>
+            </div>
+          )}
 
      
 

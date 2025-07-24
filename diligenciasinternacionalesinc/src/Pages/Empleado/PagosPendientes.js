@@ -22,7 +22,6 @@ const PagosPendientes = () => {
       const solicitudesData = response.data;
       setSolicitudes(solicitudesData);
 
-      // Cargar documentos para cada solicitud
       const docsPorSolicitud = {};
 
       for (const solicitud of solicitudesData) {
@@ -30,7 +29,12 @@ const PagosPendientes = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        docsPorSolicitud[solicitud.idsolicitud] = docRes.data;
+        const docsFiltrados = docRes.data.filter(doc =>
+          doc.nombredocumento.toLowerCase().includes('pago') ||
+          doc.nombredocumento.toLowerCase().includes('anticipo')
+        );
+
+        docsPorSolicitud[solicitud.idsolicitud] = docsFiltrados;
       }
 
       setDocumentosPorSolicitud(docsPorSolicitud);
@@ -38,6 +42,35 @@ const PagosPendientes = () => {
       console.error('Error al obtener solicitudes o documentos:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const validarPago = async (idSolicitud) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const idEmpleado = JSON.parse(localStorage.getItem('user'))?.id;
+
+
+      if (!idEmpleado) {
+        alert('No se encontró el ID del empleado en localStorage');
+        return;
+      }
+
+      const response = await axios.post(
+        `http://localhost:5000/api/solicitudes/${idSolicitud}/validar-pago`,
+        { idEmpleado },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      alert(`✅ ${response.data.mensaje}`);
+      fetchSolicitudesPendientes();
+    } catch (error) {
+      console.error('Error al validar pago:', error);
+      alert('❌ Error al validar el pago. Revisa la consola para más detalles.');
     }
   };
 
@@ -57,37 +90,59 @@ const PagosPendientes = () => {
               <th>Tipo de Trámite</th>
               <th>Estado</th>
               <th>Fecha del Seguimiento</th>
-              <th>Documento</th>
+              <th>Documentos</th>
+              <th>Acción</th>
             </tr>
           </thead>
           <tbody>
-            {solicitudes.map((sol) => (
-              <tr key={sol.idsolicitud}>
-                <td>{sol.idsolicitud}</td>
-                <td>{sol.nombrecliente}</td>
-                <td>{sol.tipotramite}</td>
-                <td>{sol.estadoseguimiento}</td>
-                <td>{new Date(sol.fecha_actualizacion).toLocaleDateString()}</td>
-                <td>
-                  {documentosPorSolicitud[sol.idsolicitud]?.length > 0 ? (
-                    documentosPorSolicitud[sol.idsolicitud].map((doc, index) => (
-                      <div key={index}>
-                        <a
-                          href={`http://localhost:5000/uploads/documentos/${doc.archivo}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-ver-archivo"
-                        >
-                          Ver {doc.nombredocumento}
-                        </a>
-                      </div>
-                    ))
-                  ) : (
-                    <span>Sin documento</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {solicitudes.map((sol) => {
+              const docs = documentosPorSolicitud[sol.idsolicitud] || [];
+              const tieneDocs = docs.length > 0;
+
+              return (
+                <tr key={sol.idsolicitud}>
+                  <td>{sol.idsolicitud}</td>
+                  <td>{sol.nombrecliente}</td>
+                  <td>{sol.tipotramite}</td>
+                  <td>{sol.estadoseguimiento}</td>
+                  <td>{new Date(sol.fecha_actualizacion).toLocaleDateString()}</td>
+                  <td>
+                    {tieneDocs ? (
+                      docs.map((doc, index) => (
+                        <div key={index} className="doc-item">
+                          <a
+                            href={`http://localhost:5000/uploads/documentos/${doc.archivo}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-ver-archivo"
+                          >
+                            Ver {doc.nombredocumento}
+                          </a>
+                          <div className="doc-meta">
+                            <small>📅 {new Date(doc.fechasubida).toLocaleDateString()}</small><br />
+                            <small>📌 Estado: {doc.estado}</small>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <span>Sin documento</span>
+                    )}
+                  </td>
+                  <td>
+                    {tieneDocs ? (
+                      <button
+                        className="btn-validar"
+                        onClick={() => validarPago(sol.idsolicitud)}
+                      >
+                        Validar pago
+                      </button>
+                    ) : (
+                      <span className="no-action">Sin documento</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}
