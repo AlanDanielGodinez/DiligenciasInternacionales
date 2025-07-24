@@ -25,9 +25,12 @@ const PagosPendientes = () => {
       const docsPorSolicitud = {};
 
       for (const solicitud of solicitudesData) {
-        const docRes = await axios.get(`http://localhost:5000/api/documentos/solicitud/${solicitud.idsolicitud}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const docRes = await axios.get(
+          `http://localhost:5000/api/documentos/solicitud/${solicitud.idsolicitud}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         const docsFiltrados = docRes.data.filter(doc =>
           doc.nombredocumento.toLowerCase().includes('pago') ||
@@ -48,8 +51,7 @@ const PagosPendientes = () => {
   const validarPago = async (idSolicitud) => {
     try {
       const token = localStorage.getItem('authToken');
-      const idEmpleado = JSON.parse(localStorage.getItem('user'))?.id;
-
+      const idEmpleado = JSON.parse(localStorage.getItem('user'))?.id; // Corregido aquí
 
       if (!idEmpleado) {
         alert('No se encontró el ID del empleado en localStorage');
@@ -67,7 +69,7 @@ const PagosPendientes = () => {
       );
 
       alert(`✅ ${response.data.mensaje}`);
-      fetchSolicitudesPendientes();
+      fetchSolicitudesPendientes(); // Refrescar lista
     } catch (error) {
       console.error('Error al validar pago:', error);
       alert('❌ Error al validar el pago. Revisa la consola para más detalles.');
