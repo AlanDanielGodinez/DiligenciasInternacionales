@@ -45,6 +45,21 @@
   letter-spacing: 0.5px;
 }
 
+.btn-ver-archivo {
+  background-color: #3498db;
+  color: white;
+  padding: 5px 10px;
+  text-decoration: none;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.btn-ver-archivo:hover {
+  background-color: #2980b9;
+}
+
+
 .pagos-pendientes-table tr:hover {
   background-color: #f1f1f1;
   transition: background-color 0.2s ease;
