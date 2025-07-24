@@ -5,7 +5,11 @@ const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
+// Reemplaza la configuración actual de multer con:
+const upload = require('./middlewares/upload');
 const path = require('path');
+
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -146,6 +150,8 @@ app.get('/api/verify-token', authenticateToken, (req, res) => {
     expiresIn: new Date(req.user.exp * 1000)
   });
 });
+
+
 
 // ==============================================
 // RUTAS DE AUTENTICACIÓN
@@ -3198,56 +3204,41 @@ app.delete('/api/solicitudes/:idSolicitud/itinerario', authenticateToken, async 
 // RUTAS PARA DOCUMENTOS DE SOLICITUDES
 // ==============================================
 
+
+
 /**
  * Agregar un documento a una solicitud
  */
-app.post('/api/solicitudes/:idSolicitud/documentos', authenticateToken, async (req, res) => {
+app.post('/api/solicitudes/:idSolicitud/documentos', upload.single('archivo'), async (req, res) => {
   const { idSolicitud } = req.params;
-  const {
-    nombreDocumento,
-    tipoDocumento,
-    archivo,
-    estado
-  } = req.body;
+  const { nombreDocumento, tipoDocumento, estado } = req.body;
 
-  if (!nombreDocumento || !tipoDocumento || !archivo) {
-    return res.status(400).json({ 
-      error: 'Faltan campos requeridos',
-      details: 'nombreDocumento, tipoDocumento y archivo son obligatorios'
-    });
+  if (!req.file) {
+    return res.status(400).json({ error: 'No se envió ningún archivo' });
   }
 
   try {
-    // Verificar que existe la solicitud
-    const solicitudExists = await pool.query(
-      'SELECT idSolicitud FROM Solicitud WHERE idSolicitud = $1',
-      [idSolicitud]
-    );
-    
-    if (solicitudExists.rows.length === 0) {
+    // Verificar que la solicitud existe
+    const solicitud = await pool.query('SELECT * FROM Solicitud WHERE idSolicitud = $1', [idSolicitud]);
+
+    if (solicitud.rowCount === 0) {
       return res.status(404).json({ error: 'Solicitud no encontrada' });
     }
 
-    // Insertar el documento
+    const archivo = req.file.filename;
+
     const result = await pool.query(
       `INSERT INTO Documento (
         idSolicitud, nombreDocumento, tipoDocumento, archivo, fechasubida, estado
-      ) VALUES ($1, $2, $3, $4, $5, $6)
+      ) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, $5)
       RETURNING *`,
-      [
-        idSolicitud,
-        nombreDocumento,
-        tipoDocumento,
-        archivo,
-        new Date().toISOString(),
-        estado || 'pendiente'
-      ]
+      [idSolicitud, nombreDocumento, tipoDocumento, archivo, estado || 'activo']
     );
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Error al agregar documento:', error);
-    res.status(500).json({ error: 'Error al agregar documento' });
+    console.error('Error al guardar documento:', error);
+    res.status(500).json({ error: 'Error al guardar documento' });
   }
 });
 
