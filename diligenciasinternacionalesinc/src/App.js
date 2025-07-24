@@ -64,6 +64,7 @@ import "../src/Styles/DetallesSolicitudModal.css";
 import "../src/Styles/MetodosPago.css";
 import "../src/Styles/PagosPendientes.css";
 import "../src/Styles/InicioCliente.css";
+import "../src/Styles/SubirDocumentoModal.css";
 
 
 import EditarArea from "./Pages/Empleado/EditarArea";

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-// Configuración de axios con interceptor para manejo de errores
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
 });
@@ -14,9 +13,18 @@ const InicioCliente = () => {
   const [idSolicitud, setIdSolicitud] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mostrarModal, setMostrarModal] = useState(false);
   const navigate = useNavigate();
 
-  // Definición de los pasos por tipo de trámite
+  // Estado para el modal de subir documentos
+  const [formData, setFormData] = useState({
+    nombreDocumento: '',
+    tipoDocumento: '',
+    archivo: null
+  });
+  const [mensaje, setMensaje] = useState('');
+  const [errorModal, setErrorModal] = useState('');
+
   const pasosPorTramite = {
     'Grupo AMA': [
       'Inicio del trámite',
@@ -97,15 +105,12 @@ const InicioCliente = () => {
     const token = localStorage.getItem('authToken');
     const userData = JSON.parse(localStorage.getItem('userCliente'));
 
-    // Verificar autenticación
     if (!token || !userData) {
       navigate('/login');
       return;
     }
 
-    // Configurar el token en los headers por defecto
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    
     setCliente(userData);
     fetchEstadoSolicitud(userData.idCliente);
   }, [navigate]);
@@ -113,25 +118,25 @@ const InicioCliente = () => {
   const fetchEstadoSolicitud = async (idCliente) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await api.get(`/solicitudes/cliente/${idCliente}`);
-      
-      if (!response.data) {
-        throw new Error('Respuesta vacía del servidor');
-      }
+
+      if (!response.data) throw new Error('Respuesta vacía del servidor');
 
       const solicitud = response.data;
-      
+      console.log('Solicitud recibida:', solicitud);
+
       if (!solicitud.estado_actual) {
         setEstadoActual('Sin solicitudes registradas');
       } else {
         setEstadoActual(solicitud.estado_actual);
       }
-      
+
       setTipoTramite(solicitud.tipoTramite || '');
-      setIdSolicitud(solicitud.idSolicitud || null);
-      
+      setIdSolicitud(solicitud.idsolicitud || null);
+
+
     } catch (error) {
       if (error.response) {
         if (error.response.status === 404) {
@@ -154,33 +159,78 @@ const InicioCliente = () => {
   };
 
   const handleLogout = () => {
-    // Limpiar headers de axios
     delete api.defaults.headers.common['Authorization'];
-    
-    // Limpiar localStorage
     localStorage.removeItem('authToken');
     localStorage.removeItem('userCliente');
-    
-    // Redirigir al login
     navigate('/login');
   };
 
+  // Funciones para el modal de subir documentos
+  const handleChangeModal = (e) => {
+    const { name, value, files } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: files ? files[0] : value
+    }));
+  };
+
+  const handleSubmitModal = async (e) => {
+    e.preventDefault();
+    setErrorModal('');
+    setMensaje('');
+
+    if (!formData.archivo) {
+      setErrorModal('Debes seleccionar un archivo');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const data = new FormData();
+      data.append('nombreDocumento', formData.nombreDocumento);
+      data.append('tipoDocumento', formData.tipoDocumento);
+      data.append('archivo', formData.archivo);
+
+      // Solo para depuración
+      for (let pair of data.entries()) {
+        console.log(`${pair[0]}:`, pair[1]);
+      }
+
+      const response = await axios.post(
+        `http://localhost:5000/api/solicitudes/${idSolicitud}/documentos`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      setMensaje('Documento subido correctamente');
+      setFormData({ nombreDocumento: '', tipoDocumento: '', archivo: null });
+
+      // Cerrar modal tras 1.5 segundos
+      setTimeout(() => {
+        setMostrarModal(false);
+      }, 1500);
+    } catch (err) {
+      console.error(err);
+      setErrorModal('Error al subir el documento');
+    }
+  };
+
   const renderPasos = () => {
-    const pasos = pasosPorTramite[tipoTramite] || [];
+    const tipoTramiteFormateado = tipoTramite.trim();
+    const pasos = pasosPorTramite[tipoTramiteFormateado] || [];
     const pasoActualIndex = pasos.findIndex(paso => paso === estadoActual);
 
     return (
       <div className="timeline-container">
         {pasos.map((paso, index) => {
           let estadoClase = 'pendiente';
-          
-          if (pasoActualIndex === -1) {
-            estadoClase = 'pendiente';
-          } else if (index < pasoActualIndex) {
-            estadoClase = 'completado';
-          } else if (index === pasoActualIndex) {
-            estadoClase = 'actual';
-          }
+          if (pasoActualIndex === -1) estadoClase = 'pendiente';
+          else if (index < pasoActualIndex) estadoClase = 'completado';
+          else if (index === pasoActualIndex) estadoClase = 'actual';
 
           return (
             <div key={index} className={`timeline-item ${estadoClase}`}>
@@ -210,11 +260,8 @@ const InicioCliente = () => {
       return (
         <div className="error-container">
           <p className="error-message">{error}</p>
-          {error.includes('expirado') ? null : (
-            <button 
-              onClick={() => fetchEstadoSolicitud(cliente.idCliente)}
-              className="btn-reintentar"
-            >
+          {!error.includes('expirado') && (
+            <button onClick={() => fetchEstadoSolicitud(cliente.idCliente)} className="btn-reintentar">
               Reintentar
             </button>
           )}
@@ -244,13 +291,22 @@ const InicioCliente = () => {
             <span className="info-value highlight">{estadoActual}</span>
           </div>
         </div>
-        
+
         {renderPasos()}
-        
+
         <div className="documentos-section">
           <h3>Documentos requeridos</h3>
           <p>Según el estado actual de tu trámite, podrías necesitar subir documentos.</p>
-          <button className="btn-subir-documentos">
+          <button 
+            className="btn-subir-documentos" 
+            onClick={() => {
+              if (idSolicitud) {
+                setMostrarModal(true);
+              } else {
+                alert('No hay una solicitud activa para subir documentos');
+              }
+            }}
+          >
             Subir documentos
           </button>
         </div>
@@ -263,21 +319,68 @@ const InicioCliente = () => {
       <div className="header-cliente">
         <div className="welcome-section">
           <h1>
-            Bienvenido, {cliente
+            Bienvenid@, {cliente
               ? `${cliente.nombreCliente} ${cliente.apellidoPaternoCliente} ${cliente.apellidoMaternoCliente}`
               : 'Cliente'}
           </h1>
-
           <p className="subtitle">Sistema de seguimiento de trámites</p>
         </div>
         <button onClick={handleLogout} className="btn-cerrar-sesion">
           Cerrar sesión
         </button>
       </div>
-      
+
       <div className="content-container">
         {renderContent()}
       </div>
+
+      {/* Modal de subir documentos */}
+      {mostrarModal && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <h2>Subir Documento</h2>
+            <form onSubmit={handleSubmitModal}>
+              <input
+                type="text"
+                name="nombreDocumento"
+                placeholder="Nombre del documento"
+                value={formData.nombreDocumento}
+                onChange={handleChangeModal}
+                required
+              />
+              <input
+                type="text"
+                name="tipoDocumento"
+                placeholder="Tipo de documento"
+                value={formData.tipoDocumento}
+                onChange={handleChangeModal}
+                required
+              />
+              <input
+                type="file"
+                name="archivo"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={handleChangeModal}
+                required
+              />
+              {errorModal && <p className="error-message">{errorModal}</p>}
+              {mensaje && <p className="success-message">{mensaje}</p>}
+              <button type="submit">Subir</button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setMostrarModal(false);
+                  setFormData({ nombreDocumento: '', tipoDocumento: '', archivo: null });
+                  setErrorModal('');
+                  setMensaje('');
+                }}
+              >
+                Cerrar
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
