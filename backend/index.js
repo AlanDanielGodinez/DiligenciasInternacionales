@@ -3073,6 +3073,82 @@ app.get('/api/solicitudes/pendientes-pago', authenticateToken, async (req, res) 
   }
 });
 
+/**
+ * Validar pago de una solicitud (basado en documento)
+ */
+app.post('/api/solicitudes/:idSolicitud/validar-pago', authenticateToken, async (req, res) => {
+  const { idSolicitud } = req.params;
+  const { idEmpleado } = req.body;
+
+  if (!idEmpleado) {
+    return res.status(400).json({ error: 'idEmpleado es requerido' });
+  }
+
+  try {
+    // 1. Verificar que la solicitud existe
+    const solicitudRes = await pool.query(
+      'SELECT estado_actual FROM Solicitud WHERE idSolicitud = $1',
+      [idSolicitud]
+    );
+
+    if (solicitudRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Solicitud no encontrada' });
+    }
+
+    const estadoActual = solicitudRes.rows[0].estado_actual;
+
+    // 2. Verificar que hay documentos de tipo pago o anticipo
+    const documentosRes = await pool.query(
+      `SELECT * FROM Documento 
+       WHERE idSolicitud = $1 
+         AND (LOWER(nombreDocumento) LIKE '%pago%' OR LOWER(nombreDocumento) LIKE '%anticipo%')`,
+      [idSolicitud]
+    );
+
+    if (documentosRes.rows.length === 0) {
+      return res.status(400).json({ error: 'No hay documentos de tipo pago o anticipo' });
+    }
+
+    // 3. Determinar nuevo estado
+    let nuevoEstado = '';
+    if (estadoActual === 'pendiente de pago') {
+      nuevoEstado = 'validando pago';
+    } else if (estadoActual === 'pendiente de anticipo') {
+      nuevoEstado = 'validando anticipo';
+    } else {
+      return res.status(400).json({
+        error: `La solicitud no está en estado pendiente de pago o anticipo (estado actual: ${estadoActual})`
+      });
+    }
+
+    // 4. Insertar nuevo seguimiento
+    await pool.query(
+      `INSERT INTO Seguimiento (idSolicitud, idEmpleado, estado, descripcion, fecha_actualizacion) 
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        idSolicitud,
+        idEmpleado,
+        nuevoEstado,
+        'Validación automática tras subir documento',
+        new Date().toISOString()
+      ]
+    );
+
+    // 5. Actualizar el estado actual de la solicitud
+    await pool.query(
+      `UPDATE Solicitud SET estado_actual = $1 WHERE idSolicitud = $2`,
+      [nuevoEstado, idSolicitud]
+    );
+
+    res.json({ success: true, mensaje: `Seguimiento agregado con estado: ${nuevoEstado}` });
+  } catch (error) {
+    console.error('Error al validar pago:', error);
+    res.status(500).json({ error: 'Error interno al validar el pago' });
+  }
+});
+
+
+
 
 
 

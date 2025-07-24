@@ -152,20 +152,23 @@ const CrearCliente = ({ mostrar, cerrar, onClienteCreado }) => {
       }
     });
 
-    // Validación de nombre
+    // Validación de nombre (longitud mínima)
     if (formData.nombreCliente?.trim().length < 2) {
-      errors.nombreCliente = 'Mínimo 2 caracteres';
+      errors.nombreCliente = errors.nombreCliente || 'Mínimo 2 caracteres';
     }
 
     // Validación de teléfono
     const cleanPhone = formData.telefono?.replace(/\D/g, '');
     if (!cleanPhone || cleanPhone.length < 10) {
-      errors.telefono = 'Mínimo 10 dígitos';
+      errors.telefono = errors.telefono || 'Mínimo 10 dígitos';
     }
 
     // Validación de edad
-    if (formData.edad && (parseInt(formData.edad) < 0 || parseInt(formData.edad) > 120)) {
-      errors.edad = 'Edad inválida (0-120)';
+    if (formData.edad) {
+      const ageNum = parseInt(formData.edad);
+      if (isNaN(ageNum) || ageNum < 0 || ageNum > 120) {
+        errors.edad = 'Edad inválida (0-120)';
+      }
     }
 
     // Validación de identificación según país de nacimiento
@@ -187,10 +190,8 @@ const CrearCliente = ({ mostrar, cerrar, onClienteCreado }) => {
         }
       }
       // Validación para otros países (documento genérico)
-      else {
-        if (idNumber.length < 5 || idNumber.length > 20) {
-          errors.identificacionunicanacional = 'Longitud inválida (5-20 caracteres)';
-        }
+      else if (idNumber.length < 5 || idNumber.length > 20) {
+        errors.identificacionunicanacional = 'Longitud inválida (5-20 caracteres)';
       }
     }
 
@@ -198,7 +199,7 @@ const CrearCliente = ({ mostrar, cerrar, onClienteCreado }) => {
     if (formData.fechaNacimiento && formData.edad) {
       const birthDate = new Date(formData.fechaNacimiento);
       const today = new Date();
-      const calculatedAge = today.getFullYear() - birthDate.getFullYear();
+      let calculatedAge = today.getFullYear() - birthDate.getFullYear();
       
       // Ajuste para meses/días no cumplidos
       const monthDiff = today.getMonth() - birthDate.getMonth();

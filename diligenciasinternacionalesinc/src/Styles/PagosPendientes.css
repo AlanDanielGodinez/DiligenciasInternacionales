@@ -64,6 +64,30 @@
   background-color: #f1f1f1;
   transition: background-color 0.2s ease;
 }
+.documento-info {
+  margin-bottom: 10px;
+}
+
+.btn-ver-archivo {
+  background-color: #3498db;
+  color: white;
+  padding: 5px 10px;
+  text-decoration: none;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.btn-ver-archivo:hover {
+  background-color: #2980b9;
+}
+
+.documento-detalles {
+  font-size: 12px;
+  color: #555;
+  margin-left: 5px;
+}
+
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
