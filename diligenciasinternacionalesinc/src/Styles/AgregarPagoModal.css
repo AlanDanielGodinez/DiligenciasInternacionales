@@ -1,0 +1,150 @@
+/* Estilos base del modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(44, 62, 80, 0.8); /* var(--color-primary) con opacidad */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-card {
+  background-color: var(--color-background);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 500px;
+  padding: 2rem;
+  transform: translateY(0);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  border: 1px solid var(--color-border);
+}
+
+.modal-card h3 {
+  color: var(--color-primary);
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Formulario */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  color: var(--color-primary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: white;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(159, 211, 246, 0.3); /* var(--color-secondary) con opacidad */
+}
+
+/* Botones */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-guardar,
+.btn-cancelar {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  font-size: 0.95rem;
+}
+
+.btn-guardar {
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+}
+
+.btn-guardar:hover {
+  background-color: #34495e; /* Tono más claro de --color-primary */
+  transform: translateY(-1px);
+}
+
+.btn-guardar:active {
+  transform: translateY(0);
+}
+
+.btn-cancelar {
+  background-color: white;
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+}
+
+.btn-cancelar:hover {
+  background-color: #f1f3f5;
+  border-color: var(--color-primary);
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .modal-card {
+    width: 90%;
+    padding: 1.5rem;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .btn-guardar,
+  .btn-cancelar {
+    width: 100%;
+  }
+}
+
+/* Estilo para el campo de estado (readonly) */
+.form-group input[name="estadoPago"] {
+  background-color: #f1f3f5;
+  cursor: not-allowed;
+  color: #666;
+}

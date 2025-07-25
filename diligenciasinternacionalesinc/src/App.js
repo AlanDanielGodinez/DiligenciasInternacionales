@@ -65,6 +65,7 @@ import "../src/Styles/MetodosPago.css";
 import "../src/Styles/PagosPendientes.css";
 import "../src/Styles/InicioCliente.css";
 import "../src/Styles/SubirDocumentoModal.css";
+import "../src/Styles/AgregarPagoModal.css";
 
 
 import EditarArea from "./Pages/Empleado/EditarArea";
