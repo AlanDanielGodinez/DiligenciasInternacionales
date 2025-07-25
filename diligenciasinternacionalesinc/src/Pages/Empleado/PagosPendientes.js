@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import AgregarPagoModal from './AgregarPagoModal';
+
 
 const PagosPendientes = () => {
   const [solicitudes, setSolicitudes] = useState([]);
   const [documentosPorSolicitud, setDocumentosPorSolicitud] = useState({});
   const [loading, setLoading] = useState(true);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [idSolicitudActual, setIdSolicitudActual] = useState(null);
+
 
   useEffect(() => {
     fetchSolicitudesPendientes();
@@ -48,33 +53,40 @@ const PagosPendientes = () => {
     }
   };
 
-  const validarPago = async (idSolicitud) => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const idEmpleado = JSON.parse(localStorage.getItem('user'))?.id; // Corregido aquí
+    const validarPago = async (idSolicitud) => {
+      try {
+        const token = localStorage.getItem('authToken');
+        const idEmpleado = JSON.parse(localStorage.getItem('user'))?.id;
 
-      if (!idEmpleado) {
-        alert('No se encontró el ID del empleado en localStorage');
-        return;
-      }
-
-      const response = await axios.post(
-        `http://localhost:5000/api/solicitudes/${idSolicitud}/validar-pago`,
-        { idEmpleado },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        if (!idEmpleado) {
+          alert('No se encontró el ID del empleado en localStorage');
+          return;
         }
-      );
 
-      alert(`✅ ${response.data.mensaje}`);
-      fetchSolicitudesPendientes(); // Refrescar lista
-    } catch (error) {
-      console.error('Error al validar pago:', error);
-      alert('❌ Error al validar el pago. Revisa la consola para más detalles.');
-    }
-  };
+        await axios.post(
+          `http://localhost:5000/api/solicitudes/${idSolicitud}/validar-pago`,
+          { idEmpleado },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // Aquí abrimos directamente el modal sin alert
+        setIdSolicitudActual(idSolicitud);
+        setModalAbierto(true);
+
+        // Puedes recargar solicitudes después de cerrar el modal si quieres
+        // fetchSolicitudesPendientes();
+
+      } catch (error) {
+        console.error('Error al validar pago:', error);
+        alert('❌ Error al validar el pago. Revisa la consola para más detalles.');
+      }
+    };
+
+
 
   return (
     <div className="pagos-pendientes-container">
@@ -148,6 +160,16 @@ const PagosPendientes = () => {
           </tbody>
         </table>
       )}
+      <AgregarPagoModal
+        visible={modalAbierto}
+        onClose={(refresh) => {
+          setModalAbierto(false);
+          if (refresh) fetchSolicitudesPendientes();
+        }}
+        idSolicitud={idSolicitudActual}
+      />
+
+
     </div>
   );
 };
