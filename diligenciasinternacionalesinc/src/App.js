@@ -69,6 +69,7 @@ import "../src/Styles/AgregarPagoModal.css";
 
 
 import EditarArea from "./Pages/Empleado/EditarArea";
+import VerPagoModal from "./Pages/Empleado/VerPagoModal";
 
 
 
@@ -109,6 +110,7 @@ function App() {
               <Route path="/empleado/detallesolicitud" element={<DetallesSolicitudModal />} />
               <Route path="/empleado/metodospago" element={<MetodosPago />} />
               <Route path="/empleado/pagos-pendientes" element={<PagosPendientes />} />
+              <Route path="/empleado/ver-pago" element={<VerPagoModal />} />
               {/* Aquí puedes agregar más rutas protegidas */}
 
 

@@ -2924,18 +2924,21 @@ app.delete('/api/seguimientos/:id', authenticateToken, async (req, res) => {
  */
 app.post('/api/solicitudes/:idSolicitud/pagos', authenticateToken, async (req, res) => {
   const { idSolicitud } = req.params;
-  const { idMetodopago, monto, estadoPago } = req.body;
+  const { idMetodopago, monto, estadoPago, idEmpleado } = req.body; // Añadir idEmpleado al body
 
-  if (!idMetodopago || !monto || !estadoPago) {
+  if (!idMetodopago || !monto || !estadoPago || !idEmpleado) { // Validar idEmpleado
     return res.status(400).json({ 
       error: 'Faltan campos requeridos',
-      details: 'idMetodopago, monto y estadoPago son obligatorios'
+      details: 'idMetodopago, monto, estadoPago y idEmpleado son obligatorios'
     });
   }
 
+  const client = await pool.connect();
   try {
-    // Verificar que existe la solicitud
-    const solicitudExists = await pool.query(
+    await client.query('BEGIN');
+
+    // 1. Verificar que existe la solicitud
+    const solicitudExists = await client.query(
       'SELECT idSolicitud FROM Solicitud WHERE idSolicitud = $1',
       [idSolicitud]
     );
@@ -2944,35 +2947,46 @@ app.post('/api/solicitudes/:idSolicitud/pagos', authenticateToken, async (req, r
       return res.status(404).json({ error: 'Solicitud no encontrada' });
     }
 
-    // Verificar que existe el método de pago
-    const metodoExists = await pool.query(
-      'SELECT idMetodopago FROM MetodoPago WHERE idMetodopago = $1',
-      [idMetodopago]
-    );
-    
-    if (metodoExists.rows.length === 0) {
-      return res.status(400).json({ error: 'Método de pago no encontrado' });
-    }
-
-    // Insertar el pago
-    const result = await pool.query(
+    // 2. Insertar el pago
+    const pagoResult = await client.query(
       `INSERT INTO Pago (
         idSolicitud, idMetodopago, monto, fechaPago, estadoPago
       ) VALUES ($1, $2, $3, $4, $5)
       RETURNING *`,
-      [
-        idSolicitud,
-        idMetodopago,
-        monto,
-        new Date().toISOString(),
-        estadoPago
-      ]
+      [idSolicitud, idMetodopago, monto, new Date().toISOString(), estadoPago]
     );
 
-    res.status(201).json(result.rows[0]);
+    // 3. Crear seguimiento automático SOLO si el pago es válido
+    if (estadoPago.toLowerCase() === 'validado') {
+      await client.query(
+        `INSERT INTO Seguimiento (
+          idSolicitud, idEmpleado, descripcion, fecha_actualizacion, estado
+        ) VALUES ($1, $2, $3, $4, $5)`,
+        [
+          idSolicitud,
+          idEmpleado,
+          'Pago validado automáticamente',
+          new Date().toISOString(),
+          'pago validado'
+        ]
+      );
+
+      // 4. Actualizar estado de la solicitud
+      await client.query(
+        'UPDATE Solicitud SET estado_actual = $1 WHERE idSolicitud = $2',
+        ['pago validado', idSolicitud]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.status(201).json(pagoResult.rows[0]);
+
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Error al agregar pago:', error);
     res.status(500).json({ error: 'Error al agregar pago' });
+  } finally {
+    client.release();
   }
 });
 
@@ -3537,6 +3551,20 @@ app.delete('/api/metodos-pago/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error al eliminar método de pago:', error);
     res.status(500).json({ error: 'Error al eliminar método de pago' });
+  }
+});
+
+app.get('/api/pagos/solicitud/:idSolicitud', authenticateToken, async (req, res) => {
+  const { idSolicitud } = req.params;
+  try {
+    const result = await pool.query(
+      'SELECT p.*, m.nombreMetodo FROM Pago p JOIN MetodoPago m ON p.idMetodopago = m.idMetodopago WHERE p.idSolicitud = $1 ORDER BY fechaPago DESC LIMIT 1',
+      [idSolicitud]
+    );
+    res.json(result.rows); // Devuelve el arreglo directamente
+  } catch (error) {
+    console.error('Error al obtener pago:', error);
+    res.status(500).json({ error: 'Error al obtener pago' });
   }
 });
 

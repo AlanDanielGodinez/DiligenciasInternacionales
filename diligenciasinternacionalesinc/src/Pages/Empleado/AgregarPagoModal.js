@@ -113,7 +113,8 @@ const AgregarPagoModal = ({ visible, onClose, idSolicitud }) => {
 
           <div className="modal-actions">
             <button type="submit" className="btn-guardar">Guardar</button>
-            <button type="button" className="btn-cancelar" onClick={onClose}>Cancelar</button>
+            <button type="button" className="btn-cancelar" onClick={() => onClose(false)}>Cancelar</button>
+
           </div>
         </form>
       </div>
