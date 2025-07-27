@@ -1,19 +1,26 @@
-// AgregarPagoModal.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
-const AgregarPagoModal = ({ visible, onClose, idSolicitud }) => {
+const AgregarPagoModal = ({ visible, onClose, idSolicitud, onPagoSuccess }) => {
   const [metodosPago, setMetodosPago] = useState([]);
+  const [empleadoId, setEmpleadoId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const [formData, setFormData] = useState({
     monto: '',
     idMetodopago: '',
     fechaPago: new Date().toISOString().split('T')[0],
-    estadoPago: 'validado'
+    estadoPago: 'validado',
+    idEmpleado: ''
   });
 
+  // Obtener métodos de pago y ID del empleado al abrir el modal
   useEffect(() => {
     if (visible) {
       fetchMetodosPago();
+      obtenerEmpleadoId();
     }
   }, [visible]);
 
@@ -24,8 +31,23 @@ const AgregarPagoModal = ({ visible, onClose, idSolicitud }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMetodosPago(response.data);
-    } catch (error) {
-      console.error('Error al cargar métodos de pago:', error);
+    } catch (err) {
+      console.error('Error al cargar métodos de pago:', err);
+      setError('No se pudieron cargar los métodos de pago');
+    }
+  };
+
+  const obtenerEmpleadoId = () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        const decoded = jwtDecode(token);
+        setEmpleadoId(decoded.id);
+        setFormData(prev => ({ ...prev, idEmpleado: decoded.id }));
+      }
+    } catch (err) {
+      console.error('Error al decodificar el token:', err);
+      setError('No se pudo identificar al empleado');
     }
   };
 
@@ -36,21 +58,34 @@ const AgregarPagoModal = ({ visible, onClose, idSolicitud }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     try {
       const token = localStorage.getItem('authToken');
-      await axios.post(`http://localhost:5000/api/solicitudes/${idSolicitud}/pagos`, {
-        ...formData,
-        idSolicitud
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const response = await axios.post(
+        `http://localhost:5000/api/solicitudes/${idSolicitud}/pagos`,
+        {
+          ...formData,
+          idEmpleado: empleadoId
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
-      });
-      alert('✅ Pago registrado correctamente');
-      onClose(true); // cerrar modal
-    } catch (error) {
-      console.error('Error al guardar pago:', error);
-      alert('❌ Error al registrar el pago');
+      );
+
+      // Notificar éxito y cerrar modal
+      if (onPagoSuccess) onPagoSuccess(response.data);
+      onClose(true);
+      
+    } catch (err) {
+      console.error('Error al registrar pago:', err);
+      setError(err.response?.data?.error || 'Error al registrar el pago');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,8 +94,14 @@ const AgregarPagoModal = ({ visible, onClose, idSolicitud }) => {
   return (
     <div className="modal-overlay">
       <div className="modal-card">
-        <h3>Agregar Pago</h3>
+        <button className="close-button" onClick={() => onClose(false)}>×</button>
+        
+        <h3>Registrar Nuevo Pago</h3>
+        
+        {error && <div className="error-message">{error}</div>}
+
         <form onSubmit={handleSubmit}>
+          {/* Campo Monto */}
           <div className="form-group">
             <label>Monto:</label>
             <input
@@ -68,10 +109,14 @@ const AgregarPagoModal = ({ visible, onClose, idSolicitud }) => {
               name="monto"
               value={formData.monto}
               onChange={handleChange}
+              placeholder="Ej: 1500.00"
+              step="0.01"
+              min="0"
               required
             />
           </div>
 
+          {/* Método de Pago */}
           <div className="form-group">
             <label>Método de pago:</label>
             <select
@@ -80,7 +125,7 @@ const AgregarPagoModal = ({ visible, onClose, idSolicitud }) => {
               onChange={handleChange}
               required
             >
-              <option value="">Selecciona</option>
+              <option value="">Seleccione un método</option>
               {metodosPago.map(mp => (
                 <option key={mp.idmetodopago} value={mp.idmetodopago}>
                   {mp.nombremetodo}
@@ -89,6 +134,7 @@ const AgregarPagoModal = ({ visible, onClose, idSolicitud }) => {
             </select>
           </div>
 
+          {/* Fecha de Pago */}
           <div className="form-group">
             <label>Fecha de pago:</label>
             <input
@@ -100,21 +146,42 @@ const AgregarPagoModal = ({ visible, onClose, idSolicitud }) => {
             />
           </div>
 
+          {/* Estado del Pago */}
           <div className="form-group">
-            <label>Estado del pago:</label>
-            <input
-              type="text"
+            <label>Estado:</label>
+            <select
               name="estadoPago"
               value={formData.estadoPago}
               onChange={handleChange}
               required
-            />
+            >
+              <option value="validado">Validado</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="rechazado">Rechazado</option>
+            </select>
           </div>
 
-          <div className="modal-actions">
-            <button type="submit" className="btn-guardar">Guardar</button>
-            <button type="button" className="btn-cancelar" onClick={() => onClose(false)}>Cancelar</button>
+          {/* Campo oculto para el ID del empleado */}
+          <input type="hidden" name="idEmpleado" value={empleadoId || ''} />
 
+          {/* Botones de acción */}
+          <div className="modal-actions">
+            <button 
+              type="submit" 
+              className="btn-primary"
+              disabled={loading}
+            >
+              {loading ? 'Procesando...' : 'Guardar Pago'}
+            </button>
+            
+            <button 
+              type="button" 
+              className="btn-secondary"
+              onClick={() => onClose(false)}
+              disabled={loading}
+            >
+              Cancelar
+            </button>
           </div>
         </form>
       </div>
