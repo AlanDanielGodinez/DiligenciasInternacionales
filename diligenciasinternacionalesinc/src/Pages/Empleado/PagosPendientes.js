@@ -11,6 +11,9 @@ const PagosPendientes = () => {
   const [idSolicitudActual, setIdSolicitudActual] = useState(null);
   const [pagosPorSolicitud, setPagosPorSolicitud] = useState({});
   const [modalPagoVisible, setModalPagoVisible] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('todos');
+
 
   useEffect(() => {
     fetchSolicitudesPendientes();
@@ -72,6 +75,13 @@ const PagosPendientes = () => {
       alert('❌ Error al validar el pago. Revisa la consola para más detalles.');
     }
   };
+    const solicitudesFiltradas = solicitudes.filter((sol) => {
+    const texto = `${sol.idsolicitud} ${sol.nombrecliente} ${sol.tipotramite} ${sol.estadoseguimiento}`.toLowerCase();
+    const coincideBusqueda = texto.includes(busqueda.toLowerCase());
+    const coincideEstado = filtroEstado === 'todos' || sol.estadoseguimiento === filtroEstado;
+    return coincideBusqueda && coincideEstado;
+  });
+
 
   const fetchPagosPorSolicitud = async (solicitudes) => {
     const token = localStorage.getItem('authToken');
@@ -97,7 +107,29 @@ const PagosPendientes = () => {
   return (
     <div className="pp-container">
       <h1 className="pp-title">Solicitudes Pendientes de Pago</h1>
-      
+      <div className="pp-filtros">
+      <input
+        type="text"
+        placeholder="Buscar por cliente, trámite, estado..."
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+        className="pp-input-busqueda"
+      />
+
+      <select
+        value={filtroEstado}
+        onChange={(e) => setFiltroEstado(e.target.value)}
+        className="pp-select-filtro"
+      >
+        <option value="todos">Todos</option>
+        <option value="pendiente de pago">Pendiente de pago</option>
+        <option value="pendiente de anticipo">Pendiente de anticipo</option>
+        <option value="validando pago">Validando pago</option>
+        <option value="validando anticipo">Validando anticipo</option>
+        <option value="pago validado">Pago validado</option>
+      </select>
+    </div>
+
       {loading ? (
         <div className="pp-loading">
           <div className="pp-spinner"></div>
@@ -125,7 +157,8 @@ const PagosPendientes = () => {
               </tr>
             </thead>
             <tbody>
-              {solicitudes.map((sol) => {
+              {solicitudesFiltradas.map((sol) => {
+
                 const docs = documentosPorSolicitud[sol.idsolicitud] || [];
                 const tieneDocs = docs.length > 0;
                 const tienePago = pagosPorSolicitud[sol.idsolicitud]?.length > 0;
