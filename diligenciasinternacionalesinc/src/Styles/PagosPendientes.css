@@ -228,6 +228,26 @@
   font-style: italic;
   font-size: 0.9rem;
 }
+.pp-filtros {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.pp-input-busqueda {
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  flex: 1;
+}
+
+.pp-select-filtro {
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
 
 /* Responsive */
 @media (max-width: 768px) {
