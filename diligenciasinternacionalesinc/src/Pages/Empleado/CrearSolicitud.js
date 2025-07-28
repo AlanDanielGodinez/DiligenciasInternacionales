@@ -375,7 +375,7 @@ const CrearSolicitud = () => {
           });
 
           alert('Solicitud creada correctamente');
-          navigate('/solicitudes');
+          navigate('/empleado/versolicitudes');
         } catch (error) {
           console.error('Error al crear la solicitud:', error);
           alert('Error al crear la solicitud');
