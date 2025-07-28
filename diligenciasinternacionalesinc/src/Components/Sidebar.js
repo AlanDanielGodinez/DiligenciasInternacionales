@@ -54,9 +54,8 @@ const SidebarNavigation = () => {
       title: "Viajes",
       icon: "✈️",
       items: [
-        { name: "Itinerarios", path: "/itinerarios" },
-        { name: "Aerolíneas", path: "/aerolineas" },
-        { name: "Grupos", path: "/grupos" }
+        { name: "Itinerarios", path: "/empleado/itinerarios" },
+        { name: "Aerolíneas", path: "/empleado/aerolineas" },
       ]
     },
     {
@@ -65,7 +64,7 @@ const SidebarNavigation = () => {
       items: [
         { name: "Registro de Pagos", path: "/empleado/pagos-pendientes" },
         { name: "Métodos de Pago", path: "/empleado/metodospago" },
-        { name: "Reportes", path: "/reportes" }
+        
       ]
     },
     {

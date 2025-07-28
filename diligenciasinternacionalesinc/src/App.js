@@ -24,6 +24,8 @@ import DetallesSolicitudModal from "./Pages/Empleado/DetallesSolicitudModal"; //
 import MetodosPago from "./Pages/Empleado/MetodosPago"; // Asegúrate de que esta ruta sea correcta
 import PagosPendientes from "./Pages/Empleado/PagosPendientes"; // Asegúrate de que esta ruta sea correcta
 import InicioCliente from "./Pages/Cliente/InicioCliente";
+import Aerolineas from "./Pages/Empleado/Aerolineas";
+import ItinerariosPendientes from "./Pages/Empleado/ItinerariosPendientes"; // Asegúrate de que esta ruta sea correcta
 import "./App.css";
 
 // Importaciones de estilos
@@ -66,6 +68,7 @@ import "../src/Styles/PagosPendientes.css";
 import "../src/Styles/InicioCliente.css";
 import "../src/Styles/SubirDocumentoModal.css";
 import "../src/Styles/AgregarPagoModal.css";
+
 
 
 import EditarArea from "./Pages/Empleado/EditarArea";
@@ -111,10 +114,12 @@ function App() {
               <Route path="/empleado/metodospago" element={<MetodosPago />} />
               <Route path="/empleado/pagos-pendientes" element={<PagosPendientes />} />
               <Route path="/empleado/ver-pago" element={<VerPagoModal />} />
+              <Route path="/empleado/aerolineas" element={<Aerolineas />} />
+              <Route path="/empleado/itinerarios" element={<ItinerariosPendientes />} />
               {/* Aquí puedes agregar más rutas protegidas */}
 
 
-              
+               <Route path="/empleado/ver-pago" element={<VerPagoModal />} />
 
             </Route>
             
