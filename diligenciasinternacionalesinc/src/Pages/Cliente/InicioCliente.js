@@ -15,6 +15,8 @@ const InicioCliente = () => {
   const [error, setError] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
   const navigate = useNavigate();
+  const [documentosEntregados, setDocumentosEntregados] = useState([]);
+
 
   // Estado para el modal de subir documentos
   const [formData, setFormData] = useState({
@@ -136,6 +138,11 @@ const InicioCliente = () => {
       setTipoTramite(solicitud.tipoTramite || '');
       setIdSolicitud(solicitud.idsolicitud || null);
 
+      if (solicitud.estado_actual === 'Documentos entregados') {
+        fetchDocumentosEntregados(solicitud.idsolicitud);
+      }
+
+
 
     } catch (error) {
       if (error.response) {
@@ -164,6 +171,16 @@ const InicioCliente = () => {
     localStorage.removeItem('userCliente');
     navigate('/login');
   };
+
+  const fetchDocumentosEntregados = async (idSolicitud) => {
+  try {
+    const response = await api.get(`/documentos/solicitud/${idSolicitud}`);
+    setDocumentosEntregados(response.data);
+  } catch (error) {
+    console.error('Error al obtener documentos entregados:', error);
+  }
+};
+
 
   // Funciones para el modal de subir documentos
   const handleChangeModal = (e) => {
@@ -314,6 +331,8 @@ const InicioCliente = () => {
     );
   };
 
+  
+
   return (
     <div className="inicio-cliente-container">
       <div className="header-cliente">
@@ -330,9 +349,31 @@ const InicioCliente = () => {
         </button>
       </div>
 
-      <div className="content-container">
-        {renderContent()}
-      </div>
+     <div className="content-container">
+      {renderContent()}
+      
+      {estadoActual === 'Documentos entregados' && documentosEntregados.length > 0 && (
+        <div className="documentos-entregados">
+          <h3>Documentos entregados por el asesor</h3>
+          <ul>
+            {documentosEntregados.map((doc) => (
+              <li key={doc.iddocumento}>
+                <strong>{doc.nombreDocumento}</strong> ({doc.tipoDocumento}) – Subido el {new Date(doc.fechasubida).toLocaleDateString()}
+                <br />
+                <a
+                  href={`http://localhost:5000/uploads/documentos/${doc.archivo}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ver documento
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+
 
       {/* Modal de subir documentos */}
       {mostrarModal && (
