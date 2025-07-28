@@ -3168,6 +3168,104 @@ app.post('/api/solicitudes/:idSolicitud/validar-pago', authenticateToken, async 
 });
 
 
+// ===============================
+// CRUD para Aerolíneas
+// ===============================
+
+/**
+ * Obtener todas las aerolíneas
+ */
+app.get('/api/aerolineas', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM Aerolinea ORDER BY idAerolinea ASC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener aerolíneas:', error);
+    res.status(500).json({ error: 'Error al obtener aerolíneas' });
+  }
+});
+
+/**
+ * Obtener una aerolínea por ID
+ */
+app.get('/api/aerolineas/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM Aerolinea WHERE idAerolinea = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Aerolínea no encontrada' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener aerolínea:', error);
+    res.status(500).json({ error: 'Error al obtener aerolínea' });
+  }
+});
+
+/**
+ * Crear nueva aerolínea
+ */
+app.post('/api/aerolineas', authenticateToken, async (req, res) => {
+  const { nombreAerolinea, contacto } = req.body;
+
+  if (!nombreAerolinea) {
+    return res.status(400).json({ error: 'El nombre de la aerolínea es obligatorio' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO Aerolinea (nombreAerolinea, contacto) VALUES ($1, $2) RETURNING *',
+      [nombreAerolinea, contacto]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al crear aerolínea:', error);
+    res.status(500).json({ error: 'Error al crear aerolínea' });
+  }
+});
+
+/**
+ * Actualizar aerolínea por ID
+ */
+app.put('/api/aerolineas/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { nombreAerolinea, contacto } = req.body;
+
+  try {
+    const result = await pool.query(
+      'UPDATE Aerolinea SET nombreAerolinea = $1, contacto = $2 WHERE idAerolinea = $3 RETURNING *',
+      [nombreAerolinea, contacto, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Aerolínea no encontrada' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al actualizar aerolínea:', error);
+    res.status(500).json({ error: 'Error al actualizar aerolínea' });
+  }
+});
+
+/**
+ * Eliminar aerolínea por ID
+ */
+app.delete('/api/aerolineas/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM Aerolinea WHERE idAerolinea = $1 RETURNING *', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Aerolínea no encontrada' });
+    }
+
+    res.json({ success: true, message: 'Aerolínea eliminada', idAerolinea: result.rows[0].idaerolinea });
+  } catch (error) {
+    console.error('Error al eliminar aerolínea:', error);
+    res.status(500).json({ error: 'Error al eliminar aerolínea' });
+  }
+});
 
 
 
@@ -3188,13 +3286,14 @@ app.post('/api/solicitudes/:idSolicitud/itinerario', authenticateToken, async (r
     numero_vuelo,
     hotel,
     direccion_hotel,
-    contacto_hotel
+    contacto_hotel,
+    idEmpleado // necesario para seguimiento
   } = req.body;
 
-  if (!fecha_salida || !fecha_regreso) {
-    return res.status(400).json({ 
+  if (!fecha_salida || !fecha_regreso || !idEmpleado) {
+    return res.status(400).json({
       error: 'Faltan campos requeridos',
-      details: 'fecha_salida y fecha_regreso son obligatorios'
+      details: 'fecha_salida, fecha_regreso e idEmpleado son obligatorios'
     });
   }
 
@@ -3202,25 +3301,18 @@ app.post('/api/solicitudes/:idSolicitud/itinerario', authenticateToken, async (r
   try {
     await client.query('BEGIN');
 
-    // Verificar que existe la solicitud
-    const solicitudExists = await client.query(
-      'SELECT idSolicitud FROM Solicitud WHERE idSolicitud = $1',
+    const solicitudCheck = await client.query(
+      'SELECT * FROM Solicitud WHERE idSolicitud = $1',
       [idSolicitud]
     );
-    
-    if (solicitudExists.rows.length === 0) {
+    if (solicitudCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Solicitud no encontrada' });
     }
 
-    // Verificar si ya existe un itinerario para esta solicitud
-    const itinerarioExists = await client.query(
-      'SELECT idItinerario FROM Itinerario WHERE idSolicitud = $1',
-      [idSolicitud]
-    );
-
     let result;
-    if (itinerarioExists.rows.length > 0) {
-      // Actualizar itinerario existente
+    const existe = await client.query('SELECT * FROM Itinerario WHERE idSolicitud = $1', [idSolicitud]);
+
+    if (existe.rows.length > 0) {
       result = await client.query(
         `UPDATE Itinerario SET
           fecha_salida = $1,
@@ -3244,7 +3336,6 @@ app.post('/api/solicitudes/:idSolicitud/itinerario', authenticateToken, async (r
         ]
       );
     } else {
-      // Crear nuevo itinerario
       result = await client.query(
         `INSERT INTO Itinerario (
           idSolicitud, fecha_salida, fecha_regreso, idAerolinea,
@@ -3264,6 +3355,25 @@ app.post('/api/solicitudes/:idSolicitud/itinerario', authenticateToken, async (r
       );
     }
 
+    // Agregar seguimiento
+    await client.query(
+      `INSERT INTO Seguimiento (idSolicitud, idEmpleado, estado, descripcion, fecha_actualizacion)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        idSolicitud,
+        idEmpleado,
+        'Itinerario establecido',
+        'Itinerario registrado correctamente',
+        new Date().toISOString()
+      ]
+    );
+
+    // Actualizar estado actual de la solicitud
+    await client.query(
+      'UPDATE Solicitud SET estado_actual = $1 WHERE idSolicitud = $2',
+      ['Itinerario establecido', idSolicitud]
+    );
+
     await client.query('COMMIT');
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -3274,6 +3384,33 @@ app.post('/api/solicitudes/:idSolicitud/itinerario', authenticateToken, async (r
     client.release();
   }
 });
+
+app.get('/api/solicitudes/pendientes-itinerario', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT DISTINCT ON (s.idSolicitud)
+        s.idSolicitud,
+        s.estado_actual,
+        s.fechaSolicitud,
+        c.nombreCliente || ' ' || c.apellidoPaternoCliente || ' ' || c.apellidoMaternoCliente AS nombreCliente,
+        t.tipoTramite,
+        sg.estado AS estadoSeguimiento,
+        sg.fecha_actualizacion
+      FROM Solicitud s
+      JOIN Cliente c ON s.idCliente = c.idCliente
+      JOIN Tramite t ON s.idTramite = t.idTramite
+      JOIN Seguimiento sg ON s.idSolicitud = sg.idSolicitud
+      WHERE sg.estado = 'pendiente de itinerario'
+        AND (LOWER(t.tipoTramite) = 'grupo ama guatemala' OR LOWER(t.tipoTramite) = 'grupo ama mexico')
+      ORDER BY s.idSolicitud, sg.fecha_actualizacion DESC
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener solicitudes pendientes de itinerario:', error);
+    res.status(500).json({ error: 'Error al obtener solicitudes' });
+  }
+});
+
 
 /**
  * Eliminar itinerario de una solicitud
