@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ResumenReencuentroModal from '../Cliente/ResumenEncuentroModal';
+
 
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
@@ -16,6 +18,7 @@ const InicioCliente = () => {
   const [mostrarModal, setMostrarModal] = useState(false);
   const navigate = useNavigate();
   const [documentosEntregados, setDocumentosEntregados] = useState([]);
+  const [mostrarModalResumen, setMostrarModalResumen] = useState(false);
 
 
   // Estado para el modal de subir documentos
@@ -422,6 +425,23 @@ const InicioCliente = () => {
           </div>
         </div>
       )}
+
+      {estadoActual === 'Vuelo y reencuentro' && (
+        <button
+          className="btn-ver-reencuentro"
+          onClick={() => setMostrarModalResumen(true)}
+        >
+          Ver detalles de mi viaje
+        </button>
+      )}
+
+      {mostrarModalResumen && (
+        <ResumenReencuentroModal
+          idSolicitud={idSolicitud}
+          cerrar={() => setMostrarModalResumen(false)}
+        />
+      )}
+
     </div>
   );
 };
