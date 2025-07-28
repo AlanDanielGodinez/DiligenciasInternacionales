@@ -291,6 +291,13 @@ ALTER TABLE Documento
   ALTER COLUMN fechasubida TYPE TIMESTAMP USING fechasubida::timestamp,
   ALTER COLUMN fechasubida SET DEFAULT CURRENT_TIMESTAMP;
 
+ALTER TABLE Documento
+ALTER COLUMN archivo TYPE VARCHAR(255);
+
+ALTER TABLE Documento
+ALTER COLUMN nombreDocumento TYPE VARCHAR(255);
+
+
 
 
 -- Índices para mejorar el rendimiento

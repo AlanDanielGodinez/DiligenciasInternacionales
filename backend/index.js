@@ -3503,6 +3503,90 @@ app.get('/api/documentos/solicitud/:idSolicitud', async (req, res) => {
   }
 });
 
+app.post('/api/solicitudes/:idSolicitud/entregar-documentos',
+  authenticateToken,
+  upload.fields([
+    { name: 'documento1', maxCount: 1 },
+    { name: 'documento2', maxCount: 1 },
+    { name: 'documento3', maxCount: 1 }
+  ]),
+  async (req, res) => {
+    const { idSolicitud } = req.params;
+    const idEmpleado = req.body.idEmpleado;
+
+    const documentosSubidos = req.files;
+
+    if (!documentosSubidos || Object.keys(documentosSubidos).length !== 3) {
+      return res.status(400).json({ error: 'Debes subir los 3 documentos requeridos' });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Guardar cada documento
+      for (const key of Object.keys(documentosSubidos)) {
+        const file = documentosSubidos[key][0];
+        const tipo = key; // documento1, documento2, etc.
+        const nombre = file.originalname;
+        const archivo = file.filename;
+
+        await client.query(
+          `INSERT INTO Documento (idSolicitud, nombreDocumento, tipoDocumento, archivo, fechasubida, estado)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [idSolicitud, nombre, tipo, archivo, new Date(), 'entregado']
+        );
+      }
+
+      // Agregar seguimiento
+      await client.query(
+        `INSERT INTO Seguimiento (idSolicitud, idEmpleado, estado, descripcion, fecha_actualizacion)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [idSolicitud, idEmpleado, 'Documentos entregados', 'Entrega oficial de documentos al cliente', new Date()]
+      );
+
+      // Actualizar estado
+      await client.query(
+        'UPDATE Solicitud SET estado_actual = $1 WHERE idSolicitud = $2',
+        ['Documentos entregados', idSolicitud]
+      );
+
+      await client.query('COMMIT');
+      res.status(200).json({ success: true, mensaje: 'Documentos registrados correctamente' });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      console.error('Error al entregar documentos:', err);
+      res.status(500).json({ error: 'Error al entregar documentos' });
+    } finally {
+      client.release();
+    }
+  }
+);
+
+app.get('/api/solicitudes/pendientes-documentos', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT DISTINCT ON (s.idSolicitud)
+        s.idSolicitud,
+        c.nombreCliente || ' ' || c.apellidoPaternoCliente || ' ' || c.apellidoMaternoCliente AS nombreCliente,
+        s.estado_actual,
+        t.tipoTramite,
+        sg.fecha_actualizacion
+      FROM Solicitud s
+      JOIN Cliente c ON s.idCliente = c.idCliente
+      JOIN Seguimiento sg ON s.idSolicitud = sg.idSolicitud
+      JOIN Tramite t ON s.idTramite = t.idTramite
+      WHERE sg.estado = 'pendiente de entregar documentos'
+      ORDER BY s.idSolicitud, sg.fecha_actualizacion DESC
+    `);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener solicitudes:', err);
+    res.status(500).json({ error: 'Error al obtener solicitudes pendientes de entrega de documentos' });
+  }
+});
+
 
 
 // ==============================================

@@ -26,6 +26,7 @@ import PagosPendientes from "./Pages/Empleado/PagosPendientes"; // Asegúrate de
 import InicioCliente from "./Pages/Cliente/InicioCliente";
 import Aerolineas from "./Pages/Empleado/Aerolineas";
 import ItinerariosPendientes from "./Pages/Empleado/ItinerariosPendientes"; // Asegúrate de que esta ruta sea correcta
+import EntregarDocumentos from "./Pages/Empleado/EntregarDocumentos"; // Asegúrate de que esta ruta sea correcta
 import "./App.css";
 
 // Importaciones de estilos
@@ -116,6 +117,7 @@ function App() {
               <Route path="/empleado/ver-pago" element={<VerPagoModal />} />
               <Route path="/empleado/aerolineas" element={<Aerolineas />} />
               <Route path="/empleado/itinerarios" element={<ItinerariosPendientes />} />
+              <Route path="/empleado/entregar-documentos" element={<EntregarDocumentos />} />
               {/* Aquí puedes agregar más rutas protegidas */}
 
 
