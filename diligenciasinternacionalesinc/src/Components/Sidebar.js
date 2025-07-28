@@ -87,7 +87,7 @@ const SidebarNavigation = () => {
       title: "Documentos",
       icon: "📄",
       items: [
-        { name: "Subir Documentos", path: "/subir-documentos" },
+        { name: "Subir Documentos", path: "/empleado/entregar-documentos" },
         { name: "Archivo Digital", path: "/archivo" },
         { name: "Validación", path: "/validacion" }
       ]
