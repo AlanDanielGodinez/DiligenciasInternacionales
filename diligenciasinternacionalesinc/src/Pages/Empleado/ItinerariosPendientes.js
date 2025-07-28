@@ -27,32 +27,36 @@ const ItinerariosPendientes = () => {
   }, []);
 
   const fetchSolicitudes = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const res = await axios.get('http://localhost:5000/api/solicitudes/pendientes-itinerario', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setSolicitudes(res.data);
+  try {
+    const token = localStorage.getItem('authToken');
+    const res = await axios.get('http://localhost:5000/api/solicitudes/pendientes-itinerario', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      // buscar si ya tienen itinerario
-      const itinerarios = {};
-      for (const s of res.data) {
-        try {
-          const resIt = await axios.get(`http://localhost:5000/api/solicitudes/${s.idsolicitud}/itinerario`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (resIt.data) itinerarios[s.idsolicitud] = resIt.data;
-        } catch (err) {
-          itinerarios[s.idsolicitud] = null;
-        }
+    setSolicitudes(res.data);
+
+    // Verificamos si ya tienen itinerario (por si acaso)
+    const itinerarios = {};
+    for (const s of res.data) {
+      try {
+        const resIt = await axios.get(`http://localhost:5000/api/solicitudes/${s.idsolicitud}/itinerario`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (resIt.data) itinerarios[s.idsolicitud] = resIt.data;
+      } catch (err) {
+        itinerarios[s.idsolicitud] = null;
       }
-      setItinerariosRegistrados(itinerarios);
-    } catch (err) {
-      console.error('Error al obtener solicitudes:', err);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    setItinerariosRegistrados(itinerarios);
+  } catch (err) {
+    console.error('Error al obtener solicitudes:', err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const fetchAerolineas = async () => {
     try {
@@ -175,7 +179,7 @@ const ItinerariosPendientes = () => {
                 <td>{s.nombrecliente}</td>
                 <td>{s.tipotramite}</td>
                 <td>{s.estado_actual}</td>
-                <td>{new Date(s.fecha_actualizacion).toLocaleDateString()}</td>
+                <td>{s.fechaactualizacion ? new Date(s.fechaactualizacion).toLocaleDateString() : '-'}</td>
                 <td>
                   <button
                     className="metodos-pago-add-button"

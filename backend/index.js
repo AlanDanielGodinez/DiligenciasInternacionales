@@ -3411,6 +3411,21 @@ app.get('/api/solicitudes/pendientes-itinerario', authenticateToken, async (req,
   }
 });
 
+app.get('/api/solicitudes/:idSolicitud/itinerario', authenticateToken, async (req, res) => {
+  const { idSolicitud } = req.params;
+
+  try {
+    const result = await pool.query('SELECT * FROM Itinerario WHERE idSolicitud = $1', [idSolicitud]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No se encontró itinerario para esta solicitud' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener itinerario:', error);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 
 /**
  * Eliminar itinerario de una solicitud
