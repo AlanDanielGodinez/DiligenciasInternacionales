@@ -3388,41 +3388,35 @@ app.post('/api/solicitudes/:idSolicitud/itinerario', authenticateToken, async (r
 app.get('/api/solicitudes/pendientes-itinerario', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT DISTINCT ON (s.idSolicitud)
+      WITH UltimoSeguimiento AS (
+        SELECT 
+          s.idSolicitud,
+          sg.estado,
+          sg.fecha_actualizacion,
+          ROW_NUMBER() OVER (PARTITION BY s.idSolicitud ORDER BY sg.fecha_actualizacion DESC) as rn
+        FROM Solicitud s
+        JOIN Seguimiento sg ON s.idSolicitud = sg.idSolicitud
+      )
+      SELECT 
         s.idSolicitud,
         s.estado_actual,
         s.fechaSolicitud,
         c.nombreCliente || ' ' || c.apellidoPaternoCliente || ' ' || c.apellidoMaternoCliente AS nombreCliente,
         t.tipoTramite,
-        sg.estado AS estadoSeguimiento,
-        sg.fecha_actualizacion
+        us.estado AS estadoSeguimiento,
+        us.fecha_actualizacion
       FROM Solicitud s
       JOIN Cliente c ON s.idCliente = c.idCliente
       JOIN Tramite t ON s.idTramite = t.idTramite
-      JOIN Seguimiento sg ON s.idSolicitud = sg.idSolicitud
-      WHERE sg.estado = 'pendiente de itinerario'
+      JOIN UltimoSeguimiento us ON s.idSolicitud = us.idSolicitud AND us.rn = 1
+      WHERE us.estado = 'pendiente de itinerario'
         AND (LOWER(t.tipoTramite) = 'grupo ama guatemala' OR LOWER(t.tipoTramite) = 'grupo ama mexico')
-      ORDER BY s.idSolicitud, sg.fecha_actualizacion DESC
+      ORDER BY us.fecha_actualizacion DESC
     `);
     res.json(result.rows);
   } catch (error) {
     console.error('Error al obtener solicitudes pendientes de itinerario:', error);
     res.status(500).json({ error: 'Error al obtener solicitudes' });
-  }
-});
-
-app.get('/api/solicitudes/:idSolicitud/itinerario', authenticateToken, async (req, res) => {
-  const { idSolicitud } = req.params;
-
-  try {
-    const result = await pool.query('SELECT * FROM Itinerario WHERE idSolicitud = $1', [idSolicitud]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'No se encontró itinerario para esta solicitud' });
-    }
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Error al obtener itinerario:', error);
-    res.status(500).json({ error: 'Error interno' });
   }
 });
 

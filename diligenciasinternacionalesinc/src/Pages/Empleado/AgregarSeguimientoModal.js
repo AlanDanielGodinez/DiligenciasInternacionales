@@ -1,8 +1,143 @@
-// AgregarSeguimientoModal.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const AgregarSeguimientoModal = ({ isOpen, onClose, idSolicitud, onSeguimientoAgregado }) => {
+// Estados mapeados para coincidir con el backend
+const estadosPorTramite = {
+  'Grupo AMA Mexico': [
+    'iniciado',
+    'pendiente de documentos',
+    'documentos entregados',
+    'pendiente de anticipo',
+    'anticipo realizado',
+    'pendiente de perfil',
+    'falta informacion',
+    'pendiente de pago',
+    'pago validado',
+    'llenado formulario',
+    'cita programada',
+    'confirmacion datos',
+    'capacitacion realizada',
+    'itinerario establecido',
+    'vuelo confirmado',
+    'finalizado'
+  ],
+  'Grupo AMA Guatemala': [
+    'iniciado',
+    'pendiente de documentos',
+    'documentos entregados',
+    'pendiente de anticipo',
+    'anticipo realizado',
+    'pendiente de perfil',
+    'falta informacion',
+    'pendiente de pago',
+    'pago validado',
+    'llenado formulario',
+    'cita programada',
+    'confirmacion datos',
+    'capacitacion realizada',
+    'itinerario establecido',
+    'vuelo confirmado',
+    'finalizado'
+  ],
+  'Visa Americana': [
+    'iniciado',
+    'pendiente de documentos',
+    'documentos entregados',
+    'pendiente de anticipo',
+    'anticipo realizado',
+    'pendiente de perfil',
+    'falta informacion',
+    'pendiente de pago',
+    'pago validado',
+    'llenado formulario',
+    'pendiente pago visa',
+    'cita programada',
+    'confirmacion datos',
+    'capacitacion realizada',
+    'finalizado'
+  ],
+  'Visa Canadiense': [
+    'iniciado',
+    'pendiente de documentos',
+    'documentos entregados',
+    'pendiente de anticipo',
+    'anticipo realizado',
+    'pendiente de perfil',
+    'falta informacion',
+    'pendiente de pago',
+    'pago validado',
+    'llenado aplicacion',
+    'pendiente documentos',
+    'espera carta biometricos',
+    'cita programada',
+    'entrega documentos',
+    'espera resultado',
+    'envio pasaporte',
+    'entrega pasaporte',
+    'finalizado'
+  ],
+  'Pasaporte Mexicano': [
+    'iniciado',
+    'pendiente de documentos',
+    'documentos entregados',
+    'pendiente de pago',
+    'anticipo realizado',
+    'pendiente de perfil',
+    'falta informacion',
+    'pago validado',
+    'cita agendada',
+    'entrega pasaporte',
+    'finalizado'
+  ],
+  'Pasaporte Guatemalteco': [
+    'iniciado',
+    'pendiente de documentos',
+    'documentos entregados',
+    'pendiente de pago',
+    'pago realizado',
+    'pendiente de perfil',
+    'falta informacion',
+    'requisitos completos',
+    'cita agendada',
+    'entrega pasaporte',
+    'finalizado'
+  ],
+  'Pasaporte EstadoUnidense': [
+    'iniciado',
+    'pendiente de documentos',
+    'documentos entregados',
+    'pendiente de anticipo',
+    'anticipo realizado',
+    'pendiente de perfil',
+    'falta informacion',
+    'ds pendiente',
+    'ds realizada',
+    'pendiente de pago',
+    'pago validado',
+    'pago derechos realizado',
+    'cita agendada',
+    'capacitacion agendada',
+    'capacitacion realizada',
+    'entrega pasaporte',
+    'finalizado'
+  ]
+};
+
+// Mapeo para mostrar nombres más descriptivos en la UI
+const estadosDisplay = {
+  'iniciado': 'Iniciado',
+  'pendiente de documentos': 'En espera de documentos',
+  'documentos entregados': 'Documentos entregados',
+  'pendiente de anticipo': 'En espera de anticipo pago',
+  'anticipo realizado': 'Anticipo realizado',
+  'pendiente de perfil': 'Pendiente de perfil de aplicación',
+  'falta informacion': 'Falta de información',
+  'pendiente de pago': 'En espera de pago',
+  'pago validado': 'Pago validado',
+  // ... otros mapeos según necesidad
+};
+
+const AgregarSeguimientoModal = ({ isOpen, onClose, idSolicitud, tipoTramite, onSeguimientoAgregado }) => {
   const [empleados, setEmpleados] = useState([]);
   const [empleadoSeleccionado, setEmpleadoSeleccionado] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -16,11 +151,11 @@ const AgregarSeguimientoModal = ({ isOpen, onClose, idSolicitud, onSeguimientoAg
       axios.get('http://localhost:5000/api/empleados', {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then(res => setEmpleados(res.data))
-      .catch(err => {
-        console.error('Error al obtener empleados:', err);
-        setError('No se pudieron cargar los empleados');
-      });
+        .then(res => setEmpleados(res.data))
+        .catch(err => {
+          console.error('Error al obtener empleados:', err);
+          setError('No se pudieron cargar los empleados');
+        });
     }
   }, [isOpen]);
 
@@ -29,31 +164,37 @@ const AgregarSeguimientoModal = ({ isOpen, onClose, idSolicitud, onSeguimientoAg
     setMensaje('');
     setError('');
 
-    if (!empleadoSeleccionado || !descripcion.trim() || !estado.trim()) {
+    if (!empleadoSeleccionado || !descripcion.trim() || !estado) {
       setError('Todos los campos son obligatorios');
       return;
     }
 
     try {
       const token = localStorage.getItem('authToken');
-      const res = await axios.post(`http://localhost:5000/api/solicitudes/${idSolicitud}/seguimientos`, {
-        idEmpleado: empleadoSeleccionado,
-        descripcion,
-        estado
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(
+        `http://localhost:5000/api/solicitudes/${idSolicitud}/seguimientos`,
+        {
+          idEmpleado: empleadoSeleccionado,
+          descripcion,
+          estado // Enviamos el valor interno (ej: "pendiente de pago")
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
 
       setMensaje('Seguimiento agregado correctamente');
       onSeguimientoAgregado(res.data);
       onClose();
     } catch (err) {
       console.error('Error al agregar seguimiento:', err);
-      setError('No se pudo agregar el seguimiento');
+      setError(err.response?.data?.error || 'No se pudo agregar el seguimiento');
     }
   };
 
   if (!isOpen) return null;
+
+  const opcionesEstado = estadosPorTramite[tipoTramite] || [];
 
   return (
     <div className="modal-overlay">
@@ -66,6 +207,7 @@ const AgregarSeguimientoModal = ({ isOpen, onClose, idSolicitud, onSeguimientoAg
             <select
               value={empleadoSeleccionado}
               onChange={e => setEmpleadoSeleccionado(e.target.value)}
+              required
             >
               <option value="">-- Selecciona un empleado --</option>
               {empleados.map(emp => (
@@ -78,12 +220,18 @@ const AgregarSeguimientoModal = ({ isOpen, onClose, idSolicitud, onSeguimientoAg
 
           <label>
             Estado:
-            <input
-              type="text"
-              value={estado}
+            <select 
+              value={estado} 
               onChange={e => setEstado(e.target.value)}
-              placeholder="Ej. En proceso, Finalizado..."
-            />
+              required
+            >
+              <option value="">-- Selecciona un estado --</option>
+              {opcionesEstado.map((est, idx) => (
+                <option key={idx} value={est}>
+                  {estadosDisplay[est] || est} {/* Muestra el nombre descriptivo */}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label>
@@ -93,6 +241,7 @@ const AgregarSeguimientoModal = ({ isOpen, onClose, idSolicitud, onSeguimientoAg
               onChange={e => setDescripcion(e.target.value)}
               rows="4"
               placeholder="Describe lo que se ha hecho o el cambio de estado"
+              required
             />
           </label>
 
