@@ -2915,6 +2915,74 @@ app.delete('/api/seguimientos/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// En tu backend (index.js)
+app.get('/api/solicitudes/:id/linea-tiempo', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // 1. Obtener el tipo de trámite y estado actual
+    const solicitud = await pool.query(`
+      SELECT t.tipotramite, s.estado_actual 
+      FROM solicitud s
+      JOIN tramite t ON s.idtramite = t.idtramite
+      WHERE s.idsolicitud = $1
+    `, [id]);
+
+    if (solicitud.rows.length === 0) {
+      return res.status(404).json({ error: 'Solicitud no encontrada' });
+    }
+
+    const tipoTramite = solicitud.rows[0].tipotramite;
+    const estadoActual = solicitud.rows[0].estado_actual;
+
+    // 2. Obtener los pasos definidos para este tipo de trámite
+    const pasos = pasosPorTramite[tipoTramite] || [];
+
+    // 3. Obtener los seguimientos históricos
+    const seguimientos = await pool.query(`
+      SELECT 
+        sg.descripcion,
+        sg.estado,
+        sg.fecha_actualizacion as fecha,
+        e.nombreempleado || ' ' || e.apellidopaternoempleado as empleado
+      FROM seguimiento sg
+      JOIN empleado e ON sg.idempleado = e.idempleado
+      WHERE sg.idsolicitud = $1
+      ORDER BY sg.fecha_actualizacion DESC
+    `, [id]);
+
+    res.json({
+      tipoTramite,
+      estadoActual,
+      pasos,
+      seguimientos: seguimientos.rows
+    });
+
+  } catch (error) {
+    console.error('Error al obtener línea de tiempo:', error);
+    res.status(500).json({ error: 'Error al obtener línea de tiempo' });
+  }
+});
+
+// Definición de pasos por tipo de trámite
+const pasosPorTramite = {
+  'Grupo AMA': [
+    'Inicio del trámite',
+    'Entrega de documentos',
+    'Pago de anticipo',
+    'Perfil de aplicación y revisión',
+    'Pago final',
+    'Llenado de formulario DS-160',
+    'Cita en embajada programada',
+    'Confirmación de datos',
+    'Capacitación',
+    'Organización del viaje',
+    'Vuelo y reencuentro',
+    'Trámite finalizado'
+  ],
+  // ... otros tipos de trámite
+};
+
 // ==============================================
 // RUTAS PARA PAGOS DE SOLICITUDES
 // ==============================================
