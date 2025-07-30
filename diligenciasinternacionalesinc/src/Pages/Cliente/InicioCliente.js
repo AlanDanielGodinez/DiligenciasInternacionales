@@ -37,6 +37,10 @@ const InicioCliente = () => {
       const response = await api.get(`/solicitudes/cliente/${idCliente}`);
       const solicitud = response.data;
       if (!solicitud.estado_actual) return setEstadoActual('Sin solicitudes registradas');
+      if (solicitud.estado_actual === 'pendiente de documentos') {
+        fetchDocumentosEntregados(solicitud.idsolicitud);
+      }
+
       setTipoTramite(solicitud.tipoTramite);
       setEstadoActual(solicitud.estado_actual);
       setIdSolicitud(solicitud.idsolicitud);
@@ -53,6 +57,15 @@ const InicioCliente = () => {
       setLoading(false);
     }
   };
+
+  const recargarDocumentos = async () => {
+  if (idSolicitud) {
+    await fetchDocumentosEntregados(idSolicitud);
+    await fetchSeguimientos(idSolicitud);
+    await fetchEstadoSolicitud(cliente.idCliente);
+  }
+};
+
 
   const fetchSeguimientos = async (idSolicitud) => {
     try {
@@ -148,7 +161,11 @@ const InicioCliente = () => {
 
           <div className="cliente-subida-documentos">
             <h3>Sube tus documentos</h3>
-            <button onClick={() => setMostrarModal(true)}>Subir documentos</button>
+            {documentosEntregados.length < 8 ? (
+              <button onClick={() => setMostrarModal(true)}>Subir documentos ({documentosEntregados.length})</button>
+            ) : (
+              <p>Has alcanzado el número máximo de documentos permitidos (8).</p>
+            )}
           </div>
         </div>
       )}
@@ -156,6 +173,7 @@ const InicioCliente = () => {
       {mostrarModal && (
         <div className="cliente-modal-overlay">
           <div className="cliente-modal">
+            
             <h2>Subir documento</h2>
             <form onSubmit={handleUploadDocumento}>
               <input type="text" name="nombreDocumento" placeholder="Nombre del documento" value={formData.nombreDocumento} onChange={handleChangeInput} required />

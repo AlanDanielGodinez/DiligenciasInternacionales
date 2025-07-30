@@ -75,6 +75,30 @@ const DetallesSolicitudModal = ({ solicitudId, isOpen, onClose }) => {
             </div>
           </div>
         ) : null}
+
+        <div className="modal-documentos">
+          <h3>Documentos Subidos por el Cliente</h3>
+          {solicitud.documentos && solicitud.documentos.length > 0 ? (
+            <ul className="documento-lista">
+              {solicitud.documentos.map((doc) => (
+                <li key={doc.iddocumento} className="documento-item">
+                  <p><strong>{doc.nombredocumento}</strong> ({doc.tipodocumento})</p>
+                  <p>Subido el: {new Date(doc.fecha).toLocaleDateString()}</p>
+                  <a
+                    href={`http://localhost:5000/uploads/documentos/${doc.archivo}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Ver documento
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No hay documentos disponibles.</p>
+          )}
+        </div>
+
       </div>
     </div>
   );
