@@ -30,9 +30,7 @@ const Navbar = () => {
         <Link to="/login" className="auth-link">
           Iniciar sesión
         </Link>
-        <Link to="/login/register" className="auth-link register-link">
-          Registrarte
-        </Link>
+        
       </div>
     </nav>
   );
