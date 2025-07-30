@@ -203,6 +203,8 @@ const VerSolicitudes = () => {
         onClose={cerrarModalSeguimiento}
         idSolicitud={solicitudSeleccionada?.idsolicitud}
         onSeguimientoAgregado={handleSeguimientoAgregado}
+        tipoTramite={solicitudSeleccionada?.tipotramite}
+
       />
       <DetallesSolicitudModal
         solicitudId={solicitudSeleccionadaId}
