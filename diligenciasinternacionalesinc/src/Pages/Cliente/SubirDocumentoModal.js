@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const SubirDocumentoModal = ({ mostrar, cerrar, idSolicitud }) => {
+const SubirDocumentoModal = ({ mostrar, cerrar, idSolicitud, documentosSubidos }) => {
+
   const [formData, setFormData] = useState({
     nombreDocumento: '',
     tipoDocumento: '',
@@ -63,6 +64,11 @@ const SubirDocumentoModal = ({ mostrar, cerrar, idSolicitud }) => {
       console.error(err);
       setError('Error al subir el documento');
     }
+    if (documentosSubidos >= 8) {
+      setError('Ya has subido el máximo permitido de 8 documentos.');
+      return;
+    }
+
   };
 
   return (
@@ -93,8 +99,16 @@ const SubirDocumentoModal = ({ mostrar, cerrar, idSolicitud }) => {
             onChange={handleChange}
             required
           />
+
           {error && <p className="error-message">{error}</p>}
           {mensaje && <p className="success-message">{mensaje}</p>}
+          <p className="info-message">
+            Documentos subidos: {documentosSubidos} / 8
+          </p>
+          {documentosSubidos < 5 && (
+            <p className="warning-message">Debes subir al menos 5 documentos</p>
+          )}
+
           <button type="submit">Subir</button>
           <button type="button" onClick={cerrar}>Cerrar</button>
         </form>

@@ -211,20 +211,33 @@ const PagosPendientes = () => {
                             Ver pago
                           </button>
                         </div>
-                      ) : tieneDocs ? (
-                        <button
-                          className="pp-validate-btn"
-                          onClick={() => validarPago(sol.idsolicitud)}
-                        >
-                          <svg className="pp-validate-icon" viewBox="0 0 24 24">
-                            <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" />
-                          </svg>
-                          Validar pago
-                        </button>
-                      ) : (
-                        <span className="pp-no-action">No disponible</span>
-                      )}
+                      ) : (() => {
+                        const estado = sol.estadoseguimiento.toLowerCase();
+                        const docs = documentosPorSolicitud[sol.idsolicitud] || [];
+
+                        const documentoEsperado =
+                          estado.includes('anticipo')
+                            ? docs.find(d => d.nombredocumento.toLowerCase().includes('anticipo'))
+                            : estado.includes('pago')
+                            ? docs.find(d => d.nombredocumento.toLowerCase().includes('pago'))
+                            : null;
+
+                        return documentoEsperado ? (
+                          <button
+                            className="pp-validate-btn"
+                            onClick={() => validarPago(sol.idsolicitud)}
+                          >
+                            <svg className="pp-validate-icon" viewBox="0 0 24 24">
+                              <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" />
+                            </svg>
+                            Validar pago
+                          </button>
+                        ) : (
+                          <span className="pp-no-action">Esperando {estado.includes('anticipo') ? 'anticipo' : 'pago'}</span>
+                        );
+                      })()}
                     </td>
+
                   </tr>
                 );
               })}
