@@ -170,8 +170,9 @@ const RolesPage = () => {
 
   // Verificar si es el rol Administrador
   const esRolAdministrador = (rol) => {
-    return rol.nombreRol.toLowerCase() === 'administrador';
+  return (rol?.nombreRol || '').toLowerCase() === 'administrador';
   };
+
 
   return (
     <div className="roles-container">
