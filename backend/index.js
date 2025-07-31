@@ -3873,6 +3873,71 @@ app.get('/api/pagos/solicitud/:idSolicitud', authenticateToken, async (req, res)
   }
 });
 
+// ==============================================
+// RUTAS PARA DASHBOARD
+// ==============================================
+app.get('/api/dashboard/grupos-ama-activos', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        t.idTramite,
+        t.tipoTramite,
+        t.fecha_inicio,
+        COUNT(tc.idCliente) AS totalClientes
+      FROM Tramite t
+      JOIN Tramite_Cliente tc ON t.idTramite = tc.idTramite
+      JOIN Solicitud s ON s.idTramite = t.idTramite
+      WHERE t.tipoTramite ILIKE 'Grupo AMA%'
+        AND (s.estado_actual IS NULL OR s.estado_actual != 'Trámite finalizado')
+      GROUP BY t.idTramite, t.tipoTramite, t.fecha_inicio
+      ORDER BY t.fecha_inicio DESC
+    `);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener grupos AMA activos:', error);
+    res.status(500).json({ error: 'Error al obtener grupos AMA activos' });
+  }
+});
+
+app.get('/api/dashboard/tramites-activos', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        t.tipoTramite,
+        COUNT(*) AS total
+      FROM Tramite t
+      JOIN Solicitud s ON s.idTramite = t.idTramite
+      WHERE s.estado_actual IS DISTINCT FROM 'Trámite finalizado'
+      GROUP BY t.tipoTramite
+      ORDER BY total DESC
+    `);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener trámites activos:', error);
+    res.status(500).json({ error: 'Error al obtener trámites activos' });
+  }
+});
+
+app.get('/api/dashboard/clientes-por-pais', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        p.nombrePais,
+        COUNT(c.idCliente) AS total
+      FROM Cliente c
+      JOIN Pais p ON c.idPais = p.idPais
+      GROUP BY p.nombrePais
+      ORDER BY total DESC
+    `);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener clientes por país:', error);
+    res.status(500).json({ error: 'Error al obtener clientes por país' });
+  }
+});
 
 
 
