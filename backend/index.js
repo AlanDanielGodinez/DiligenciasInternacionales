@@ -924,6 +924,31 @@ app.post('/api/roles', authenticateToken, async (req, res) => {
   }
 });
 
+app.put('/api/roles/:id', async (req, res) => {
+  const { id } = req.params;
+  const { nombreRol } = req.body;
+
+  if (!nombreRol) {
+    return res.status(400).json({ error: 'El nombre del rol es requerido' });
+  }
+
+  try {
+    const result = await pool.query(
+      'UPDATE Rol SET nombreRol = $1 WHERE idRol = $2 RETURNING *',
+      [nombreRol, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Rol no encontrado' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al editar rol:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 
 // Eliminar rol
 app.delete('/api/roles/:id', authenticateToken, async (req, res) => {
