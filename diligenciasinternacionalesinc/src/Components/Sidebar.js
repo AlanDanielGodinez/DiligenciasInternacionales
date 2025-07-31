@@ -83,15 +83,7 @@ const SidebarNavigation = () => {
         { name: "Roles y Permisos", path: "/empleado/roles" },
       ]
     },
-    {
-      title: "Documentos",
-      icon: "📄",
-      items: [
-        { name: "Subir Documentos", path: "/empleado/entregar-documentos" },
-        { name: "Archivo Digital", path: "/archivo" },
-        { name: "Validación", path: "/validacion" }
-      ]
-    }
+    
   ];
 
   const configItems = [
