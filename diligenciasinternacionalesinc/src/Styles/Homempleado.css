@@ -1,56 +1,105 @@
-/* HomeEmpleado.css */
-.home-empleado-container {
-    display: flex;
-    min-height: 100vh;
-  }
-  
-  .main-content {
-    flex: 1;
-    margin-left: 280px; /* Igual al ancho del sidebar */
-    transition: margin-left 0.3s ease;
-    padding: 20px;
-    background-color: #f5f7fa;
-    min-height: 100vh;
-  }
-  
-  /* Cuando el sidebar está colapsado */
-  .sidebar-collapsed + .main-content {
-    margin-left: 80px; /* Ancho reducido cuando está colapsado */
-  }
-  
-  /* Contenido principal */
-  .home-empleado {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
-  .dashboard-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-    margin-top: 30px;
-  }
-  
-  .card {
-    background: white;
-    border-radius: 10px;
-    padding: 25px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-  }
-  
-  .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  }
-  
-  .card h3 {
-    margin-top: 0;
-    color: #2c3e50;
-  }
-  
-  .card p {
-    color: #7f8c8d;
-    margin-bottom: 0;
-  }
+:root {
+  --color-primary: #2c3e50;
+  --color-secondary: #9fd3f6;
+  --color-accent: #e74c3c;
+  --color-warning: #f7d091;
+  --color-background: #f8f9fa;
+  --color-text: #2c3e50;
+  --color-text-light: #ffffff;
+  --color-border: #dee2e6;
+}
+
+/* Grid Layout Principal */
+.dashboard-empleado-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  grid-template-rows: auto 1fr;
+  gap: 16px;
+  padding: 20px;
+  background-color: var(--color-background);
+  min-height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Sección 1 - Grupos AMA */
+.dashboard-empleado-grupos {
+  grid-column: 1 / 3;
+  background-color: var(--color-text-light);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-empleado-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.dashboard-empleado-card {
+  background-color: var(--color-secondary);
+  padding: 16px;
+  border-radius: 10px;
+  flex: 1 1 240px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+  color: var(--color-primary);
+}
+
+.dashboard-empleado-card:hover {
+  transform: scale(1.02);
+}
+
+/* Sección 2 - Trámites activos */
+.dashboard-empleado-tramites {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+  background-color: var(--color-text-light);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Sección 3 - Clientes por país */
+.dashboard-empleado-paises {
+  background-color: var(--color-text-light);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  grid-column: span 2;
+  grid-row-start: 2;
+  grid-row-end: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard-empleado-paises h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--color-primary);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 4px;
+}
+
+/* Recharts ajustes visuales */
+.recharts-wrapper {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.recharts-legend-item text {
+  font-size: 13px;
+  fill: var(--color-primary);
+}
+
+/* Títulos generales */
+.dashboard-empleado-grupos h2,
+.dashboard-empleado-tramites h2,
+.dashboard-empleado-paises h2 {
+  margin-bottom: 12px;
+  color: var(--color-primary);
+  font-size: 1.4rem;
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: 6px;
+}
