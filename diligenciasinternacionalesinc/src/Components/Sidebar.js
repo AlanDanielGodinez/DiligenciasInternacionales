@@ -110,11 +110,7 @@ const SidebarNavigation = () => {
     
   ];
 
-  const configItems = [
-    { name: "Configuración", icon: "⚙️", path: "/configuracion" },
-    { name: "Notificaciones", icon: "🧩", path: "/notificaciones" },
-    { name: "Ayuda", icon: "❓", path: "/ayuda" }
-  ];
+  
 
   return (
     <>
@@ -171,16 +167,6 @@ const SidebarNavigation = () => {
         </nav>
         
         <div className="sidebar-footer">
-          {configItems.map((item, index) => (
-            <Link
-              key={index}
-              to={item.path}
-              className={`sidebar-footer-item ${location.pathname === item.path ? 'active' : ''}`}
-            >
-              <span className="sidebar-footer-icon">{item.icon}</span>
-              <span>{item.name}</span>
-            </Link>
-          ))}
           <button 
             onClick={handleLogout}
             className="sidebar-footer-item logout-button"
@@ -189,6 +175,7 @@ const SidebarNavigation = () => {
             <span>Cerrar sesión</span>
           </button>
         </div>
+
       </div>
     </>
   );
