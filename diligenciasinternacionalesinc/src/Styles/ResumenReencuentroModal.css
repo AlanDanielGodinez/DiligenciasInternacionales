@@ -1,65 +1,284 @@
-.modal-reencuentro-overlay {
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(30, 30, 30, 0.7);
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 999;
+  z-index: 1000;
+  padding: 20px;
 }
 
-.modal-reencuentro-container {
+.modal-container {
   background-color: white;
-  padding: 2rem;
-  width: 90%;
-  max-width: 700px;
-  border-radius: 12px;
-  overflow-y: auto;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 800px;
   max-height: 90vh;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.tarjeta-info {
-  background-color: #f4f4f4;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 0 3px rgba(0,0,0,0.1);
+.modal-container.loading,
+.modal-container.error {
+  padding: 30px;
+  text-align: center;
 }
 
-.tarjeta-info h3 {
-  margin-bottom: 0.8rem;
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #aeaeae;
+  color: rgb(255, 255, 255);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: white;
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.info-section {
+  margin-bottom: 25px;
+  padding-bottom: 25px;
+  border-bottom: 1px solid #eee;
+}
+
+.info-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.section-title {
   color: #2c3e50;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
 }
 
-.tarjeta-info p {
-  margin: 0.2rem 0;
+.section-content {
+  padding-left: 15px;
+}
+
+.client-name {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #3498db;
+}
+
+.itinerario-details {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.flight-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.flight-number {
+  font-weight: bold;
+  color: #e74c3c;
+}
+
+.airline {
+  color: #7f8c8d;
+}
+
+.date-row {
+  display: flex;
+  gap: 20px;
+}
+
+.date-item {
+  flex: 1;
+}
+
+.date-label {
+  display: block;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.date-value {
+  font-weight: bold;
+}
+
+.hotel-info {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.hotel-name {
+  font-weight: bold;
+  color: #2c3e50;
+  margin-top: 0;
+}
+
+.pagos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .pago-item {
-  background-color: #fff;
-  padding: 0.8rem;
-  margin-bottom: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  padding: 15px;
 }
 
-.modal-reencuentro-footer {
-  text-align: right;
+.pago-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
-.modal-reencuentro-footer button {
-  padding: 0.6rem 1.2rem;
-  background-color: #2c3e50;
+.pago-estado {
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.pago-estado.aprobado {
+  background-color: #2ecc71;
   color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
 }
 
-.modal-reencuentro-footer button:hover {
-  background-color: #1a242f;
+.pago-estado.pendiente {
+  background-color: #f39c12;
+  color: white;
+}
+
+.pago-estado.rechazado {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.pago-monto {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.pago-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.documentos-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.documento-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+}
+
+.documento-name {
+  flex-grow: 1;
+}
+
+.documento-type {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.documento-link {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.documento-link:hover {
+  text-decoration: underline;
+}
+
+.no-data {
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2980b9;
+}
+
+/* Loading spinner */
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #3498db;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.error-message {
+  color: #e74c3c;
+  margin-bottom: 20px;
 }

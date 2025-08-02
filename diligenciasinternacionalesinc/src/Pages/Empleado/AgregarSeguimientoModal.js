@@ -21,6 +21,7 @@ const estadosPorTramite = {
     'itinerario establecido',
     'vuelo confirmado',
     'pendiente de entregar los documentos finales',
+    'Vuelo y reencuentro',
     'finalizado'
   ],
   'Grupo AMA Guatemala': [
@@ -41,6 +42,7 @@ const estadosPorTramite = {
     'itinerario establecido',
     'vuelo confirmado',
     'pendiente de entregar los documentos finales',
+    'Vuelo y reencuentro',
     'finalizado'
   ],
   'Visa Americana': [
