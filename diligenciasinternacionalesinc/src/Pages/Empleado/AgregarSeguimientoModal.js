@@ -17,8 +17,10 @@ const estadosPorTramite = {
     'cita programada',
     'confirmacion datos',
     'capacitacion realizada',
+    'pendiente de itinerario',
     'itinerario establecido',
     'vuelo confirmado',
+    'pendiente de entregar los documentos finales',
     'finalizado'
   ],
   'Grupo AMA Guatemala': [
@@ -35,8 +37,10 @@ const estadosPorTramite = {
     'cita programada',
     'confirmacion datos',
     'capacitacion realizada',
+    'pendiente de itinerario',
     'itinerario establecido',
     'vuelo confirmado',
+    'pendiente de entregar los documentos finales',
     'finalizado'
   ],
   'Visa Americana': [
@@ -54,6 +58,7 @@ const estadosPorTramite = {
     'cita programada',
     'confirmacion datos',
     'capacitacion realizada',
+    'pendiente de entregar los documentos finales',
     'finalizado'
   ],
   'Visa Canadiense': [
