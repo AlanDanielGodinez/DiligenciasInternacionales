@@ -27,6 +27,7 @@ import InicioCliente from "./Pages/Cliente/InicioCliente";
 import Aerolineas from "./Pages/Empleado/Aerolineas";
 import ItinerariosPendientes from "./Pages/Empleado/ItinerariosPendientes"; // Asegúrate de que esta ruta sea correcta
 import EntregarDocumentos from "./Pages/Empleado/EntregarDocumentos"; // Asegúrate de que esta ruta sea correcta
+
 import "./App.css";
 
 // Importaciones de estilos
@@ -71,6 +72,7 @@ import "../src/Styles/InicioCliente.css";
 import "../src/Styles/SubirDocumentoModal.css";
 import "../src/Styles/AgregarPagoModal.css";
 import "../src/Styles/ResumenReencuentroModal.css";
+import "../src/Styles/EntrregarDocumento.css";
 
 
 
