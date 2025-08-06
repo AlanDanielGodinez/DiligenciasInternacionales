@@ -246,9 +246,7 @@ const VerSolicitudes = () => {
                   >
                     📄 Entregar documentos
                   </button>
-                ) : (
-                  <button className="solicitud-action-btn solicitud-edit-btn">Editar</button>
-                )}
+                ) : null}
 
                 <button
                   className="solicitud-action-btn solicitud-followup-btn"
