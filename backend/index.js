@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -2788,11 +2787,13 @@ app.get('/api/solicitudes/cliente/:idCliente', authenticateToken, async (req, re
       SELECT 
         s.idSolicitud,
         s.estado_actual,
-        t.tipoTramite,
         s.fechaSolicitud,
-        e.idEmpleado,
+        c.nombreCliente || ' ' || c.apellidoPaternoCliente || ' ' || c.apellidoMaternoCliente AS nombreCliente,
+        t.tipoTramite,
+        s.idEmpleado,
         e.nombreEmpleado || ' ' || e.apellidoPaternoEmpleado AS nombreEmpleado
       FROM Solicitud s
+      JOIN Cliente c ON s.idCliente = c.idCliente
       JOIN Tramite t ON s.idTramite = t.idTramite
       JOIN Empleado e ON s.idEmpleado = e.idEmpleado
       WHERE s.idCliente = $1
@@ -2921,7 +2922,7 @@ app.delete('/api/seguimientos/:id', authenticateToken, async (req, res) => {
       [idsolicitud]
     );
 
-    if (ultimoSeguimiento.rows.length > 0) {
+     if (ultimoSeguimiento.rows.length > 0) {
       await pool.query(
         'UPDATE Solicitud SET estado_actual = $1 WHERE idSolicitud = $2',
         [ultimoSeguimiento.rows[0].estado, idsolicitud]
@@ -3963,7 +3964,55 @@ app.get('/api/dashboard/clientes-por-pais', authenticateToken, async (req, res) 
     res.status(500).json({ error: 'Error al obtener clientes por país' });
   }
 });
+// ==============================================
+// RUTAS PARA CLIENTE GRUPO
+// ==============================================
+// ...otros requires y middlewares...
 
+// Endpoint para obtener los clientes de un grupo (por idtramite)
+app.get('/api/grupos/:idGrupo/clientes', async (req, res) => {
+  const { idGrupo } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT c.*
+         FROM cliente c
+         JOIN tramite_cliente tc ON c.idcliente = tc.idcliente
+         WHERE tc.idtramite = $1`,
+      [idGrupo]
+    );
+    console.log("Clientes encontrados:", result.rows); // <-- Agrega esto
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener clientes del grupo:', err);
+    res.status(500).json({ error: 'Error al obtener clientes del grupo' });
+  }
+});
+
+
+app.get('/api/tramites/:idTramite/cliente/:idCliente', async (req, res) => {
+  const { idTramite, idCliente } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT 
+          t.tipotramite,
+          t.descripcion,
+          t.fecha_inicio,
+          s.idsolicitud,
+          s.fechasolicitud,
+          s.estado_actual AS estadosolicitud
+        FROM tramite t
+        JOIN tramite_cliente tc ON t.idtramite = tc.idtramite
+        LEFT JOIN solicitud s ON s.idtramite = t.idtramite AND s.idcliente = tc.idcliente
+        WHERE t.idtramite = $1 AND tc.idcliente = $2
+        LIMIT 1`,
+      [idTramite, idCliente]
+    );
+    res.json(result.rows[0] || {});
+  } catch (err) {
+    console.error('Error al obtener el trámite y solicitud del cliente:', err);
+    res.status(500).json({ error: 'Error al obtener el trámite y solicitud del cliente' });
+  }
+});
 
 
 // ==============================================
