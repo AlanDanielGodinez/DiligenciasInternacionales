@@ -4,11 +4,13 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 const HomeEmpleado = () => {
   const [gruposAMAData, setGruposAMAData] = useState([]);
   const [tramitesActivosData, setTramitesActivosData] = useState([]);
   const [clientesPaisData, setClientesPaisData] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     cargarDatosDashboard();
@@ -46,7 +48,12 @@ const HomeEmpleado = () => {
             <p>No hay grupos activos.</p>
           ) : (
             gruposAMAData.map((grupo) => (
-              <div className="dashboard-empleado-card" key={grupo.idtramite}>
+              <div
+                className="dashboard-empleado-card"
+                key={grupo.idtramite}
+                style={{ cursor: "pointer" }}
+                onClick={() => navigate(`/grupos/${grupo.idtramite}`)}
+              >
                 <h4>{grupo.tipotramite}</h4>
                 <p>Inicio: {new Date(grupo.fecha_inicio).toLocaleDateString()}</p>
                 <p>Clientes: {grupo.totalclientes}</p>
