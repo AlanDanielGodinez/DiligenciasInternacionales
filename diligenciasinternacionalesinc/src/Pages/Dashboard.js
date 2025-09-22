@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { MdFamilyRestroom } from "react-icons/md";
 import { FaPlane, FaPassport, FaHeart, FaHandsHelping, FaUsers, FaGlobeAmericas } from "react-icons/fa";
 import backgroundImage from "../Images/PI.jpg";
@@ -24,6 +25,7 @@ import elSalvadorFlag from "../Images/Flags/salvador.png";
 import guatemalaFlag from "../Images/Flags/guatemala.png";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const banderas = [
     { content: <img src={usaFlag} alt="Estados Unidos" className="bandera-carrusel" /> },
     { content: <img src={mexicoFlag} alt="México" className="bandera-carrusel" /> },
@@ -31,7 +33,6 @@ const Dashboard = () => {
     { content: <img src={elSalvadorFlag} alt="El Salvador" className="bandera-carrusel" /> },
     { content: <img src={guatemalaFlag} alt="Guatemala" className="bandera-carrusel" /> },
   ];
-
   const servicios = [
     {
       title: "Reencuentros familiares",

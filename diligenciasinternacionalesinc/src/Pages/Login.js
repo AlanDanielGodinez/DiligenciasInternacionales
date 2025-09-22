@@ -53,6 +53,17 @@ const Login = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
+    
+    // if (userType === 'empleado') {
+    //   localStorage.setItem('authToken', 'dummy-token-empleado');
+    //   localStorage.setItem('user', JSON.stringify({ rol: 'Administrador' }));
+    //   navigate('/home');
+    // } else {
+    //   localStorage.setItem('authToken', 'fake-token-cliente');
+    //   localStorage.setItem('userCliente', JSON.stringify({ rol: 'cliente', nombre: 'Cliente' }));
+    //   navigate('/cliente/inicio');
+    // }   setIsSubmitting(false); 
+  
 
     try {
       let response;

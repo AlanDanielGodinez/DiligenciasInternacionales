@@ -1,0 +1,130 @@
+.grupo-detalle-container {
+  max-width: 1100px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(44, 62, 80, 0.08);
+  padding: 32px 36px 36px 36px;
+}
+
+.grupo-detalle-container h2 {
+  font-size: 2rem;
+  margin-bottom: 28px;
+  color: #2c3e50;
+  font-weight: 700;
+}
+
+.grupo-detalle-table-container {
+  overflow-x: auto;
+}
+
+.grupo-detalle-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f9fbfc;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.grupo-detalle-table th,
+.grupo-detalle-table td {
+  padding: 14px 18px;
+  text-align: left;
+}
+
+.grupo-detalle-table th {
+  background: #eaf1fb;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 1rem;
+  border-bottom: 2px solid #dbeafe;
+}
+
+.grupo-detalle-table tr {
+  transition: background 0.2s;
+}
+
+.grupo-detalle-table tr:hover {
+  background: #e3f0ff;
+}
+
+.grupo-detalle-table td {
+  font-size: 0.98rem;
+  color: #34495e;
+  border-bottom: 1px solid #f0f4f8;
+}
+
+.btn-ver {
+  background: #4f8cff;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-right: 6px;
+}
+
+.btn-ver:hover {
+  background: #2563eb;
+}
+
+.modal-cliente {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(44, 62, 80, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 14px;
+  padding: 32px 36px;
+  box-shadow: 0 6px 32px rgba(44, 62, 80, 0.18);
+  min-width: 340px;
+  max-width: 95vw;
+  animation: modalShow 0.2s;
+}
+
+@keyframes modalShow {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  color: #2563eb;
+  font-size: 1.3rem;
+  margin-bottom: 18px;
+}
+
+.modal-content ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 18px;
+}
+
+.modal-content li {
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.btn-cerrar {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 22px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-cerrar:hover {
+  background: #c0392b;
+}

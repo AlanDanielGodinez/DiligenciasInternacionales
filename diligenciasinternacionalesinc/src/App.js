@@ -27,6 +27,7 @@ import InicioCliente from "./Pages/Cliente/InicioCliente";
 import Aerolineas from "./Pages/Empleado/Aerolineas";
 import ItinerariosPendientes from "./Pages/Empleado/ItinerariosPendientes"; // Asegúrate de que esta ruta sea correcta
 import EntregarDocumentos from "./Pages/Empleado/EntregarDocumentos"; // Asegúrate de que esta ruta sea correcta
+import GrupoDetalle from './Pages/Empleado/GrupoDetalle';
 
 import "./App.css";
 
@@ -123,6 +124,7 @@ function App() {
               <Route path="/empleado/aerolineas" element={<Aerolineas />} />
               <Route path="/empleado/itinerarios" element={<ItinerariosPendientes />} />
               <Route path="/empleado/entregar-documentos" element={<EntregarDocumentos />} />
+              <Route path="/grupos/:idGrupo" element={<GrupoDetalle />} />
               {/* Aquí puedes agregar más rutas protegidas */}
 
 
