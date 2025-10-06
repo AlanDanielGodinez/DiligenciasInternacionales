@@ -13,6 +13,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Logs de requests (similar al backend anterior)
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
 // Conectar a MongoDB
 connectDB();
 
@@ -31,6 +37,12 @@ app.get('/health', (req, res) => {
     mongodb: 'Conectado',
     timestamp: new Date().toISOString()
   });
+});
+
+// Manejo de errores global
+app.use((error, req, res, next) => {
+  console.error('Error no manejado:', error);
+  res.status(500).json({ error: 'Error interno del servidor' });
 });
 
 app.listen(PORT, () => {
