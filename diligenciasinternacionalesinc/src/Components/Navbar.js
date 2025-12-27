@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import logoImage from "../Images/LogoDIItrazadoblanco.png";
+import logoImage from "../Images/1.png";
 
 const Navbar = () => {
   return (

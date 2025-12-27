@@ -1,38 +1,23 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { MdFamilyRestroom } from "react-icons/md";
-import { FaPlane, FaPassport, FaHeart, FaHandsHelping, FaUsers, FaGlobeAmericas } from "react-icons/fa";
+import { FaPlane, FaPassport, FaHandsHelping, FaUsers, FaGlobeAmericas } from "react-icons/fa";
 import backgroundImage from "../Images/PI.jpg";
 import fixedImage from "../Images/Carrucel/carrucel5.jpg";
+import LogoAMA from "../Images/4.png";
 import backgroundImage4 from "../Images/Carrucel/carrucel4.jpg";
 import imageD from "../Images/Carrucel/carrucel6.jpg";
 import Footer from "../Components/Footer";
 import ServiceCard from "../Components/ServiceCard";
 import TestimonialCard from "../Components/TestimonialCard";
-import InfiniteScroll from "../Components/InfiniteScroll";
-import Navbar from "../Components/Navbar";
+import Navbar from "../Components/Navbar2";
 
 // Importa las imágenes para las cards
 import imageA from "../Images/Carrucel/carrucel1.jpg";
 import imageB from "../Images/Carrucel/carrucel2.jpg";
 import imageC from "../Images/Carrucel/carrucel3.jpg";
 
-// Importa las banderas de los países
-import usaFlag from "../Images/Flags/usa.png";
-import mexicoFlag from "../Images/Flags/mexico.webp";
-import hondurasFlag from "../Images/Flags/honduras.png";
-import elSalvadorFlag from "../Images/Flags/salvador.png";
-import guatemalaFlag from "../Images/Flags/guatemala.png";
-
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const banderas = [
-    { content: <img src={usaFlag} alt="Estados Unidos" className="bandera-carrusel" /> },
-    { content: <img src={mexicoFlag} alt="México" className="bandera-carrusel" /> },
-    { content: <img src={hondurasFlag} alt="Honduras" className="bandera-carrusel" /> },
-    { content: <img src={elSalvadorFlag} alt="El Salvador" className="bandera-carrusel" /> },
-    { content: <img src={guatemalaFlag} alt="Guatemala" className="bandera-carrusel" /> },
-  ];
+  
   const servicios = [
     {
       title: "Reencuentros familiares",
@@ -54,18 +39,25 @@ const Dashboard = () => {
     }
   ];
 
+  // Testimonios con videos y imágenes como fallback
   const testimonios = [
     {
+      type: 'video',
+      video: '/videos/IMG_3467.MOV',
       image: imageA,
       quote: "Gracias a su ayuda pude reencontrarme con mi hijo después de 8 años",
       name: "María G."
     },
     {
+      type: 'video',
+      video: '/videos/testimonio-carlos.mp4',
       image: imageB,
       quote: "El proceso de visa fue mucho más fácil con su asesoría experta",
       name: "Carlos M."
     },
     {
+      type: 'video',
+      video: '/videos/testimonio-laura.mp4',
       image: imageC,
       quote: "Nunca imaginé que podría resolver todo tan rápido y sin complicaciones",
       name: "Laura T."
@@ -94,15 +86,17 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
       <Navbar/>
+      
       {/* Hero Section */}
       <section 
         className="hero-section animate-on-scroll" 
         style={{ backgroundImage: `linear-gradient(rgba(66, 70, 88, 0.7), rgba(32, 36, 51, 0.7)), url(${backgroundImage})` }}
       >
         <div className="hero-content">
-          <h1>ÚNETE AL PROGRAMA AMA</h1>
-          <p className="hero-subtitle">Abrazos... y más abrazos</p>
+          <h1>ÚNETE AL PROGRAMA </h1>
+          <p className="hero-subtitle">ABRAZOS Y MAS ABRAZOS</p>
           <button className="cta-button">Conoce más</button>
+          <img src={LogoAMA} alt="Logo AMA" className="LogoAMA" />
         </div>
       </section>
 
@@ -143,24 +137,53 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section 
-        className="testimonials-section animate-on-scroll"
-        style={{ backgroundImage: `linear-gradient(rgba(13, 26, 78, 0.8), url(${backgroundImage4})` }}
-      >
+      {/* EXPERIENCIA AMA Section - OPCIÓN 1: TEXTO PLANO */}
+      <section className="countries-section animate-on-scroll">
         <div className="section-header">
-          <h2>Historias de Éxito</h2>
+          <h2>EXPERIENCIA AMA</h2>
         </div>
         
-        <div className="testimonials-grid">
-          {testimonios.map((testimonio, index) => (
-            <TestimonialCard 
-              key={index}
-              image={testimonio.image}
-              quote={testimonio.quote}
-              name={testimonio.name}
-            />
-          ))}
+        {/* Contenedor para mision, video y vision lado a lado */}
+        <div className="video-mission-container">
+          
+          {/* Misión a la izquierda */}
+          <div className="mission-text">
+            <h3>MISIÓN</h3>
+            <p>
+              Facilitar los procesos a nuestros solicitantes por medio del asesoramiento 
+              y gestión en trámites consulares, turísticos y migratorios, otorgando 
+              confianza, seguridad y profesionalismo durante la ejecución.
+            </p>
+          </div>
+          
+          {/* Video en el centro */}
+          <div className="video-container">
+            <video 
+              className="experience-video" 
+              controls
+              poster={LogoAMA}
+              preload="metadata"
+              playsInline
+              controlsList="nodownload"
+              disablePictureInPicture
+            >
+              <source src="/videos/MVI_5659.mp4" type="video/mp4" />
+              <source src="/videos/MVI_5659.MOV" type="video/quicktime" />
+              
+              Tu navegador no soporta videos HTML5. 
+              <a href="/videos/MVI_5659.mp4">Descargar el video</a>
+            </video>
+          </div>
+          
+          {/* Visión a la derecha */}
+          <div className="vision-text">
+            <h3>VISIÓN</h3>
+            <p>
+              Ser la empresa con más aprobaciones en México y todo Centroamérica, 
+              con la finalidad de romper las barreras que se han presentado a países 
+              latinoamericanos, fomentando la migración segura y legal.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -186,22 +209,26 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* Countries Section */}
-      <section className="countries-section animate-on-scroll">
+      {/* Testimonials Section con Videos */}
+      <section 
+        className="testimonials-section animate-on-scroll"
+        style={{ backgroundImage: `linear-gradient(rgba(13, 26, 78, 0.8), rgba(13, 26, 78, 0.8)), url(${backgroundImage4})` }}
+      >
         <div className="section-header">
-          <h2>Tu familia importa más</h2>
-          <p>Aquí no hay pretextos para reunirte con tus seres queridos</p>
+          <h2>Testimonios de la gente</h2>
         </div>
         
-        <div className="flags-container">
-          <InfiniteScroll
-            items={banderas}
-            isTilted={true}
-            tiltDirection="left"
-            autoplay={true}
-            autoplaySpeed={0.1}
-            pauseOnHover={true}
-          />
+        <div className="testimonials-grid">
+          {testimonios.map((testimonio, index) => (
+            <TestimonialCard 
+              key={index}
+              type={testimonio.type}
+              video={testimonio.video}
+              image={testimonio.image}
+              quote={testimonio.quote}
+              name={testimonio.name}
+            />
+          ))}
         </div>
       </section>
 
@@ -209,7 +236,7 @@ const Dashboard = () => {
       <section className="cta-section animate-on-scroll">
         <h2>¿Listo para reunirte con tu familia?</h2>
         <p>Nuestros asesores pueden crear un plan a medida para tu caso</p>
-        <button className="cta-button" >Iniciar sesión</button>
+        <button className="cta-button">Iniciar sesión</button>
       </section>
 
       <Footer />

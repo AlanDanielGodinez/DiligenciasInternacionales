@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaUser, FaLock, FaSignInAlt, FaUserTie, FaIdCard, FaPhone } from 'react-icons/fa';
 import axios from 'axios';
+// NUEVO: Import para API MongoDB
+import API_ENDPOINTS from '../config/api';
 
 const Login = () => {
   const [userType, setUserType] = useState('empleado'); // 'empleado' o 'cliente'
@@ -21,14 +23,21 @@ const Login = () => {
     const user = localStorage.getItem('user');
 
     if (token && user) {
-      axios.get('http://localhost:5000/api/protected', {
+      // COMENTADO - PostgreSQL API:
+      // axios.get('http://localhost:5000/api/protected', {
+      //   headers: { 'Authorization': `Bearer ${token}` }
+      // })
+      
+      // NUEVO - MongoDB API:
+      axios.get(API_ENDPOINTS.VERIFY, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       .then(() => {
         const userData = JSON.parse(user);
-        if (userData.rol === 'Administrador') {
+        // Compatibilidad con ambos formatos (PostgreSQL y MongoDB)
+        if (userData.rol === 'Administrador' || userData.role === 'admin') {
           navigate('/home');
-        } else if (userData.rol === 'cliente') {
+        } else if (userData.rol === 'cliente' || userData.role === 'user') {
           navigate('/cliente/inicio');
         } else {
           navigate('/dashboard');
@@ -53,56 +62,83 @@ const Login = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
-    
-    // if (userType === 'empleado') {
-    //   localStorage.setItem('authToken', 'dummy-token-empleado');
-    //   localStorage.setItem('user', JSON.stringify({ rol: 'Administrador' }));
-    //   navigate('/home');
-    // } else {
-    //   localStorage.setItem('authToken', 'fake-token-cliente');
-    //   localStorage.setItem('userCliente', JSON.stringify({ rol: 'cliente', nombre: 'Cliente' }));
-    //   navigate('/cliente/inicio');
-    // }   setIsSubmitting(false); 
-  
 
     try {
       let response;
       if (userType === 'empleado') {
-        response = await axios.post('http://localhost:5000/api/login', {
+        // COMENTADO - PostgreSQL API:
+        // response = await axios.post('http://localhost:5000/api/login', {
+        //   email: formData.email,
+        //   password: formData.password
+        // });
+
+        // NUEVO - MongoDB API:
+        response = await axios.post(API_ENDPOINTS.LOGIN, {
           email: formData.email,
           password: formData.password
         });
 
-        if (response.data.tempPassword) {
-          return navigate('/change-password', {
-            state: { email: formData.email, requiresPasswordChange: true }
-          });
+        // COMENTADO - PostgreSQL lógica:
+        // if (response.data.tempPassword) {
+        //   return navigate('/change-password', {
+        //     state: { email: formData.email, requiresPasswordChange: true }
+        //   });
+        // }
+
+        // NUEVO - MongoDB manejo de respuesta:
+        if (response.data.token && response.data.user) {
+          localStorage.setItem('authToken', response.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+          
+          // Verificar rol para navegación
+          if (response.data.user.role === 'admin') {
+            navigate('/home');
+          } else {
+            navigate('/dashboard');
+          }
         }
 
-        localStorage.setItem('authToken', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        navigate('/home');
+        // COMENTADO - PostgreSQL storage:
+        // localStorage.setItem('authToken', response.data.token);
+        // localStorage.setItem('user', JSON.stringify(response.data.user));
+        // navigate('/home');
 
       } else {
-        response = await axios.post('http://localhost:5000/api/clientes/login', {
+        // COMENTADO - PostgreSQL cliente login:
+        // response = await axios.post('http://localhost:5000/api/clientes/login', {
+        //   identificacionunicanacional: formData.identificacionunicanacional,
+        //   telefono: formData.telefono
+        // });
+
+        // NUEVO - MongoDB cliente login (pendiente de implementar):
+        response = await axios.post(API_ENDPOINTS.CLIENTE_LOGIN, {
           identificacionunicanacional: formData.identificacionunicanacional,
           telefono: formData.telefono
         });
 
-        const token = response.data.token;
-        const userData = {
-          rol: 'cliente',
-          nombre: 'Cliente',
-        };
+        // COMENTADO - PostgreSQL cliente storage:
+        // const token = response.data.token;
+        // const userData = {
+        //   rol: 'cliente',
+        //   nombre: 'Cliente',
+        // };
+        // localStorage.setItem('authToken', token);
+        // localStorage.setItem('userCliente', JSON.stringify(response.data.userCliente));
 
-       localStorage.setItem('authToken', token);
-      localStorage.setItem('userCliente', JSON.stringify(response.data.userCliente)); // o el nombre real que venga
-
-        navigate('/cliente/inicio');
+        // NUEVO - MongoDB cliente storage:
+        if (response.data.token && response.data.user) {
+          localStorage.setItem('authToken', response.data.token);
+          localStorage.setItem('userCliente', JSON.stringify(response.data.user));
+          navigate('/cliente/inicio');
+        }
       }
 
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al iniciar sesión');
+      // COMENTADO - PostgreSQL error handling:
+      // setError(err.response?.data?.error || 'Error al iniciar sesión');
+      
+      // NUEVO - MongoDB error handling:
+      setError(err.response?.data?.error || err.response?.data?.message || 'Error al iniciar sesión');
     } finally {
       setIsSubmitting(false);
     }

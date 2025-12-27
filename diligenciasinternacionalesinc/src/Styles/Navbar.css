@@ -1,16 +1,19 @@
 /* Estilos generales del NavBar */
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&display=swap');
+
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 5px 40px;
-    background-color: var(--color-primary); /* Fondo azul oscuro */
-    color: var(--color-text-light);        /* Texto blanco */
+    background-color: #0d1a4e; /* Fondo azul oscuro */
+    color: white;        /* Texto blanco */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
     position: sticky;
     top: 0;
     z-index: 1000;
-    border-bottom: 2px solid var(--color-warning); /* Línea inferior de acento (naranja) */
+    border-bottom: 2px solid #ed3b89; /* Línea inferior de acento (naranja) */
+   /* font-family: 'Anton','Oswald', sans-serif;*/
 }
 
 /* Logo */
@@ -45,7 +48,7 @@
 }
 
 .navbar-menu a {
-    color: var(--color-text-light);        /* Texto blanco */
+    color: white;        /* Texto blanco */
     text-decoration: none;
     font-size: 1.1rem;
     font-weight: 500;
@@ -55,7 +58,7 @@
 }
 
 .navbar-menu a:hover {
-    color: var(--color-warning);           /* Color de acento (naranja) al hacer hover */
+    color: #ed3b89;           /* Color de acento (rosa) al hacer hover */
     background-color: rgba(217, 121, 4, 0.1); /* Fondo suave al hacer hover */
 }
 
@@ -64,7 +67,7 @@
     position: absolute;
     width: 0;
     height: 2px;
-    background-color: var(--color-warning); /* Color de acento (naranja) */
+    background-color: #ed3b89; /* Color de acento (rosa) */
     bottom: -5px;
     left: 0;
     transition: width 0.3s ease;
@@ -81,7 +84,7 @@
 }
 
 .auth-link {
-    color: var(--color-text-light);       /* Texto blanco */
+    color: white;       /* Texto blanco */
     text-decoration: none;
     margin-left: 20px;
     font-size: 1.1rem;
@@ -92,8 +95,8 @@
 }
 
 .auth-link:hover {
-    color: var(--color-primary);         /* Texto azul oscuro al hacer hover */
-    background-color: var(--color-warning); /* Fondo de acento (naranja) al hacer hover */
+    color: white;         /* Texto azul oscuro al hacer hover */
+    background-color: #ed3b89; /* Fondo de acento (rosa) al hacer hover */
 }
 
 .auth-link:first-child {
@@ -102,14 +105,14 @@
 
 /* Efecto de botón para el enlace de registro */
 .auth-link:last-child {
-    background-color: var(--color-warning); /* Fondo de acento (naranja) */
-    color: var(--color-primary);         /* Texto azul oscuro */
-    border: 2px solid var(--color-warning); /* Borde de acento (naranja) */
+    background-color: #ed3b89; /* Fondo de acento (naranja) */
+    color: white;         /* Texto azul oscuro */
+    border: 2px solid #ed3b89; /* Borde de acento (naranja) */
 }
 
 .auth-link:last-child:hover {
     background-color: transparent;
-    color: var(--color-warning);         /* Texto de acento (naranja) al hacer hover */
+    color: #ed3b89;         /* Texto de acento (rosa) al hacer hover */
 }
 
 /* Responsive Design (opcional) */
@@ -131,5 +134,156 @@
 
     .navbar-auth {
         margin-top: 10px;
+    }
+}
+/* Estilos para el menú desplegable */
+.navbar-dropdown {
+    position: relative;
+}
+
+.dropdown-trigger {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    color: white;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: color 0.3s ease;
+}
+
+.dropdown-trigger:hover {
+    color: #ed3b89;
+    background-color: rgba(255, 158, 28, 0.1);
+}
+
+.dropdown-arrow {
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+}
+
+.dropdown-arrow.open {
+    transform: rotate(180deg);
+}
+
+/* Menú desplegable */
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #0d1a4e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    min-width: 250px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: block;
+    padding: 12px 20px;
+    color: white;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 400;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+    border-radius: 0 0 8px 8px;
+}
+
+.dropdown-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.dropdown-item:hover {
+    background-color: #ed3b89;
+    color: #0d1a4e;
+    padding-left: 25px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dropdown-menu {
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        box-shadow: none;
+        border: none;
+        background-color: transparent;
+        margin-top: 10px;
+    }
+    
+    .dropdown-item {
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+}
+/* Opciones de autenticación - ACTUALIZAR */
+.navbar-auth {
+    display: flex;
+    align-items: center;
+    gap: 15px;  /* Espacio entre banderas y botón */
+}
+
+/* Contenedor de banderas decorativas */
+.navbar-flags {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.9;
+}
+
+/* Estilos para banderas decorativas */
+.flag-decoration {
+    width: 22px;
+    height: 16px;
+    object-fit: cover;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    filter: brightness(0.95);
+}
+
+/* Efecto sutil al pasar el mouse sobre las banderas */
+.navbar-flags:hover .flag-decoration {
+    filter: brightness(1.1);
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+/* Responsive - ocultar banderas en móviles */
+@media (max-width: 768px) {
+    .navbar-flags {
+        display: none;
+    }
+}
+
+/* Si quieres mantenerlas en tablets */
+@media (max-width: 992px) and (min-width: 769px) {
+    .flag-decoration {
+        width: 18px;
+        height: 13px;
+    }
+    
+    .navbar-flags {
+        gap: 4px;
     }
 }

@@ -62,6 +62,12 @@ const Contacto = () => {
             <div className="contact-info-card">
               <FaMapMarkerAlt className="contact-icon" />
               <h3>Ubicación</h3>
+              <p>1010 Wilshire Blvd, Los Angeles, CA 90017, EE. UU.</p>
+            </div>
+            
+            <div className="contact-info-card" >
+              <FaMapMarkerAlt className="contact-icon" />
+              <h3>Ubicación</h3>
               <p>Atenas 80-Sur, Cd del Valle, 63157 Tepic, Nay., México</p>
             </div>
             
@@ -79,7 +85,7 @@ const Contacto = () => {
               <p>soporte@dillgenciascorp.org</p>
             </div>
             
-            <div className="contact-info-card">
+            <div className="contact-info-card" >
               <FaClock className="contact-icon" />
               <h3>Horario</h3>
               <p>Lunes a Viernes:<br></br> 8:00 AM - 6:00 PM</p>

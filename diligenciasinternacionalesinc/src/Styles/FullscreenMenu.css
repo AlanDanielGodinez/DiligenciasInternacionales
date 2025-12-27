@@ -1,0 +1,298 @@
+/* 
+COLORES DEL PROYECTO:
+#1f96b8 - AZUL TURQUESA (para acentos y detalles especiales)
+#ed3b89 - ROSA/MAGENTA (color principal de botones y elementos importantes) 
+#0d1a4e - AZUL OSCURO (color principal de fondos y texto principal)
+#ff9e1c - NARANJA (color secundario para hover y elementos de acción)
+*/
+
+/* Menú Fullscreen - SOLO CAMBIAR EL FONDO */
+.fullscreen-menu {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 100%;
+  height: 100vh;
+  /* NUEVO FONDO: BLANCO en lugar del gradiente azul */
+  background: white;
+  /* Eliminar el fondo anterior:
+  background: linear-gradient(135deg, #0d1a4e 0%, #1a2668 50%, #2c3e50 100%); */
+  z-index: 1500;
+  transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  overflow-y: auto;
+}
+
+.fullscreen-menu.open {
+  right: 0;
+}
+
+/* Header del menú fullscreen - AJUSTAR PARA FONDO BLANCO */
+.fullscreen-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 3rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Cambiar a línea oscura */
+  /* FONDO DEL HEADER: Azul oscuro sólido para contrastar con blanco */
+  background: #0d1a4e; /* Azul sólido en lugar de transparente */
+  backdrop-filter: none; /* Quitar blur ya que no es transparente */
+}
+
+.menu-logo-image {
+  height: 60px;
+  width: auto;
+}
+
+.close-menu-btn {
+  background: none;
+  border: none;
+  /* MANTENER texto blanco ya que el header sigue siendo azul */
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.close-menu-btn:hover {
+  /* MANTENER hover blanco transparente */
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: rotate(90deg);
+}
+
+/* Contenido del menú - FONDO BLANCO */
+.fullscreen-menu-content {
+  padding: 3rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: white; /* Asegurar fondo blanco */
+}
+
+/* Grid de servicios */
+.services-grid-fullscreen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+/* Tarjetas de servicios - CAMBIAR A FONDO AZUL SÓLIDO */
+.service-card-fullscreen {
+  /* NUEVO FONDO TARJETAS: Azul sólido en lugar de transparente */
+  background: #0d1a4e; /* Azul sólido */
+  /* Eliminar el fondo anterior:
+  background: rgba(255, 255, 255, 0.05); */
+  
+  /* MANTENER todo lo demás igual */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 2.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.service-card-fullscreen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  /* MANTENER efecto brillo blanco */
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.service-card-fullscreen:hover::before {
+  left: 100%;
+}
+
+.service-card-fullscreen:hover {
+  transform: translateY(-10px);
+  /* MANTENER borde naranja en hover */
+  border-color: #ff9e1c;
+  /* MANTENER sombra negra */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.service-card-fullscreen.large-card {
+  grid-column: span 2;
+}
+
+/* Iconos grandes (ahora imágenes) */
+.service-icon-large {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+/* Títulos - MANTENER texto blanco */
+.service-card-fullscreen h3 {
+  color: white;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Descripciones - MANTENER texto blanco semi-transparente */
+.service-card-fullscreen p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+/* Lista de características */
+.service-features {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+  text-align: left;
+}
+
+.service-features li {
+  /* MANTENER texto blanco */
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem 0;
+  font-size: 1rem;
+  /* MANTENER separadores blancos transparentes */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.service-features li:last-child {
+  border-bottom: none;
+}
+
+/* Detalles del servicio */
+.service-details {
+  display: flex;
+  justify-content: space-between;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  /* MANTENER fondo blanco transparente */
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.service-details span {
+  /* MANTENER texto naranja */
+  color: #ff9e1c;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Botones CTA - paleta sobria */
+.service-cta-btn {
+  background: #0d1a4e;
+  color: #ffffff;
+  border: 1px solid #ff9e1c;
+  padding: 15px 30px;
+  border-radius: 25px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width: 100%;
+  margin-top: 1rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+.service-cta-btn:hover {
+  transform: translateY(-2px);
+  background: #ff9e1c;
+  color: #0d1a4e;
+  border-color: #ff9e1c;
+  box-shadow: 0 12px 28px rgba(255, 158, 28, 0.35);
+}
+
+/* Preview de todos los servicios */
+.all-services-preview {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.service-category-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 1rem;
+  /* MANTENER fondo blanco transparente */
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  /* MANTENER texto blanco */
+  color: white;
+}
+
+.category-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+/* Overlay - MANTENER igual */
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1400;
+  backdrop-filter: blur(5px);
+}
+
+/* Responsive - MANTENER igual */
+@media (max-width: 768px) {
+  .fullscreen-menu-header {
+    padding: 1rem 1.5rem;
+  }
+  
+  .fullscreen-menu-content {
+    padding: 1.5rem;
+  }
+  
+  .services-grid-fullscreen {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .service-card-fullscreen.large-card {
+    grid-column: span 1;
+  }
+  
+  .service-card-fullscreen {
+    padding: 2rem;
+  }
+  
+  .all-services-preview {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 
+CAMBIOS REALIZADOS:
+- Fondo principal del menú: BLANCO (en lugar del gradiente azul)
+- Header: Azul sólido #0d1a4e (en lugar de transparente)
+- Tarjetas: Azul sólido #0d1a4e (en lugar de transparente)
+- Todo lo demás se mantiene IGUAL
+
+COLORES FINALES:
+- Fondo del menú: Blanco
+- Header: #0d1a4e (azul sólido)
+- Tarjetas: #0d1a4e (azul sólido)
+- Texto: Blanco sobre azul
+- Acentos: #ff9e1c (naranja) y #ed3b89 (rosa/magenta)
+*/

@@ -1,0 +1,318 @@
+/* 
+COLORES DEL PROYECTO:
+#1f96b8 - AZUL TURQUESA (para acentos y detalles especiales)
+#ed3b89 - ROSA/MAGENTA (color principal de botones y elementos importantes) 
+#0d1a4e - AZUL OSCURO (color principal de fondos y texto principal)
+#ff9e1c - NARANJA (color secundario para hover y elementos de acción)
+*/
+
+* {
+  box-sizing: border-box;
+}
+
+/* Navbar3 Principal */
+.navbar3 {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 5px 40px !important;
+  background-color: #0d1a4e !important;
+  color: white !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  border-bottom: 2px solid #ed3b89 !important;
+  width: 100% !important;
+}
+
+/* Logo */
+.navbar3-logo a {
+  display: block !important;
+}
+
+.logo-image3 {
+  height: 60px !important;
+  width: auto !important;
+  transition: transform 0.3s ease !important;
+}
+
+.logo-image3:hover {
+  transform: scale(1.05) !important;
+}
+
+/* Menú de opciones */
+.navbar3-menu {
+  display: flex !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 30px !important;
+  align-items: center !important;
+}
+
+.navbar3-menu li {
+  position: relative !important;
+}
+
+.navbar3-menu a {
+  color: white !important;
+  text-decoration: none !important;
+  font-size: 1.1rem !important;
+  font-weight: 500 !important;
+  padding: 8px 15px !important;
+  border-radius: 5px !important;
+  transition: all 0.3s ease !important;
+  display: block !important;
+}
+
+.navbar3-menu a:hover {
+  color: #ff9e1c !important;
+  background-color: rgba(255, 158, 28, 0.1) !important;
+}
+
+/* Dropdown container */
+.navbar3-dropdown {
+  position: relative !important;
+}
+
+/* Dropdown trigger */
+.dropdown3-trigger {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  color: white !important;
+  font-size: 1.1rem !important;
+  font-weight: 500 !important;
+  padding: 8px 15px !important;
+  border-radius: 5px !important;
+  transition: all 0.3s ease !important;
+  user-select: none !important;
+}
+
+.dropdown3-trigger:hover {
+  color: #ff9e1c !important;
+  background-color: rgba(255, 158, 28, 0.1) !important;
+}
+
+/* Mantener resaltado cuando el menú está abierto */
+.dropdown3-trigger.active {
+  color: #ff9e1c !important;
+  background-color: rgba(255, 158, 28, 0.1) !important;
+}
+
+.dropdown3-arrow {
+  font-size: 0.8rem !important;
+  transition: transform 0.3s ease !important;
+}
+
+.dropdown3-arrow.open {
+  transform: rotate(180deg) !important;
+}
+
+/* Menú desplegable ANCHO COMPLETO DE PANTALLA */
+.dropdown3-menu-large {
+  position: fixed !important;
+  top: 70px !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100vw !important;
+  transform: none !important;
+  background: white !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 0 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: opacity 0.3s ease, visibility 0.3s ease !important;
+  z-index: 9999 !important;
+  border: none !important;
+  border-bottom: 3px solid #ed3b89 !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.dropdown3-menu-large.show {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: all !important;
+  transform: none !important;
+}
+
+/* Contenido centrado dentro del ancho completo */
+.dropdown3-content-large {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 100px !important; /* MÁS espacio entre columnas */
+  padding: 60px 100px !important; /* MÁS padding lateral para usar el ancho */
+  max-width: none !important; /* CAMBIO: sin límite de ancho máximo */
+  margin: 0 auto !important;
+  width: 100% !important; /* CAMBIO: usar todo el ancho disponible */
+}
+
+/* Columnas grandes */
+.dropdown3-column-large {
+  min-height: 280px !important; /* MÁS altura */
+}
+
+.column3-title-large {
+  color: #0d1a4e !important;
+  font-size: 1.4rem !important; /* TÍTULO MÁS GRANDE */
+  font-weight: 700 !important;
+  margin-bottom: 25px !important; /* MÁS espacio */
+  padding-bottom: 15px !important; /* MÁS espacio */
+  border-bottom: 3px solid #ed3b89 !important; /* BORDE MÁS GRUESO */
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important; /* MÁS espaciado */
+}
+
+.column3-subtitle-large {
+  color: #6c757d !important;
+  font-size: 1rem !important; /* SUBTÍTULO MÁS GRANDE */
+  font-weight: 600 !important;
+  margin: 25px 0 15px 0 !important; /* MÁS espacio */
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Items del dropdown - MÁS GRANDES Y ESPACIADOS */
+.dropdown3-item-large {
+  display: block !important;
+  color: #0d1a4e !important;
+  text-decoration: none !important;
+  padding: 15px 0 !important; /* MÁS padding */
+  font-size: 1.1rem !important; /* TEXTO MÁS GRANDE */
+  transition: all 0.3s ease !important;
+  border-left: 4px solid transparent !important; /* BORDE MÁS GRUESO */
+  padding-left: 15px !important; /* MÁS padding */
+  margin-left: -15px !important;
+  line-height: 1.5 !important; /* MÁS espacio entre líneas */
+  font-weight: 500 !important; /* MÁS peso de fuente */
+}
+
+.dropdown3-item-large:hover {
+  color: #ff9e1c !important;
+  border-left-color: #ff9e1c !important;
+  padding-left: 25px !important; /* MÁS desplazamiento en hover */
+  background-color: rgba(255, 158, 28, 0.08) !important; /* FONDO EN HOVER */
+  border-radius: 5px !important; /* BORDES REDONDEADOS EN HOVER */
+}
+
+/* Separadores entre elementos */
+.dropdown3-item-large:not(:last-child) {
+  border-bottom: 1px solid rgba(13, 26, 78, 0.1) !important;
+}
+
+/* Banderas y autenticación */
+.navbar3-auth {
+  display: flex !important;
+  align-items: center !important;
+  gap: 15px !important;
+}
+
+.navbar3-flags {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  opacity: 0.9 !important;
+}
+
+.flag3-decoration {
+  width: 22px !important;
+  height: 16px !important;
+  object-fit: cover !important;
+  border-radius: 3px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.3s ease !important;
+  filter: brightness(0.95) !important;
+}
+
+.navbar3-flags:hover .flag3-decoration {
+  filter: brightness(1.1) !important;
+  opacity: 1 !important;
+  transform: scale(1.05) !important;
+}
+
+.auth3-link {
+  background-color: #ed3b89 !important;
+  color: white !important;
+  text-decoration: none !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  padding: 10px 20px !important;
+  border-radius: 25px !important;
+  transition: all 0.3s ease !important;
+  border: none !important;
+}
+
+.auth3-link:hover {
+  background-color: #ff9e1c !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 5px 15px rgba(237, 59, 137, 0.3) !important;
+  color: white !important;
+}
+
+/* Overlay */
+.dropdown3-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.0) !important; /* No cubre visualmente */
+  z-index: 500 !important; /* Debajo de la navbar (z-index:1000) */
+}
+
+/* Dropdown controlado por JavaScript (onMouseEnter/Leave) */
+.dropdown3-menu-large.show {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: all !important;
+  transform: none !important;
+}
+@media (max-width: 1400px) {
+  .dropdown3-content-large {
+    gap: 80px !important;
+    padding: 50px 80px !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  .dropdown3-content-large {
+    gap: 60px !important;
+    padding: 50px 60px !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .dropdown3-content-large {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 50px !important;
+    padding: 40px 50px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar3 {
+    padding: 5px 20px !important;
+  }
+  
+  .navbar3-menu {
+    gap: 20px !important;
+  }
+  
+  .navbar3-flags {
+    display: none !important;
+  }
+  
+  .dropdown3-content-large {
+    grid-template-columns: 1fr !important;
+    gap: 30px !important;
+    padding: 30px 20px !important;
+  }
+  
+  .dropdown3-menu-large {
+    top: 60px !important; /* Ajustar para móviles */
+  }
+}

@@ -1,7 +1,14 @@
+/* Tamaño configurable del logo del héroe */
+:root {
+  --logo-ama-size: 200px;      /* Tamaño del logo en desktop */
+  --logo-ama-size-sm: 95px;    /* Tamaño del logo en móvil */
+  --logo-ama-gap: 0rem;        /* ÚNICO control vertical botón ↔ logo */
+}
+
 .dashboard-container {
   width: 100%;
-  /* Elimina esta línea: overflow-x: hidden; */
- 
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Animations */
@@ -33,37 +40,93 @@
 /* Hero Section */
 .hero-section {
   min-height: 100vh;
-  background-size: cover;
-  background-position: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
   padding: 2rem;
   color: var(--color-text-light);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .hero-content {
   max-width: 800px;
   animation: fadeIn 1.5s ease;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  padding: 0 1rem;
+  box-sizing: border-box;
 }
 
 .hero-content h1 {
   font-size: 3.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  order: 1;
 }
 
 .hero-subtitle {
   font-size: 1.8rem;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+  order: 2;
+}
+
+/* Buttons */
+.cta-button {
+  background-color: #ed3b89;
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  margin-bottom: 0;
+  order: 3;
+}
+
+.cta-button:hover {
+  background-color: #ff9e1c;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Logo AMA - UNA SOLA DEFINICIÓN */
+.LogoAMA {
+  width: var(--logo-ama-size) !important; /* tamaño controlado por variable */
+  height: auto !important;
+  margin-top: 0 !important; /* el espacio lo controla la regla adyacente */
+  margin-bottom: 0 !important;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) !important;
+  transition: all 0.3s ease !important;
+  order: 4 !important;
+}
+
+/* Espaciado específico entre botón y logo (solo cuando son adyacentes) */
+.cta-button + .LogoAMA {
+  /* Compensa el gap fijo (1.5rem) del contenedor para acercar el logo */
+  margin-top: calc(var(--logo-ama-gap) - 1.5rem) !important;
+}
+
+.LogoAMA:hover {
+  transform: scale(1.05) !important;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4)) !important;
 }
 
 /* Common Section Styles */
 section {
   padding: 5rem 2rem;
-  
 }
 
 .section-header {
@@ -73,14 +136,12 @@ section {
 
 .section-header h2 {
   font-size: 2.5rem;
-  color: var(--color-primary);
+  color: white;
   margin-bottom: 1rem;
-  background-color: white;
+  background-color: #0d1a4e;
   padding: 10px;
-  
   width: 100%;
   border-radius: 10px;
-  
 }
 
 .section-header p {
@@ -89,7 +150,6 @@ section {
   max-width: 700px;
   margin: 0 auto;
   color: var(--color-warning);
-  
 }
 
 /* Split Container */
@@ -129,7 +189,7 @@ section {
 
 /* About Section */
 .about-section {
-  background-color: var(--color-background);
+  background-color: white;
 }
 
 .about-image {
@@ -139,8 +199,8 @@ section {
 
 /* Services Section */
 .services-section {
-  background-color: var(--color-primary);
-  color: var(--color-text-light);
+  background-color: white;
+  color: #0d1a4e;
 }
 
 .services-grid {
@@ -149,12 +209,12 @@ section {
   gap: 2rem;
   max-width: 1200px;
   margin: 0 auto;
-  padding-bottom: 20px ;
-  
+  padding-bottom: 20px;
 }
 
 .service-card {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: #0d1a4e;
+  color: white;
   border-radius: 10px;
   padding: 2rem;
   text-align: center;
@@ -173,52 +233,6 @@ section {
 .service-card h3 {
   font-size: 1.5rem;
   margin-bottom: 1rem;
-}
-
-/* Testimonials Section */
-.testimonials-section {
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  color: var(--color-text-light);
-  padding: 5rem 2rem;
-}
-
-.testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.testimonial-card {
-  background-color: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(5px);
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.testimonial-image {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-}
-
-.testimonial-content {
-  padding: 1.5rem;
-}
-
-.testimonial-content p {
-  font-style: italic;
-  margin-bottom: 1rem;
-  color: black;
-}
-
-.testimonial-content .name {
-  font-weight: bold;
-  text-align: right;
 }
 
 /* Features Section */
@@ -243,27 +257,139 @@ section {
   color: var(--color-accent);
 }
 
-/* Countries Section */
+/* EXPERIENCIA AMA Section - ESTILOS SEPARADOS */
 .countries-section {
-  background-color: var(--color-primary);
-  color: var(--color-text-light);
-  padding: 5rem 0;
+  background-color: white;
+  color: #0d1a4e;
+  padding: 5rem 2rem;
   text-align: center;
 }
 
-.flags-container {
-  max-width: 1200px;
-  margin: 3rem auto 0;
-  padding: 0 2rem;
+.countries-section .section-header h2 {
+  font-size: 2.5rem;
+  color: white;
+  margin-bottom: 1rem;
+  background-color: #0d1a4e;
+  padding: 10px;
+  width: 100%;
+  border-radius: 10px;
 }
 
-.bandera-carrusel {
-  width: 400px;
-  height: 200px;
+.countries-section .section-header p {
+  color: #0d1a4e;
+  font-size: 1.2rem;
+}
+
+/* VIDEO DE AMA - Tamaño específico */
+.video-container {
+  max-width: 800px; /* <-- CAMBIAR PARA AJUSTAR TAMAÑO DEL VIDEO AMA */
+  width: 100%;
+  margin: 4rem auto 0;
+  position: relative;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  background: #000;
+  aspect-ratio: 16/9;
+  border: 2px solid #0d1a4e;
+}
+
+.experience-video {
+  width: 100% !important;
+  height: 100% !important;
   object-fit: cover;
-  border-radius: 8px;
-  margin: 0 1rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  object-position: center;
+  display: block;
+  background: #000;
+  border-radius: 13px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.video-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  padding: 1.5rem;
+  color: white;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.video-container:hover .video-overlay {
+  transform: translateY(0);
+}
+
+.video-info h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: #ff9e1c;
+  font-weight: 700;
+}
+
+.video-info p {
+  font-size: 1rem;
+  margin: 0;
+  opacity: 0.9;
+  color: white;
+}
+
+/* TESTIMONIOS Section - ESTILOS SEPARADOS Y ORIGINALES */
+.testimonials-section {
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: var(--color-text-light);
+  padding: 5rem 2rem;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.testimonial-card {
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* IMÁGENES de testimonios - tamaño original */
+.testimonial-image {
+  width: 100%;
+  height: 250px; /* Tamaño específico para imágenes de testimonios */
+  object-fit: cover;
+}
+
+/* VIDEOS de testimonios - tamaño diferente al de AMA */
+.testimonial-video {
+  width: 100%;
+  height: 250px; /* Mismo tamaño que las imágenes de testimonios */
+  object-fit: cover;
+  object-position: center;
+}
+
+.testimonial-content {
+  padding: 1.5rem;
+}
+
+.testimonial-content p {
+  font-style: italic;
+  margin-bottom: 1rem;
+  color: black;
+}
+
+.testimonial-content .name {
+  font-weight: bold;
+  text-align: right;
 }
 
 /* CTA Section */
@@ -285,42 +411,123 @@ section {
   margin: 0 auto 2rem;
 }
 
-/* Buttons */
-.cta-button {
-  background-color: var(--color-accent);
-  color: white;
+/* Contenedor 3 columnas: Misión | Video | Visión */
+.video-mission-container {
+  display: grid;
+  grid-template-columns: 0.9fr 2.5fr 0.9fr;
+  gap: 3rem;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  text-align: left;
+  align-items: center;
+}
+
+/* Estilos simples para Misión y Visión (sin cuadros) */
+.mission-text, .vision-text {
+  color: #0d1a4e;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transition: transform 0.3s ease;
   border: none;
-  padding: 1rem 2.5rem;
-  font-size: 1.1rem;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: bold;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  height: auto;
+  display: block;
 }
 
-.cta-button:hover {
-  background-color: var(--color-warning);
+.mission-text:hover, .vision-text:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
 }
 
-/* Responsive Design */
+.mission-text h3, .vision-text h3 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  margin-top: 0;
+  color: #0d1a4e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mission-text p, .vision-text p {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+  color: #333;
+  font-weight: 400;
+}
+
+/* Video destacado en el centro */
+.video-mission-container .video-container {
+  max-width: 100%;
+  margin: 0;
+  aspect-ratio: 16/9;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.video-mission-container .video-container:hover {
+  transform: scale(1.02);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.video-mission-container .experience-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+}
+
+/* Quitar overlay que bloquea el video */
+.video-mission-container .video-overlay {
+  display: none;
+}
+
+/* Responsive para tablets */
+@media (max-width: 1024px) {
+  .video-mission-container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 0 1.5rem;
+  }
+  
+  .mission-text, .vision-text {
+    padding: 2rem;
+  }
+  
+  .mission-text h3, .vision-text h3 {
+    font-size: 1.6rem;
+  }
+  
+  .mission-text p, .vision-text p {
+    font-size: 1rem;
+  }
+}
+
+/* Media queries adicionales para mobile */
 @media (max-width: 768px) {
-  .split-container {
+  .video-mission-container {
     flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 3rem;
   }
   
-  .hero-content h1 {
-    font-size: 2.5rem;
+  .video-mission-container .video-container {
+    max-width: 500px;
   }
   
-  .hero-subtitle {
-    font-size: 1.3rem;
+  .mission-vision-container {
+    max-width: 100%;
+    align-items: center;
   }
   
-  .section-header h2 {
-    font-size: 2rem;
+  .mission-card, .vision-card {
+    padding: 2rem;
+    text-align: center;
   }
 }
 
@@ -329,11 +536,68 @@ section {
     padding: 3rem 1rem;
   }
   
+  .hero-section {
+    min-height: 92vh;
+    padding: 0;
+    background-attachment: scroll; /* mejor soporte móvil */
+    background-position: center 30%;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .hero-content {
+    gap: 1.2rem; /* gap fijo en móvil */
+    width: 100%;
+    margin: 0;
+    padding: 1.5rem 1rem;
+    box-sizing: border-box;
+  }
+
   .hero-content h1 {
-    font-size: 2rem;
+    font-size: 1.9rem;
+    line-height: 1.2;
+  }
+
+  .hero-subtitle {
+    font-size: 1.05rem;
+  }
+
+  .cta-button {
+    padding: 0.85rem 1.6rem;
+    font-size: 1rem;
   }
   
   .cta-section h2 {
     font-size: 1.8rem;
+  }
+  
+  .LogoAMA {
+    width: var(--logo-ama-size-sm) !important; /* tamaño móvil controlado por variable */
+  }
+  .cta-button + .LogoAMA {
+    margin-top: calc(var(--logo-ama-gap) - 1.2rem) !important;
+  }
+  
+  .video-container {
+    max-width: 350px;
+    aspect-ratio: 16/9;
+    border-radius: 10px;
+    border-width: 2px;
+  }
+  
+  .experience-video {
+    border-radius: 8px;
+  }
+  
+  .countries-section {
+    padding: 3rem 1rem;
+  }
+  
+  .countries-section .section-header h2 {
+    font-size: 1.8rem;
+  }
+  
+  .video-overlay {
+    padding: 0.8rem;
   }
 }
