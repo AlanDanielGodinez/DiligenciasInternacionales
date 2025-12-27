@@ -1,8 +1,8 @@
-const User = require('../models/User');
+const User = require('../models/user'); // ✅ Correcto - archivo en minúscula
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../config/env');
 
-// Generar JWT (igual que el backend anterior)
+// Generar JWT
 const generateToken = (user) => {
   return jwt.sign(
     { userId: user._id, email: user.email },
@@ -16,25 +16,20 @@ const register = async (req, res) => {
   try {
     const { email, password, name } = req.body;
 
-    // Validar campos requeridos
     if (!email || !password || !name) {
       return res.status(400).json({ 
-        error: 'Todos los campos son requeridos',
-        required: ['email', 'password', 'name']
+        error: 'Todos los campos son requeridos'
       });
     }
 
-    // Verificar si el usuario ya existe
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: 'El usuario ya existe' });
     }
 
-    // Crear nuevo usuario
     const user = new User({ email, password, name });
     await user.save();
 
-    // Generar token
     const token = generateToken(user);
 
     res.status(201).json({
@@ -43,7 +38,7 @@ const register = async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
-        nombre: user.name, // Cambiado a 'nombre' para coincidir con el frontend
+        nombre: user.name,
         role: user.role
       }
     });
@@ -54,21 +49,19 @@ const register = async (req, res) => {
   }
 };
 
-// Login (adaptado del backend anterior)
+// Login
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     console.log('Intento de login recibido para email:', email);
 
-    // Validar campos requeridos
     if (!email || !password) {
       return res.status(400).json({ 
         error: 'Email y password son requeridos'
       });
     }
 
-    // Buscar usuario (equivalente al SELECT en PostgreSQL)
     const user = await User.findOne({ email });
     
     if (!user) {
@@ -76,7 +69,6 @@ const login = async (req, res) => {
       return res.status(401).json({ error: 'Usuario no encontrado' });
     }
 
-    // Verificar password (igual que en el backend anterior)
     const validPassword = await user.comparePassword(password);
     
     if (!validPassword) {
@@ -84,19 +76,25 @@ const login = async (req, res) => {
       return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
 
-    // Generar token (igual estructura que el backend anterior)
     const token = generateToken(user);
 
     console.log('Login exitoso para:', email);
 
-    // Respuesta igual que el backend anterior
+    // CAMBIO: Actualizar rol para compatibilidad con frontend
+    let userRole = user.role;
+    if (user.role === 'user') {
+      userRole = 'admin'; // Temporalmente tratar users como admin
+    }
+
     res.json({
       message: 'Login exitoso',
       token,
       user: {
         id: user._id,
         email: user.email,
-        nombre: user.name // Cambiado a 'nombre' para coincidir con el frontend
+        nombre: user.name,
+        role: userRole, // Usar el rol ajustado
+        rol: userRole   // Agregar compatibilidad con frontend existente
       }
     });
 
@@ -106,7 +104,49 @@ const login = async (req, res) => {
   }
 };
 
+// Verificar token
+const verify = async (req, res) => {
+  try {
+    res.json({
+      message: 'Token válido',
+      user: {
+        id: req.user._id,
+        email: req.user.email,
+        nombre: req.user.name,
+        role: req.user.role
+      }
+    });
+  } catch (error) {
+    console.error('Error en verificación:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+const getDashboardData = (req, res) => {
+  try {
+    res.json({
+      gruposActivos: [
+        { id: 1, nombre: 'Grupo A', descripcion: 'Descripción del Grupo A' },
+        { id: 2, nombre: 'Grupo B', descripcion: 'Descripción del Grupo B' }
+      ],
+      tramitesActivos: [
+        { id: 1, titulo: 'Trámite 1', estado: 'En progreso' },
+        { id: 2, titulo: 'Trámite 2', estado: 'Completado' }
+      ],
+      clientePorPais: [
+        { pais: 'Argentina', cantidad: 120 },
+        { pais: 'Brasil', cantidad: 80 },
+      ]
+    });
+  } catch (error) {
+    console.error('Error en obtener datos del dashboard:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+      
 module.exports = {
   register,
-  login
+  login,
+  verify,
+  getDashboardData
 };
