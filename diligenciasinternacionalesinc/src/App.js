@@ -28,6 +28,11 @@ import Aerolineas from "./Pages/Empleado/Aerolineas";
 import ItinerariosPendientes from "./Pages/Empleado/ItinerariosPendientes"; // Asegúrate de que esta ruta sea correcta
 import EntregarDocumentos from "./Pages/Empleado/EntregarDocumentos"; // Asegúrate de que esta ruta sea correcta
 import GrupoDetalle from './Pages/Empleado/GrupoDetalle';
+import AbrazosYMasAbrazos from "./Pages/AbrazosYMasAbrazos";
+import TramiteVisa from "./Pages/TramiteVisa";
+import TramitePasaporte from "./Pages/TramitePasaporte";
+import AsesoriaLegal from "./Pages/AsesoriaLegal";
+import CatalogoServicios from "./Pages/CatalogoServicios";
 
 import "./App.css";
 
@@ -74,6 +79,7 @@ import "../src/Styles/SubirDocumentoModal.css";
 import "../src/Styles/AgregarPagoModal.css";
 import "../src/Styles/ResumenReencuentroModal.css";
 import "../src/Styles/EntrregarDocumento.css";
+import "../src/Styles/ServiciosDetalle.css";
 
 
 
@@ -96,6 +102,13 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/login/register" element={<Login initialMode="register" />} />
             <Route path="/cliente/inicio" element={<InicioCliente />} />
+            
+            {/* Rutas de servicios */}
+            <Route path="/servicios/abrazos" element={<AbrazosYMasAbrazos />} />
+            <Route path="/servicios/visa" element={<TramiteVisa />} />
+            <Route path="/servicios/pasaporte" element={<TramitePasaporte />} />
+            <Route path="/servicios/asesoria-legal" element={<AsesoriaLegal />} />
+            <Route path="/servicios/catalogo" element={<CatalogoServicios />} />
             
 
             {/* Rutas protegidas con layout de empleado */}

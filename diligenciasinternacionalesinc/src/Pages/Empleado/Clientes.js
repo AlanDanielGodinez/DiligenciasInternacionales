@@ -100,25 +100,12 @@ const Clientes = () => {
   };
 
   // Handlers
-  const handleVerDetalles = async (cliente) => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get(
-        `http://localhost:5000/api/clientes/${cliente.idCliente}/completo`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-      
-      setState(prev => ({
-        ...prev,
-        clienteDetalles: response.data,
-        mostrarModalVer: true
-      }));
-    } catch (err) {
-      console.error('Error al obtener detalles del cliente:', err);
-      alert(err.response?.data?.error || 'Error al cargar detalles del cliente');
-    }
+  const handleVerDetalles = (cliente) => {
+    setState(prev => ({
+      ...prev,
+      clienteDetalles: cliente,
+      mostrarModalVer: true
+    }));
   };
 
   const handleEliminarCliente = async (idCliente) => {
@@ -202,65 +189,51 @@ const Clientes = () => {
           <p>Cargando clientes...</p>
         </div>
       ) : (
-        <div className="duo-table-container">
-          <table className="duo-table">
-            <thead>
-              <tr>
-                <th>Identificación</th>
-                <th>Nombre</th>
-                <th>Apellido Paterno</th>
-                <th>Apellido Materno</th>
-                <th>Teléfono</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.clientesFiltrados.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="duo-no-results">
-                    {state.terminoBusqueda ? 
-                      'No se encontraron clientes con ese criterio' : 
-                      'No hay clientes registrados'}
-                  </td>
-                </tr>
-              ) : (
-                state.clientesFiltrados.map((cliente) => (
-                  <tr key={cliente.idCliente} className="duo-table-row">
-                    <td>{cliente.identificacionunicanacional || 'N/A'}</td>
-                    <td>{cliente.nombreCliente || 'N/A'}</td>
-                    <td>{cliente.apellidoPaternoCliente || 'N/A'}</td>
-                    <td>{cliente.apellidoMaternoCliente || 'N/A'}</td>
-                    <td>{formatearTelefono(cliente.telefono)}</td>
-                    <td className="duo-actions">
-                      <div className="duo-actions-container">
-                        <button 
-                          className="duo-btn-action duo-btn-view"
-                          onClick={() => handleVerDetalles(cliente)}
-                          title="Ver detalles"
-                        >
-                          <FaEye />
-                        </button>
-                        <button 
-                          className="duo-btn-action duo-btn-edit"
-                          onClick={() => toggleModal('Editar', true, cliente)}
-                          title="Editar"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button 
-                          className="duo-btn-action duo-btn-delete"
-                          onClick={() => handleEliminarCliente(cliente.idCliente)}
-                          title="Eliminar"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className="clientes-grid">
+          {state.clientesFiltrados.length === 0 ? (
+            <div className="duo-no-results">
+              {state.terminoBusqueda ? 
+                'No se encontraron clientes con ese criterio' : 
+                'No hay clientes registrados'}
+            </div>
+          ) : (
+            state.clientesFiltrados.map((cliente) => (
+              <div key={cliente.idCliente} className="cliente-card">
+                <div className="cliente-card-header">
+                  <h3>{cliente.nombreCliente || 'N/A'}</h3>
+                </div>
+                <div className="cliente-card-body">
+                  <p><strong>Identificación:</strong> {cliente.identificacionunicanacional || 'No disponible'}</p>
+                  <p><strong>Teléfono:</strong> {formatearTelefono(cliente.telefono)}</p>
+                  <p><strong>Apellido Paterno:</strong> {cliente.apellidoPaternoCliente || 'N/A'}</p>
+                  <p><strong>Apellido Materno:</strong> {cliente.apellidoMaternoCliente || 'N/A'}</p>
+                </div>
+                <div className="cliente-card-actions">
+                  <button 
+                    className="duo-btn-action duo-btn-view"
+                    onClick={() => handleVerDetalles(cliente)}
+                    title="Ver detalles"
+                  >
+                    <FaEye />
+                  </button>
+                  <button 
+                    className="duo-btn-action duo-btn-edit"
+                    onClick={() => toggleModal('Editar', true, cliente)}
+                    title="Editar"
+                  >
+                    <FaEdit />
+                  </button>
+                  <button 
+                    className="duo-btn-action duo-btn-delete"
+                    onClick={() => handleEliminarCliente(cliente.idCliente)}
+                    title="Eliminar"
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
 

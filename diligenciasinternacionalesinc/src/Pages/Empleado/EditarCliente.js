@@ -32,9 +32,9 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
   useEffect(() => {
     const loadData = async () => {
       if (mostrar && clienteId) {
-        // Primero cargar países
+        // Cargar países
         await fetchCountries();
-        // Luego cargar datos del cliente (que también cargará las ciudades)
+        // Cargar datos del cliente
         await fetchClientData();
       }
     };
@@ -48,11 +48,16 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
     try {
       const token = localStorage.getItem('authToken');
       const response = await axios.get(
-        `http://localhost:5000/api/clientes/${clienteId}/completo`,
+        `http://localhost:5000/api/clientes`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      const clientData = response.data;
+      // Buscar el cliente en la lista
+      const clientData = response.data.find(c => c.idCliente === clienteId);
+      
+      if (!clientData) {
+        throw new Error('Cliente no encontrado');
+      }
       
       // Función para normalizar nombres de campos
       const normalizeField = (data, fieldName) => {
@@ -84,11 +89,6 @@ const EditarCliente = ({ mostrar, cerrar, clienteId, onClienteActualizado }) => 
       };
       
       setFormData(formattedData);
-      
-      // Cargar países primero si no están cargados
-      if (countries.length === 0) {
-        await fetchCountries();
-      }
       
       // Cargar ciudades si hay un país seleccionado
       if (formattedData.idPais) {

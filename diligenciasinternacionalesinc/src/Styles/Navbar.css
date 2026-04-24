@@ -12,7 +12,7 @@
     position: sticky;
     top: 0;
     z-index: 1000;
-    border-bottom: 2px solid #ed3b89; /* Línea inferior de acento (naranja) */
+    border-bottom: 2px solid #ed3b89; /* Línea inferior de acento (rosa) */
    /* font-family: 'Anton','Oswald', sans-serif;*/
 }
 
@@ -24,7 +24,7 @@
 }
 
 .logo-image {
-    height: 80px; /* Ajusta la altura de la imagen según sea necesario */
+    height: 100px; /* Ajusta la altura de la imagen según sea necesario */
     width: auto; /* Mantiene la proporción de la imagen */
     transition: transform 0.3s ease;
     border-radius: 5px;
@@ -214,7 +214,7 @@
 
 .dropdown-item:hover {
     background-color: #ed3b89;
-    color: #0d1a4e;
+    color: #2c3e50;
     padding-left: 25px;
 }
 

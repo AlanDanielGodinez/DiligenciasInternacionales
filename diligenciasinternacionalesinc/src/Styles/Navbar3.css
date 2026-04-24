@@ -16,7 +16,7 @@ COLORES DEL PROYECTO:
   justify-content: space-between !important;
   align-items: center !important;
   padding: 5px 40px !important;
-  background-color: #0d1a4e !important;
+  background-color: #ed3b89 !important;
   color: white !important;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
   position: sticky !important;
@@ -32,7 +32,7 @@ COLORES DEL PROYECTO:
 }
 
 .logo-image3 {
-  height: 60px !important;
+  height: 80px !important;
   width: auto !important;
   transition: transform 0.3s ease !important;
 }

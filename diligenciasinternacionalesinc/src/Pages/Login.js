@@ -16,6 +16,12 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Extraer servicio solicitado de URL params
+  const searchParams = new URLSearchParams(location.search);
+  const servicioSolicitado = searchParams.get('servicio');
+  const action = searchParams.get('action');
 
   // Verificar token al cargar
   useEffect(() => {
@@ -129,7 +135,18 @@ const Login = () => {
         if (response.data.token && response.data.user) {
           localStorage.setItem('authToken', response.data.token);
           localStorage.setItem('userCliente', JSON.stringify(response.data.user));
-          navigate('/cliente/inicio');
+          
+          // Si viene de solicitar un servicio, redirigir con esa info
+          if (servicioSolicitado) {
+            navigate('/cliente/inicio', { 
+              state: { 
+                servicioSolicitado,
+                mensaje: `Continuar con: ${servicioSolicitado}`
+              }
+            });
+          } else {
+            navigate('/cliente/inicio');
+          }
         }
       }
 
@@ -149,6 +166,13 @@ const Login = () => {
       <div className="auth-card">
         <form className="auth-form" onSubmit={handleSubmit}>
           <h2 className="form-title">Iniciar Sesión</h2>
+
+          {/* Mensaje de servicio solicitado */}
+          {servicioSolicitado && (
+            <div className="servicio-info-banner">
+              <p>📋 Para solicitar <strong>{servicioSolicitado}</strong>, inicia sesión o regístrate</p>
+            </div>
+          )}
 
           <div className="user-type-toggle">
             <button

@@ -126,11 +126,18 @@ COLORES DEL PROYECTO:
 
 /* Iconos grandes (ahora imágenes) */
 .service-icon-large {
-  width: 72px;
-  height: 72px;
+  width: 120px;
+  height: 120px;
   object-fit: contain;
   margin-bottom: 1.5rem;
   display: block;
+
+/* Tamaño especial para el icono de Abrazos (PNG) */
+.abrazos-icon-special {
+  width: 220px !important;
+  height: 220px !important;
+  object-fit: contain;
+}
 }
 
 /* Títulos - MANTENER texto blanco */
@@ -199,13 +206,12 @@ COLORES DEL PROYECTO:
   border-radius: 25px;
   font-size: 1.05rem;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  width: 100%;
-  margin-top: 1rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+/* Tamaño especial para el icono de Abrazos (PNG) */
+.abrazos-icon-special {
+  width: 220px !important;
+  height: 220px !important;
+  object-fit: contain;
+}
 }
 
 .service-cta-btn:hover {

@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import logoImage from "../Images/1.png";
 import { FaChevronDown, FaTimes } from "react-icons/fa";
 import '../Styles/FullscreenMenu.css';
 // Iconos como imágenes
-import abrazosIcon from "../Images/Services/abrazos.svg";
-import visaIcon from "../Images/Services/visa.svg";
-import pasaporteIcon from "../Images/Services/pasaporte.svg";
+import abrazosIcon from "../Images/AMA.png";
+import visaIcon from "../Images/Services/visa-stamp.svg";
+import pasaporteIcon from "../Images/Services/pasaporte-globe.svg";
 import legalIcon from "../Images/Services/legal.svg";
 import catalogoIcon from "../Images/Services/catalogo.svg";
 import catFamiliaIcon from "../Images/Services/categoria-familia.svg";
@@ -22,6 +22,18 @@ import guatemalaFlag from "../Images/Flags/guatemala.png";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Evita doble scroll bloqueando el body cuando el menú está abierto
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMenuOpen]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -93,20 +105,21 @@ const Navbar = () => {
             
             {/* Servicio 1: Abrazos y Más Abrazos */}
             <div className="service-card-fullscreen" onClick={closeMenu}>
-              <img className="service-icon-large" src={abrazosIcon} alt="Abrazos y Más Abrazos" />
+              <img className="service-icon-large abrazos-icon-special" src={abrazosIcon} alt="Abrazos y Más Abrazos" />
               <h3>ABRAZOS Y MAS ABRAZOS</h3>
               <p>Programa especializado para reunir familias separadas por la migración</p>
               <ul className="service-features">
-                <li>✅ Asesoría legal personalizada</li>
-                <li>✅ Gestión completa de documentos</li>
-                <li>✅ Acompañamiento emocional</li>
-                <li>✅ Coordinación de viajes</li>
+                <li>Asesoría legal personalizada</li>
+                <li>Gestión completa de documentos</li>
+                <li>Acompañamiento emocional</li>
+                <li>Coordinación de viajes</li>
               </ul>
               <div className="service-details">
-                <span className="duration">Duración: 3-6 meses</span>
-                <span className="price">Consulta personalizada</span>
+                <span className="price">$50 USD para iniciar</span>
               </div>
-              <button className="service-cta-btn">Solicitar Información</button>
+              <Link to="/servicios/abrazos" onClick={closeMenu}>
+                <button className="service-cta-btn">Solicitar Información</button>
+              </Link>
             </div>
 
             {/* Servicio 2: Trámite de Visa */}
@@ -115,16 +128,17 @@ const Navbar = () => {
               <h3>Trámite de Visa</h3>
               <p>Todos los tipos de visa para Estados Unidos y otros países</p>
               <ul className="service-features">
-                <li>🛂 Visa de Turista (B1/B2)</li>
-                <li>👨‍👩‍👧‍👦 Visa Familiar (IR1, IR2, F1, F2)</li>
-                <li>💼 Visa de Trabajo (H1B, L1)</li>
-                <li>🎓 Visa de Estudiante (F1, M1)</li>
+                <li>Visa de Turista (B1/B2)</li>
+                <li>Visa Familiar (IR1, IR2, F1, F2)</li>
+                <li>Visa de Trabajo (H1B, L1)</li>
+                <li>Visa de Estudiante (F1, M1)</li>
               </ul>
               <div className="service-details">
-                <span className="duration">Tiempo: 2-12 meses</span>
-                <span className="price">Desde $300 USD</span>
+                <span className="price">$50 USD para iniciar</span>
               </div>
-              <button className="service-cta-btn">Iniciar Trámite</button>
+              <Link to="/servicios/visa" onClick={closeMenu}>
+                <button className="service-cta-btn">Iniciar Trámite</button>
+              </Link>
             </div>
 
             {/* Servicio 3: Trámite de Pasaporte */}
@@ -133,16 +147,17 @@ const Navbar = () => {
               <h3>Trámite de Pasaporte</h3>
               <p>Renovación y obtención de pasaportes de manera rápida y segura</p>
               <ul className="service-features">
-                <li>📋 Llenado de formularios</li>
-                <li>📸 Fotografías oficiales</li>
-                <li>🚀 Trámite express disponible</li>
-                <li>📦 Entrega a domicilio</li>
+                <li>Llenado de formularios</li>
+                <li>Fotografías oficiales</li>
+                <li>Trámite express disponible</li>
+                <li>Entrega a domicilio</li>
               </ul>
               <div className="service-details">
-                <span className="duration">15-20 días hábiles</span>
-                <span className="price">Express: 3-5 días</span>
+                <span className="price">$50 USD para iniciar</span>
               </div>
-              <button className="service-cta-btn">Solicitar Cita</button>
+              <Link to="/servicios/pasaporte" onClick={closeMenu}>
+                <button className="service-cta-btn">Solicitar Cita</button>
+              </Link>
             </div>
 
             {/* Servicio 4: Asesoría Legal */}
@@ -151,16 +166,17 @@ const Navbar = () => {
               <h3>ASESORÍA LEGAL</h3>
               <p>Consultoría especializada en derecho migratorio y procesos legales</p>
               <ul className="service-features">
-                <li>⚖️ Consulta migratoria</li>
-                <li>📜 Preparación de peticiones</li>
-                <li>🏛️ Representación legal</li>
-                <li>📋 Revisión de casos</li>
+                <li>Consulta migratoria</li>
+                <li>Preparación de peticiones</li>
+                <li>Representación legal</li>
+                <li>Revisión de casos</li>
               </ul>
               <div className="service-details">
-                <span className="duration">Consulta inicial gratuita</span>
-                <span className="price">Desde $200 USD</span>
+                <span className="price">$50 USD para iniciar</span>
               </div>
-              <button className="service-cta-btn">Agendar Consulta</button>
+              <Link to="/servicios/asesoria-legal" onClick={closeMenu}>
+                <button className="service-cta-btn">Agendar Consulta</button>
+              </Link>
             </div>
 
             {/* Servicio 5: Todos los Servicios */}
@@ -186,7 +202,9 @@ const Navbar = () => {
                   <span>Servicios de Viaje</span>
                 </div>
               </div>
-              <button className="service-cta-btn">Ver Catálogo Completo</button>
+              <Link to="/servicios/catalogo" onClick={closeMenu}>
+                <button className="service-cta-btn">Ver Catálogo Completo</button>
+              </Link>
             </div>
 
           </div>

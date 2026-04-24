@@ -171,7 +171,7 @@
   
   .antecedentes-alert-error {
     border-left-color: var(--color-danger);
-    background-color: rgba(231, 76, 60, 0.08);
+    background-color: rgba(31, 150, 184, 0.08);
   }
   
   /* Estado de carga */
@@ -326,7 +326,7 @@
     padding: 0.6rem 1.2rem;
     
     &:hover {
-      background-color: #c0392b;
+      background-color: #1a2a66;
     }
   }
   

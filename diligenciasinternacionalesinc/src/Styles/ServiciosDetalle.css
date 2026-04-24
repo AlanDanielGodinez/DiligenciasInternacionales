@@ -1,0 +1,662 @@
+/* Contenedor principal */
+.servicio-detalle-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+}
+
+/* Hero Section */
+.servicio-hero {
+  background: linear-gradient(135deg, #0d1a4e 0%, #1a2f6f 100%);
+  color: white;
+  text-align: center;
+  padding: 6rem 2rem 4rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.servicio-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* background: #0d1a4e ; */
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"><path d="M0,0 Q300,40 600,20 T1200,0 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.05)"/></svg>') repeat-x bottom;
+  pointer-events: none;
+}
+
+.servicio-hero-icon {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 2rem;
+  display: block;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+/* Ajuste específico para el icono de Abrazos (para compensar margen transparente del PNG/SVG) */
+.abrazos-hero-icon {
+  width: 260px;
+  height: 260px;
+}
+
+.servicio-hero h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.servicio-hero-subtitle {
+  font-size: 1.3rem;
+  opacity: 0.9;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Contenido */
+.servicio-contenido {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+}
+
+.servicio-section {
+  margin-bottom: 4rem;
+}
+
+.servicio-section h2 {
+  font-size: 2.2rem;
+  color: #0d1a4e;
+  margin-bottom: 2rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.servicio-section p {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #333;
+  max-width: 800px;
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+/* Grid de características */
+.caracteristicas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.caracteristica-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.caracteristica-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.caracteristica-icono {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.caracteristica-card h3 {
+  font-size: 1.3rem;
+  color: #0d1a4e;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.caracteristica-card p {
+  font-size: 1rem;
+  color: #666;
+  text-align: center;
+  margin: 0;
+}
+
+/* Timeline de proceso */
+.proceso-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 800px;
+  margin: 3rem auto 0;
+}
+
+.proceso-paso {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+.proceso-paso::after {
+  content: '';
+  position: absolute;
+  left: 38px;
+  top: 100%;
+  width: 3px;
+  height: 2rem;
+  background: linear-gradient(to bottom, #ff9e1c, transparent);
+}
+
+.proceso-paso:last-child::after {
+  display: none;
+}
+
+.paso-numero {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #ff9e1c, #ed3b89);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(255, 158, 28, 0.3);
+}
+
+.proceso-paso h3 {
+  font-size: 1.3rem;
+  color: #0d1a4e;
+  margin-bottom: 0.5rem;
+}
+
+.proceso-paso p {
+  color: #666;
+  margin: 0;
+  text-align: left;
+}
+
+/* Tipos de trámite */
+.tipos-tramite {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.tramite-opcion {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #ff9e1c;
+}
+
+.tramite-opcion h3 {
+  font-size: 1.4rem;
+  color: #0d1a4e;
+  margin-bottom: 1rem;
+}
+
+.tramite-opcion p {
+  color: #666;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.tramite-opcion ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tramite-opcion ul li {
+  padding: 0.5rem 0;
+  color: #333;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.tramite-opcion ul li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #ff9e1c;
+  font-weight: bold;
+}
+
+/* Requisitos */
+.requisitos-lista {
+  list-style: none;
+  padding: 0;
+  max-width: 700px;
+  margin: 2rem auto;
+}
+
+.requisitos-lista li {
+  background: white;
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  position: relative;
+  padding-left: 3rem;
+  font-size: 1.05rem;
+  color: #333;
+}
+
+.requisitos-lista li::before {
+  content: '✓';
+  position: absolute;
+  left: 1.2rem;
+  color: #ff9e1c;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* Áreas de especialización */
+.areas-especializacion {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.area-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.area-card h3 {
+  font-size: 1.3rem;
+  color: #0d1a4e;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #ff9e1c;
+}
+
+.area-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.area-card ul li {
+  padding: 0.7rem 0;
+  color: #666;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.area-card ul li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #ff9e1c;
+  font-weight: bold;
+}
+
+/* Ventajas */
+.ventajas-lista {
+  max-width: 800px;
+  margin: 2rem auto;
+}
+
+.ventaja-item {
+  display: flex;
+  gap: 1.5rem;
+  background: white;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  align-items: flex-start;
+}
+
+.ventaja-icono {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #ff9e1c, #ed3b89);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.ventaja-item h4 {
+  font-size: 1.2rem;
+  color: #0d1a4e;
+  margin-bottom: 0.5rem;
+}
+
+.ventaja-item p {
+  color: #666;
+  margin: 0;
+  text-align: left;
+}
+
+/* Sección CTA */
+.servicio-cta-section {
+  background: linear-gradient(135deg, #0d1a4e 0%, #1a2f6f 100%);
+  color: white;
+  padding: 4rem 2rem;
+  border-radius: 20px;
+  text-align: center;
+  margin-top: 4rem;
+}
+
+.servicio-cta-section h2 {
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.servicio-cta-section p {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2rem;
+}
+
+.servicio-info {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+  margin: 2rem 0;
+}
+
+.info-item {
+  text-align: center;
+}
+
+.info-item strong {
+  display: block;
+  font-size: 1.1rem;
+  color: #ff9e1c;
+  margin-bottom: 0.5rem;
+}
+
+.servicio-cta-button {
+  background: #ff9e1c;
+  color: #0d1a4e;
+  border: none;
+  padding: 1.2rem 3rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 8px 20px rgba(255, 158, 28, 0.3);
+}
+
+.servicio-cta-button:hover {
+  background: #ed3b89;
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(237, 59, 137, 0.4);
+}
+
+/* CATÁLOGO DE SERVICIOS */
+.catalogo-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+}
+
+.catalogo-hero {
+  background: linear-gradient(135deg, #0d1a4e 0%, #1a2f6f 100%);
+  color: white;
+  text-align: center;
+  padding: 6rem 2rem 4rem;
+}
+
+.catalogo-hero h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.catalogo-hero p {
+  font-size: 1.3rem;
+  opacity: 0.9;
+}
+
+.catalogo-contenido {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+}
+
+.catalogo-intro {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 4rem;
+}
+
+.catalogo-intro h2 {
+  font-size: 2.2rem;
+  color: #0d1a4e;
+  margin-bottom: 1.5rem;
+}
+
+.catalogo-intro p {
+  font-size: 1.1rem;
+  color: #666;
+  line-height: 1.8;
+}
+
+.servicios-catalogo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2.5rem;
+  margin-bottom: 5rem;
+}
+
+.servicio-catalogo-card {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.servicio-catalogo-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  border-color: #ff9e1c;
+}
+
+.servicio-catalogo-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  display: block;
+}
+
+.servicio-catalogo-card h3 {
+  font-size: 1.5rem;
+  color: #0d1a4e;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.servicio-descripcion {
+  color: #666;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.servicio-caracteristicas-lista {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+  text-align: left;
+}
+
+.servicio-caracteristicas-lista li {
+  padding: 0.6rem 0;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.ver-mas-button {
+  display: inline-block;
+  background: #0d1a4e;
+  color: white;
+  padding: 0.9rem 2rem;
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+  border: 2px solid #0d1a4e;
+}
+
+.ver-mas-button:hover {
+  background: #ff9e1c;
+  color: #0d1a4e;
+  border-color: #ff9e1c;
+  transform: translateY(-2px);
+}
+
+.catalogo-garantias {
+  margin: 5rem 0;
+}
+
+.catalogo-garantias h2 {
+  font-size: 2.2rem;
+  color: #0d1a4e;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.garantias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.garantia-item {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.garantia-numero {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #ff9e1c;
+  margin-bottom: 1rem;
+}
+
+.garantia-item h3 {
+  font-size: 1.3rem;
+  color: #0d1a4e;
+  margin-bottom: 1rem;
+}
+
+.garantia-item p {
+  color: #666;
+  font-size: 1rem;
+}
+
+.catalogo-cta {
+  background: linear-gradient(135deg, #0d1a4e 0%, #1a2f6f 100%);
+  color: white;
+  padding: 4rem 2rem;
+  border-radius: 20px;
+  text-align: center;
+  margin-top: 5rem;
+}
+
+.catalogo-cta h2 {
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+}
+
+.catalogo-cta p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+.contacto-button {
+  display: inline-block;
+  background: #ff9e1c;
+  color: #0d1a4e;
+  padding: 1.2rem 3rem;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.contacto-button:hover {
+  background: #ed3b89;
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(237, 59, 137, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .servicio-hero h1, .catalogo-hero h1 {
+    font-size: 2rem;
+  }
+
+  .servicio-hero-subtitle, .catalogo-hero p {
+    font-size: 1.1rem;
+  }
+
+  .servicio-hero-icon {
+    width: 120px;
+    height: 120px;
+  }
+
+  /* Hacer el icono de Abrazos más grande también en móvil/tablet */
+  .abrazos-hero-icon {
+    width: 180px;
+    height: 180px;
+  }
+
+  .caracteristicas-grid,
+  .tipos-tramite,
+  .areas-especializacion,
+  .servicios-catalogo-grid,
+  .garantias-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .proceso-timeline {
+    padding: 0 1rem;
+  }
+
+  .servicio-info {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .servicio-section h2 {
+    font-size: 1.8rem;
+  }
+}

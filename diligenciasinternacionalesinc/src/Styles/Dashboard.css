@@ -1,7 +1,7 @@
 /* Tamaño configurable del logo del héroe */
 :root {
-  --logo-ama-size: 200px;      /* Tamaño del logo en desktop */
-  --logo-ama-size-sm: 95px;    /* Tamaño del logo en móvil */
+  --logo-ama-size: 280px;      /* Tamaño del logo en desktop */
+  --logo-ama-size-sm: 140px;   /* Tamaño del logo en móvil */
   --logo-ama-gap: 0rem;        /* ÚNICO control vertical botón ↔ logo */
 }
 

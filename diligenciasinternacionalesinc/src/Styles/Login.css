@@ -152,6 +152,29 @@
   border-radius: 3px;
 }
 
+/* Banner informativo de servicio solicitado */
+.servicio-info-banner {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-left: 4px solid #ff9e1c;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.servicio-info-banner p {
+  margin: 0;
+  color: #856404;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.servicio-info-banner strong {
+  color: #0d1a4e;
+  font-weight: 600;
+}
+
+
 .welcome-title {
   font-size: 2rem;
   margin-bottom: 1rem;

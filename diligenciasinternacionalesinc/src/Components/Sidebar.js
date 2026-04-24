@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaBars, FaTimes, FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import logoImage from '../Images/1.png';
 
 const SidebarNavigation = () => {
   const [activeMenu, setActiveMenu] = useState(null);
@@ -127,7 +128,7 @@ const SidebarNavigation = () => {
         </button>
         
         <div className="sidebar-logo">
-          <h2>D I I</h2>
+          <img src={logoImage} alt="Logo" className="sidebar-logo-image" />
         </div>
         
         <nav className="sidebar-nav">

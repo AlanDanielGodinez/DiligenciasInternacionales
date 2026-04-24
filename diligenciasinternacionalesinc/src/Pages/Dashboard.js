@@ -23,19 +23,19 @@ const Dashboard = () => {
       title: "Reencuentros familiares",
       description: "Te ayudamos con todo el proceso legal para reunir familias separadas por la migración",
       icon: <MdFamilyRestroom className="service-icon" />,
-      color: "var(--color-accent)"
+      color: "#ff9e1c"
     },
     {
       title: "Tramite de visa",
       description: "Aprobación segura y sin estrés con nuestro soporte prioritario",
       icon: <FaPassport className="service-icon" />,
-      color: "var(--color-secondary)"
+      color: "#ed3b89"
     },
     {
       title: "Tramite de pasaporte",
       description: "Guiamos paso a paso para que no pierdas tiempo en citas",
       icon: <FaGlobeAmericas className="service-icon" />,
-      color: "var(--color-primary)"
+      color: "#1f96b8"
     }
   ];
 
