@@ -1,0 +1,12 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const {__test}=require('../src/services/individualOperacion.service');
+test('CAS, Consulado y Pasaporte son tipos separados',()=>{assert.equal(__test.normalizeType('cas'),'CAS');assert.equal(__test.normalizeType('consulado'),'CONSULADO');assert.equal(__test.normalizeType('pasaporte'),'PASAPORTE')});
+test('rechaza tipos de cita no documentados',()=>assert.throws(()=>__test.normalizeType('entrevista'),/inválido/));
+test('normaliza sólo los campos documentados de cita',()=>assert.deepEqual(__test.normalizeAppointment({tipo:'CAS',fecha:'2030-05-10',hora:'09:30:00',lugar:'CAS CDMX',id_empleado_responsable:'4'}),{tipo:'CAS',fecha:'2030-05-10',hora:'09:30',lugar:'CAS CDMX',id_empleado_responsable:4}));
+test('valida fecha civil',()=>assert.throws(()=>__test.normalizeAppointment({tipo:'CAS',fecha:'10/05/2030',hora:'09:30'}),/fecha inválida/));
+test('valida hora civil',()=>assert.throws(()=>__test.normalizeAppointment({tipo:'CAS',fecha:'2030-05-10',hora:'25:00'}),/hora inválida/));
+test('días restantes se deriva sin persistir contador',()=>assert.equal(__test.daysRemaining('2030-05-10',new Date(2030,4,7,18)),3));
+test('una cita pasada produce días negativos',()=>assert.equal(__test.daysRemaining('2030-05-01',new Date(2030,4,7)),-6));
+test('resultados finales mantienen dominios separados',()=>{for(const value of __test.RESULTS)assert.equal(__test.normalizeResult(value.toLowerCase()),value)});
+test('rechaza resultados no documentados',()=>assert.throws(()=>__test.normalizeResult('cancelado automáticamente'),/inválido/));

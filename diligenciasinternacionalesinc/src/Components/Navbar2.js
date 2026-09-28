@@ -6,8 +6,6 @@ import '../Styles/FullscreenMenu.css';
 // Iconos como imágenes
 import abrazosIcon from "../Images/AMA.png";
 import visaIcon from "../Images/Services/visa-stamp.svg";
-import pasaporteIcon from "../Images/Services/pasaporte-globe.svg";
-import legalIcon from "../Images/Services/legal.svg";
 import catalogoIcon from "../Images/Services/catalogo.svg";
 import catFamiliaIcon from "../Images/Services/categoria-familia.svg";
 import catDocsIcon from "../Images/Services/categoria-docs.svg";
@@ -141,45 +139,7 @@ const Navbar = () => {
               </Link>
             </div>
 
-            {/* Servicio 3: Trámite de Pasaporte */}
-            <div className="service-card-fullscreen" onClick={closeMenu}>
-              <img className="service-icon-large" src={pasaporteIcon} alt="Trámite de Pasaporte" />
-              <h3>Trámite de Pasaporte</h3>
-              <p>Renovación y obtención de pasaportes de manera rápida y segura</p>
-              <ul className="service-features">
-                <li>Llenado de formularios</li>
-                <li>Fotografías oficiales</li>
-                <li>Trámite express disponible</li>
-                <li>Entrega a domicilio</li>
-              </ul>
-              <div className="service-details">
-                <span className="price">$50 USD para iniciar</span>
-              </div>
-              <Link to="/servicios/pasaporte" onClick={closeMenu}>
-                <button className="service-cta-btn">Solicitar Cita</button>
-              </Link>
-            </div>
-
-            {/* Servicio 4: Asesoría Legal */}
-            <div className="service-card-fullscreen" onClick={closeMenu}>
-              <img className="service-icon-large" src={legalIcon} alt="Asesoría Legal" />
-              <h3>ASESORÍA LEGAL</h3>
-              <p>Consultoría especializada en derecho migratorio y procesos legales</p>
-              <ul className="service-features">
-                <li>Consulta migratoria</li>
-                <li>Preparación de peticiones</li>
-                <li>Representación legal</li>
-                <li>Revisión de casos</li>
-              </ul>
-              <div className="service-details">
-                <span className="price">$50 USD para iniciar</span>
-              </div>
-              <Link to="/servicios/asesoria-legal" onClick={closeMenu}>
-                <button className="service-cta-btn">Agendar Consulta</button>
-              </Link>
-            </div>
-
-            {/* Servicio 5: Todos los Servicios */}
+            {/* Acceso al catálogo completo */}
             <div className="service-card-fullscreen large-card" onClick={closeMenu}>
               <img className="service-icon-large" src={catalogoIcon} alt="Catálogo de Servicios" />
               <h3>Ver Todos Nuestros Servicios</h3>

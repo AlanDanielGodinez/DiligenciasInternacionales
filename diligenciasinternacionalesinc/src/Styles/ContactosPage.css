@@ -1,0 +1,341 @@
+.contactos-crm {
+  min-height: 100vh;
+  padding: 24px;
+  background: #f6f8fb;
+  color: #1f2937;
+}
+
+.contactos-crm-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.contactos-crm-hero span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #2f6f73;
+  font-weight: 700;
+}
+
+.contactos-crm-hero h1 {
+  margin: 6px 0;
+  font-size: 28px;
+  color: #14213d;
+}
+
+.contactos-crm-hero p {
+  margin: 0;
+  color: #667085;
+}
+
+.contactos-crm-actions,
+.contactos-crm-detail-actions,
+.contactos-crm-row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.contactos-crm button {
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #1f2937;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.contactos-crm button:hover {
+  border-color: #2f6f73;
+  color: #2f6f73;
+}
+
+.contactos-crm-search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.contactos-crm-search svg {
+  color: #667085;
+}
+
+.contactos-crm input,
+.contactos-crm select,
+.contactos-crm textarea {
+  width: 100%;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  padding: 10px 11px;
+  font: inherit;
+  background: #fff;
+  color: #1f2937;
+  box-sizing: border-box;
+}
+
+.contactos-crm textarea {
+  min-height: 82px;
+  resize: vertical;
+}
+
+.contactos-crm label {
+  display: grid;
+  gap: 6px;
+  color: #344054;
+  font-weight: 700;
+}
+
+.contactos-crm-message {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #ecfdf3;
+  border: 1px solid #abefc6;
+  color: #067647;
+}
+
+.contactos-crm-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+}
+
+.contactos-crm-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+
+.contactos-crm-table th,
+.contactos-crm-table td {
+  text-align: left;
+  padding: 13px 14px;
+  border-bottom: 1px solid #eef2f6;
+  vertical-align: top;
+}
+
+.contactos-crm-table th {
+  color: #475467;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  background: #f9fafb;
+}
+
+.contactos-crm-table td strong,
+.contactos-crm-table td span,
+.contactos-crm-table td small {
+  display: block;
+}
+
+.contactos-crm-table td small {
+  color: #667085;
+  margin-top: 3px;
+}
+
+.contactos-crm-row-actions {
+  min-width: 180px;
+}
+
+.contactos-crm-row-actions button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+.contactos-crm-empty {
+  padding: 24px;
+  color: #667085;
+  text-align: center;
+}
+
+.contactos-crm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 28px 16px;
+  overflow: auto;
+  background: rgba(17, 24, 39, 0.48);
+}
+
+.contactos-crm-modal {
+  width: min(620px, 100%);
+  display: grid;
+  gap: 14px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 22px 55px rgba(17, 24, 39, 0.22);
+}
+
+.contactos-crm-modal--wide {
+  width: min(1020px, 100%);
+}
+
+.contactos-crm-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  border-bottom: 1px solid #eef2f6;
+  padding-bottom: 12px;
+}
+
+.contactos-crm-modal__header h2 {
+  margin: 0;
+  color: #14213d;
+  font-size: 22px;
+}
+
+.contactos-crm-modal__header span {
+  color: #667085;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.contactos-crm-primary {
+  background: #2f6f73 !important;
+  border-color: #2f6f73 !important;
+  color: #fff !important;
+}
+
+.contactos-crm-hint {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+.contactos-crm-form-grid,
+.contactos-crm-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.contactos-crm-span-2 {
+  grid-column: 1 / -1;
+}
+
+.contactos-crm-detail-grid div {
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f9fafb;
+}
+
+.contactos-crm-detail-grid span {
+  display: block;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.contactos-crm-detail-grid strong {
+  color: #1f2937;
+}
+
+.contactos-crm-section {
+  display: grid;
+  gap: 12px;
+}
+
+.contactos-crm-section h3 {
+  margin: 4px 0 0;
+  font-size: 18px;
+  color: #14213d;
+}
+
+.contactos-crm-applicants,
+.contactos-crm-history {
+  display: grid;
+  gap: 10px;
+}
+
+.contactos-crm-applicant,
+.contactos-crm-history article {
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.contactos-crm-applicant {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.contactos-crm-applicant span,
+.contactos-crm-history small,
+.contactos-crm-history span {
+  display: block;
+  color: #667085;
+  font-size: 13px;
+}
+
+.contactos-crm-solicitudes {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.contactos-crm-solicitudes button {
+  font-weight: 600;
+  color: #344054;
+}
+
+@media (max-width: 760px) {
+  .contactos-crm {
+    padding: 16px;
+  }
+
+  .contactos-crm-hero {
+    display: grid;
+  }
+
+  .contactos-crm-search,
+  .contactos-crm-form-grid,
+  .contactos-crm-detail-grid,
+  .contactos-crm-applicant {
+    grid-template-columns: 1fr;
+  }
+
+  .contactos-crm-span-2 {
+    grid-column: auto;
+  }
+}
+.contactos-crm-qb-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.contactos-crm-qb-status.is-synced { background: #ecfdf3; color: #067647; }
+.contactos-crm-qb-status.is-error,
+.contactos-crm-qb-status.is-requires_reconnection { background: #fef3f2; color: #b42318; }

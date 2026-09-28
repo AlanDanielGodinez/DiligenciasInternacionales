@@ -1,0 +1,10 @@
+import api from '../lib/api';
+export const getLegales=async p=>(await api.get('/legales',{params:p})).data;
+export const getLegalesSolicitud=async id=>(await api.get(`/legales/solicitud/${id}`)).data;
+export const updateLegal=async(id,p)=>(await api.patch(`/legales/${id}`,p)).data;
+export const addActividadLegal=async(id,p)=>(await api.post(`/legales/${id}/actividades`,p)).data;
+export const addNotaLegal=async(id,p)=>(await api.post(`/legales/${id}/notas`,p)).data;
+export const resolverLegal=async(id,p)=>(await api.post(`/legales/${id}/resolver`,p)).data;
+export const regresarLegal=async(id,p)=>(await api.post(`/legales/${id}/regresar-origen`,p)).data;
+export const cerrarLegal=async(id,p)=>(await api.post(`/legales/${id}/cerrar`,p)).data;
+export const crearSolicitudLegal=async(id,p)=>(await api.post(`/legales/${id}/nueva-solicitud`,p)).data;

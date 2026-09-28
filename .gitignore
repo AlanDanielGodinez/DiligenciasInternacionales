@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 
 # Videos grandes
 *.MP4
@@ -13,10 +12,30 @@ package-lock.json
 # Uploads
 backend/uploads/
 backend-mongo/uploads/
+backend/reports/
+backend/.tmp/
+
+# Local exports and generated audit/build output
+backend-mongo/data/
+diligenciasinternacionalesinc/.visual-audit/
+diligenciasinternacionalesinc/build/
+diligenciasinternacionalesinc/build-*/
+diligenciasinternacionalesinc/Clientes_js_para_revisar.txt
+backend-mongo.zip
+diligenciasinternacionalesinc.zip
+diligenciasinternacionalesinc/public.zip
+diligenciasinternacionalesinc/src.zip
 
 # Environment variables
 .env
 .env.local
+.env.development
+.env.test
+.env.production
+credentials/
+
+# Known credential JSON files (do not ignore safe JSON globally)
+backend/credentials/
 
 # Logs
 *.log

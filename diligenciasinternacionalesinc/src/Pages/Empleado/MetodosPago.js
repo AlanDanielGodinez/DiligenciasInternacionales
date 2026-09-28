@@ -1,194 +1,239 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { FaSearch, FaPlus, FaEdit, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
+import React, { useEffect, useMemo, useState } from 'react';
+import { FaCreditCard, FaPlus, FaSearch } from 'react-icons/fa';
+import {
+  createMetodoPago,
+  getMetodosPago,
+  updateMetodoPago,
+} from '../../services/metodosPago.service';
+
+const emptyForm = {
+  nombre_metodo: '',
+  descripcion: '',
+  activo: true,
+};
 
 const MetodosPago = () => {
   const [metodos, setMetodos] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [newMetodo, setNewMetodo] = useState('');
-  const [editingId, setEditingId] = useState(null);
-  const [editValue, setEditValue] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [query, setQuery] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(emptyForm);
 
-  // Cargar métodos al iniciar
+  const cargarMetodos = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getMetodosPago({ include_inactive: true });
+      setMetodos(data);
+    } catch (requestError) {
+      setError('No fue posible cargar los métodos de pago.');
+      setMetodos([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchMetodos();
+    cargarMetodos();
   }, []);
 
-  const fetchMetodos = async () => {
+  const metodosFiltrados = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return metodos;
+    return metodos.filter((metodo) =>
+      [
+        metodo.nombre_metodo,
+        metodo.descripcion,
+        metodo.activo ? 'activo' : 'inactivo',
+      ].join(' ').toLowerCase().includes(normalized)
+    );
+  }, [metodos, query]);
+
+  const abrirNuevo = () => {
+    setEditing(null);
+    setForm(emptyForm);
+    setMessage('');
+    setError('');
+    setShowForm(true);
+  };
+
+  const abrirEdicion = (metodo) => {
+    setEditing(metodo);
+    setForm({
+      nombre_metodo: metodo.nombre_metodo || '',
+      descripcion: metodo.descripcion || '',
+      activo: metodo.activo !== false,
+    });
+    setMessage('');
+    setError('');
+    setShowForm(true);
+  };
+
+  const cerrarForm = () => {
+    setShowForm(false);
+    setEditing(null);
+    setForm(emptyForm);
+  };
+
+  const guardarMetodo = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setError('');
+    setMessage('');
     try {
-      const response = await axios.get('http://localhost:5000/api/metodos-pago', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-      });
-      setMetodos(response.data);
-    } catch (error) {
-      console.error('Error al obtener métodos de pago:', error);
-      alert('Error al cargar los métodos de pago');
+      if (editing?.id_metodo_pago) {
+        await updateMetodoPago(editing.id_metodo_pago, form);
+        setMessage('Método de pago actualizado.');
+      } else {
+        await createMetodoPago(form);
+        setMessage('Método de pago creado.');
+      }
+      cerrarForm();
+      await cargarMetodos();
+    } catch (requestError) {
+      setError(requestError?.response?.data?.error?.message || 'No fue posible guardar el método de pago.');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const filteredMetodos = metodos.filter(metodo =>
-    metodo.nombremetodo.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleAddMetodo = async () => {
-    const nuevo = newMetodo.trim();
-    if (!nuevo) return alert('El nombre no puede estar vacío');
-
-    if (metodos.some(m => m.nombremetodo.toLowerCase() === nuevo.toLowerCase())) {
-      return alert('Ese método ya existe');
-    }
-
+  const toggleActivo = async (metodo) => {
+    setSaving(true);
+    setError('');
+    setMessage('');
     try {
-      const response = await axios.post('http://localhost:5000/api/metodos-pago', 
-        { nombreMetodo: nuevo },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` } }
-      );
-      setMetodos([...metodos, response.data]);
-      setNewMetodo('');
-      setShowModal(false);
-    } catch (error) {
-      console.error('Error al agregar método:', error);
-      alert('Hubo un error al guardar el método');
-    }
-  };
-
-  const startEditing = (id, currentName) => {
-    setEditingId(id);
-    setEditValue(currentName);
-  };
-
-  const cancelEditing = () => {
-    setEditingId(null);
-    setEditValue('');
-  };
-
-  const saveEditing = async (id) => {
-    const actualizado = editValue.trim();
-    if (!actualizado) return alert('El nombre no puede estar vacío');
-
-    if (metodos.some(m => m.idmetodopago !== id && m.nombremetodo.toLowerCase() === actualizado.toLowerCase())) {
-      return alert('Ese método ya existe');
-    }
-
-    try {
-      const response = await axios.put(`http://localhost:5000/api/metodos-pago/${id}`, 
-        { nombreMetodo: actualizado },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` } }
-      );
-      setMetodos(metodos.map(m => m.idmetodopago === id ? response.data : m));
-      cancelEditing();
-    } catch (error) {
-      console.error('Error al actualizar método:', error);
-      alert('No se pudo actualizar el método');
-    }
-  };
-
-  const handleDelete = async (id) => {
-    const confirmar = window.confirm('¿Estás seguro de eliminar este método de pago?');
-    if (!confirmar) return;
-
-    try {
-      await axios.delete(`http://localhost:5000/api/metodos-pago/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-      });
-      setMetodos(metodos.filter(m => m.idmetodopago !== id));
-    } catch (error) {
-      console.error('Error al eliminar método:', error);
-      alert('Error al eliminar el método');
+      await updateMetodoPago(metodo.id_metodo_pago, { activo: !metodo.activo });
+      setMessage(metodo.activo ? 'Método desactivado.' : 'Método activado.');
+      await cargarMetodos();
+    } catch (requestError) {
+      setError('No fue posible cambiar el estado del método de pago.');
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div className="metodos-pago-container">
-      <h1 className="metodos-pago-title">Métodos de Pago</h1>
-
-      <div className="metodos-pago-header">
-        <div className="metodos-pago-search-container">
-          <input
-            type="text"
-            placeholder="Buscar métodos de pago..."
-            className="metodos-pago-search-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <FaSearch className="metodos-pago-search-icon" />
+    <main className="config-min metodos-pago-page">
+      <header className="config-min__header">
+        <div>
+          <span className="config-min__eyebrow"><FaCreditCard /> Finanzas</span>
+          <h1>Métodos de pago</h1>
+          <p>Catálogo operativo para registrar pagos sin depender de texto libre.</p>
         </div>
-
-        <button onClick={() => setShowModal(true)} className="metodos-pago-add-button">
-          <FaPlus className="metodos-pago-add-icon" /> Agregar Método
+        <button type="button" onClick={abrirNuevo}>
+          <FaPlus /> Nuevo método
         </button>
-      </div>
+      </header>
 
-      <div className="metodos-pago-grid">
-        {filteredMetodos.length > 0 ? (
-          filteredMetodos.map(metodo => (
-            <div key={metodo.idmetodopago} className="metodo-pago-card">
-              <div className="metodo-pago-card-header">
-                {editingId === metodo.idmetodopago ? (
-                  <div className="metodo-pago-edit-container">
-                    <input
-                      type="text"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && saveEditing(metodo.idmetodopago)}
-                      className="metodo-pago-edit-input"
-                      autoFocus
-                    />
-                    <button onClick={() => saveEditing(metodo.idmetodopago)} className="metodo-pago-confirm-button">
-                      <FaCheck />
-                    </button>
-                    <button onClick={cancelEditing} className="metodo-pago-cancel-button">
-                      <FaTimes />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <h3 className="metodo-pago-name">{metodo.nombremetodo}</h3>
-                    <button onClick={() => startEditing(metodo.idmetodopago, metodo.nombremetodo)} className="metodo-pago-edit-button">
-                      <FaEdit />
-                    </button>
-                  </>
-                )}
-              </div>
+      <section className="config-min__search">
+        <FaSearch />
+        <input
+          type="search"
+          placeholder="Buscar por nombre, descripción o estado"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+      </section>
 
-              <div className="metodo-pago-actions">
-                <button onClick={() => handleDelete(metodo.idmetodopago)} className="metodo-pago-delete-button">
-                  <FaTrash />
-                </button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="metodos-pago-empty">
-            {searchTerm ? 'No se encontraron métodos con ese nombre' : 'No hay métodos de pago registrados'}
-          </div>
-        )}
-      </div>
+      {message && <div className="config-min__message is-success">{message}</div>}
+      {error && <div className="config-min__message">{error}</div>}
 
-      {showModal && (
-        <div className="metodo-pago-modal-overlay">
-          <div className="metodo-pago-modal">
-            <h2 className="metodo-pago-modal-title">Agregar Método de Pago</h2>
-            <div className="metodo-pago-modal-input-container">
-              <label className="metodo-pago-modal-label">Nombre del Método</label>
+      {loading ? (
+        <div className="config-min__empty">Cargando métodos de pago...</div>
+      ) : metodosFiltrados.length === 0 ? (
+        <div className="config-min__empty">No hay métodos de pago para mostrar.</div>
+      ) : (
+        <section className="config-min__table-wrap">
+          <table className="config-min__table">
+            <thead>
+              <tr>
+                <th>Método</th>
+                <th>Descripción</th>
+                <th>Estado</th>
+                <th>Actualizado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {metodosFiltrados.map((metodo) => (
+                <tr key={metodo.id_metodo_pago}>
+                  <td>
+                    <strong>{metodo.nombre_metodo}</strong>
+                    <small>#{metodo.id_metodo_pago}</small>
+                  </td>
+                  <td>{metodo.descripcion || 'N/A'}</td>
+                  <td>
+                    <span className={`config-min__badge ${metodo.activo ? '' : 'is-off'}`}>
+                      {metodo.activo ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </td>
+                  <td>{metodo.actualizado_en ? new Date(metodo.actualizado_en).toLocaleDateString('es-MX') : 'N/A'}</td>
+                  <td>
+                    <div className="metodos-pago-actions">
+                      <button type="button" onClick={() => abrirEdicion(metodo)}>
+                        Editar
+                      </button>
+                      <button type="button" onClick={() => toggleActivo(metodo)} disabled={saving}>
+                        {metodo.activo ? 'Desactivar' : 'Activar'}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+
+      {showForm && (
+        <div className="metodos-pago-modal-overlay" role="presentation">
+          <form className="metodo-pago-modal" onSubmit={guardarMetodo}>
+            <h2 className="metodo-pago-modal-title">
+              {editing ? 'Editar método de pago' : 'Nuevo método de pago'}
+            </h2>
+            <label className="metodo-pago-modal-input-container">
+              <span className="metodo-pago-modal-label">Nombre *</span>
               <input
-                type="text"
                 className="metodo-pago-modal-input"
-                value={newMetodo}
-                onChange={(e) => setNewMetodo(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddMetodo()}
-                autoFocus
+                type="text"
+                value={form.nombre_metodo}
+                onChange={(event) => setForm((current) => ({ ...current, nombre_metodo: event.target.value }))}
+                required
               />
-            </div>
+            </label>
+            <label className="metodo-pago-modal-input-container">
+              <span className="metodo-pago-modal-label">Descripción</span>
+              <textarea
+                className="metodo-pago-modal-input"
+                rows="3"
+                value={form.descripcion}
+                onChange={(event) => setForm((current) => ({ ...current, descripcion: event.target.value }))}
+              />
+            </label>
+            <label className="metodos-pago-check">
+              <input
+                type="checkbox"
+                checked={form.activo}
+                onChange={(event) => setForm((current) => ({ ...current, activo: event.target.checked }))}
+              />
+              Activo
+            </label>
             <div className="metodo-pago-modal-buttons">
-              <button onClick={() => setShowModal(false)} className="metodo-pago-modal-cancel">Cancelar</button>
-              <button onClick={handleAddMetodo} className="metodo-pago-modal-save">Guardar</button>
+              <button type="button" className="metodo-pago-modal-cancel" onClick={cerrarForm}>
+                Cancelar
+              </button>
+              <button type="submit" className="metodo-pago-modal-save" disabled={saving}>
+                {saving ? 'Guardando...' : 'Guardar'}
+              </button>
             </div>
-          </div>
+          </form>
         </div>
       )}
-    </div>
+    </main>
   );
 };
 

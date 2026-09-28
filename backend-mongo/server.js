@@ -1,36 +1,49 @@
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./src/config/database');
+// const connectDB = require('./src/config/database');
 const { PORT } = require('./src/config/env');
+const { sequelize } = require('./src/models');
 
-// Importar rutas
 const authRoutes = require('./src/routes/auth');
+const syncRoutes = require('./src/routes/sync');
+const dashboardRoutes = require('./src/routes/dashboard');
+const clientesRoutes = require('./src/routes/clientes');
 
 const app = express();
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Logs de requests (similar al backend anterior)
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
 });
 
-// Conectar a MongoDB
-connectDB();
+// Inicializar conexión a PostgreSQL (Sequelize)
+(async () => {
+  try {
+    await sequelize.authenticate();
+    await sequelize.sync();
+    console.log('Conectado a PostgreSQL via Sequelize');
+  } catch (err) {
+    console.error('Error conectando a PostgreSQL:', err);
+  }
+})();
 
-// Rutas
 app.use('/api/auth', authRoutes);
+app.use('/api/sync', syncRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api', clientesRoutes);
 
-// Ruta de prueba
 app.get('/', (req, res) => {
-  res.json({ message: 'Backend MongoDB funcionando correctamente!' });
+  res.json({ 
+    message: 'Backend MongoDB funcionando correctamente',
+    version: '1.0.0',
+    database: 'PostgreSQL (Sequelize)'
+  });
 });
 
-// Ruta para verificar conexión a BD
 app.get('/health', (req, res) => {
   res.json({ 
     message: 'Server OK',
@@ -39,12 +52,17 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Manejo de errores global
 app.use((error, req, res, next) => {
   console.error('Error no manejado:', error);
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 
+app.use((req, res) => {
+  res.status(404).json({ error: 'Ruta no encontrada' });
+});
+
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`CORS habilitado`);
+  console.log(`Base de datos: MongoDB Atlas`);
 });

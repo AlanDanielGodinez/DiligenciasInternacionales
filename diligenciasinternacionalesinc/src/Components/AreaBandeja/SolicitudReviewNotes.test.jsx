@@ -1,0 +1,20 @@
+import React from 'react';
+import {render,screen,fireEvent,waitFor} from '@testing-library/react';
+import api from '../../lib/api';
+import SolicitudReviewNotes from './SolicitudReviewNotes';
+jest.mock('../../lib/api',()=>({get:jest.fn(),post:jest.fn()}));
+test('agrega nota sin sobrescribir historial y conserva observación sin autor inventado',async()=>{
+  api.get.mockResolvedValue({data:[{id_nota:1,contenido:'Primera nota',autor_nombre_historico:'Ana',area_historica:'AMA',creado_en:'2026-09-09'}]});
+  api.post.mockResolvedValue({data:{id_nota:2,contenido:'Corrección',autor_nombre_historico:'Luis',area_historica:'Legal',creado_en:'2026-09-10'}});
+  localStorage.setItem('authToken','session-test');
+  render(<SolicitudReviewNotes solicitud={{id_solicitud:1,observaciones:'Texto heredado'}}/>);
+  await screen.findByText('Primera nota');
+  fireEvent.change(screen.getByRole('textbox'),{target:{value:'Corrección'}});
+  fireEvent.click(screen.getByRole('button',{name:'Agregar nota'}));
+  await screen.findByText('Corrección');
+  expect(screen.getByText('Primera nota')).toBeTruthy();
+  expect(screen.getByText('Texto heredado')).toBeTruthy();
+  expect(screen.getByText('Autor, fecha y área originales no registrados.')).toBeTruthy();
+  expect(api.post).toHaveBeenCalledWith('/solicitudes/1/notas',{contenido:'Corrección'},{headers:{Authorization:'Bearer session-test'}});
+  await waitFor(()=>expect(screen.getByRole('textbox').value).toBe(''));
+});

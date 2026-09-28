@@ -1,0 +1,11 @@
+const service=require('../services/negados.service');
+const run=(fn,status=200)=>async(req,res,next)=>{try{res.status(status).json(await fn(req,res))}catch(e){next(e)}};
+exports.list=run(req=>service.list(req.query));
+exports.detail=run(req=>service.detail(req.params.idSolicitud));
+exports.update=run(req=>service.updateProcess(req.params.idSolicitud,req.body));
+exports.activity=run(req=>service.addActivity(req.params.idSolicitud,req.body),201);
+exports.note=run(req=>service.addNote(req.params.idSolicitud,req.body),201);
+exports.questions=run(req=>service.setQuestions(req.params.idSolicitud,req.body));
+exports.legal=run(req=>service.sendLegal(req.params.idSolicitud,req.body),201);
+exports.close=run(req=>service.close(req.params.idSolicitud,req.body));
+exports.reapplication=run(req=>service.createReapplication(req.params.idSolicitud,req.body),201);

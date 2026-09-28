@@ -1,0 +1,11 @@
+const service=require('../services/legales.service');
+const run=(fn,status=200)=>async(req,res,next)=>{try{res.status(status).json(await fn(req,res))}catch(e){next(e)}};
+exports.list=run(req=>service.list(req.query));
+exports.bySolicitud=run(req=>service.bySolicitud(req.params.idSolicitud));
+exports.update=run(req=>service.update(req.params.idProceso,req.body));
+exports.activity=run(req=>service.addActivity(req.params.idProceso,req.body),201);
+exports.note=run(req=>service.addNote(req.params.idProceso,req.body),201);
+exports.resolve=run(req=>service.resolve(req.params.idProceso,req.body));
+exports.returnOrigin=run(req=>service.returnOrigin(req.params.idProceso,req.body));
+exports.close=run(req=>service.close(req.params.idProceso,req.body));
+exports.createRequest=run(req=>service.createLegalRequest(req.params.idProceso,req.body),201);

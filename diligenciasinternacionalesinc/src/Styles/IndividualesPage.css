@@ -1,0 +1,256 @@
+.ind-page {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 28px;
+  color: #172033;
+}
+
+.ind-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.ind-eyebrow {
+  margin: 0 0 4px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.ind-header h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.ind-header span {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.ind-header button,
+.ind-filters button,
+.ind-actions button,
+.ind-modal button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid #d7deea;
+  border-radius: 8px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ind-header button:hover,
+.ind-filters button:hover,
+.ind-actions button:hover,
+.ind-modal button:hover {
+  border-color: #2563eb;
+  color: #1d4ed8;
+}
+
+.ind-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(160px, 1fr)) auto;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ind-filters input,
+.ind-filters select,
+.ind-modal select {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #d7deea;
+  border-radius: 8px;
+  color: #0f172a;
+  font: inherit;
+  font-size: 14px;
+}
+
+.ind-alert {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ind-alert-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.ind-alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.ind-state {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  color: #607089;
+}
+
+.ind-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+}
+
+.ind-table {
+  width: 100%;
+  min-width: 1120px;
+  border-collapse: collapse;
+}
+
+.ind-table th {
+  padding: 12px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.ind-table td {
+  padding: 13px 12px;
+  border-top: 1px solid #eef2f7;
+  color: #172033;
+  font-size: 14px;
+  vertical-align: top;
+}
+
+.ind-stacked,
+.ind-progress {
+  display: grid;
+  gap: 5px;
+}
+
+.ind-stacked small,
+.ind-progress small,
+.ind-muted {
+  color: #64748b;
+}
+
+.ind-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.ind-progress span {
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ind-progress-bar {
+  width: 140px;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.ind-progress-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0f766e, #2563eb);
+}
+
+.ind-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.ind-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.ind-modal {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.25);
+}
+
+.ind-modal header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ind-modal h2,
+.ind-modal p {
+  margin: 0;
+}
+
+.ind-modal label {
+  display: grid;
+  gap: 6px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.ind-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ind-modal-actions button[type="submit"] {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .ind-page {
+    padding: 18px;
+  }
+
+  .ind-header,
+  .ind-filters {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

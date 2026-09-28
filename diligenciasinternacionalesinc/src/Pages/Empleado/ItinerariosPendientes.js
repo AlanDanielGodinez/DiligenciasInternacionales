@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { getCurrentEmployeeId } from '../../utils/authUser';
 
 const ItinerariosPendientes = () => {
   const [solicitudes, setSolicitudes] = useState([]);
@@ -104,7 +105,7 @@ const ItinerariosPendientes = () => {
 
   const guardarItinerario = async () => {
     const token = localStorage.getItem('authToken');
-    const idEmpleado = JSON.parse(localStorage.getItem('user'))?.id;
+    const idEmpleado = getCurrentEmployeeId();
 
     if (!form.fecha_salida || !form.fecha_regreso || !idEmpleado) {
       return alert('Faltan campos obligatorios');

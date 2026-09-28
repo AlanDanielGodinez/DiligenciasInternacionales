@@ -6,4 +6,10 @@ module.exports = {
   JWT_SECRET: process.env.JWT_SECRET || 'fallback_secret',
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@example.com',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'admin123'
+  ,
+  PGHOST: process.env.PGHOST || '127.0.0.1',
+  PGPORT: process.env.PGPORT || 5432,
+  PGDATABASE: process.env.PGDATABASE || 'diligencias',
+  PGUSER: process.env.PGUSER || 'postgres',
+  PGPASSWORD: process.env.PGPASSWORD || ''
 };

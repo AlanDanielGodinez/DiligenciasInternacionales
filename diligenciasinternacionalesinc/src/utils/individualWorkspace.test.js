@@ -1,0 +1,12 @@
+import {deriveInboxNextAction,deriveNextAction,getFlowStages,getIndividualFlow} from './individualWorkspace';
+test('Visa Individual usa etapas CAS, Consulado y DS',()=>expect(getFlowStages(getIndividualFlow('Visa Individual'))).toEqual(['Perfil','Pago','CAS','Consulado','DS','Documentos','Resultado']));
+test('Pasaporte no muestra CAS, Consulado ni DS',()=>expect(getFlowStages(getIndividualFlow('Pasaporte México'))).toEqual(['Perfil','Pago','Cita pasaporte','Documentos','Cierre']));
+test('ETA usa un cierre simple',()=>expect(getFlowStages(getIndividualFlow('eTA'))).toEqual(['Perfil','Cierre']));
+test('Canadá conserva sólo operación verificada',()=>expect(getFlowStages(getIndividualFlow('Visa Canadiense'))).toEqual(['Pago','Biométricos','Resultado']));
+test('prioriza perfil y pago antes de citas',()=>{expect(deriveNextAction({flow:'VISA'})).toBe('Completar perfil');expect(deriveNextAction({flow:'VISA',profilePercent:100})).toBe('Validar pago')});
+test('Visa deriva CAS y Consulado por existencia real',()=>{const base={flow:'VISA',profilePercent:100,paymentStatus:'VALIDADO'};expect(deriveNextAction(base)).toBe('Agendar CAS');expect(deriveNextAction({...base,appointments:[{tipo:'CAS'}]})).toBe('Agendar Consulado')});
+test('Pasaporte deriva su propia cita',()=>expect(deriveNextAction({flow:'PASAPORTE',profilePercent:100,paymentStatus:'VALIDADO'})).toBe('Agendar cita de pasaporte'));
+test('no propone operación después de registrar resultado',()=>expect(deriveNextAction({flow:'VISA',result:'APROBADO'})).toBe('Revisar cierre'));
+test('Canadá no exige un perfil que no existe',()=>expect(deriveNextAction({flow:'CANADA'})).toBe('Validar pago'));
+test('ETA pasa del perfil directamente al cierre',()=>expect(deriveNextAction({flow:'ETA',profilePercent:100})).toBe('Registrar cierre'));
+test('la bandeja deriva sólo con datos disponibles',()=>expect(deriveInboxNextAction({flow:'VISA',profilePercent:100,paymentStatus:'VALIDADO',missingDocuments:2})).toBe('Documentos pendientes'));

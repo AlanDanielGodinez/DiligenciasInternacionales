@@ -4,6 +4,8 @@ import { FaUser, FaLock, FaSignInAlt, FaUserTie, FaIdCard, FaPhone } from 'react
 import axios from 'axios';
 // NUEVO: Import para API MongoDB
 import API_ENDPOINTS from '../config/api';
+import { saveCurrentUser } from '../utils/authUser';
+import { AUTH_TOKEN_KEY, clearAuthSession } from '../utils/authSession';
 
 const Login = () => {
   const [userType, setUserType] = useState('empleado'); // 'empleado' o 'cliente'
@@ -25,7 +27,7 @@ const Login = () => {
 
   // Verificar token al cargar
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
     const user = localStorage.getItem('user');
 
     if (token && user) {
@@ -39,19 +41,18 @@ const Login = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       .then(() => {
-        const userData = JSON.parse(user);
+        const userData = saveCurrentUser(JSON.parse(user));
         // Compatibilidad con ambos formatos (PostgreSQL y MongoDB)
         if (userData.rol === 'Administrador' || userData.role === 'admin') {
           navigate('/home');
         } else if (userData.rol === 'cliente' || userData.role === 'user') {
           navigate('/cliente/inicio');
         } else {
-          navigate('/dashboard');
+          navigate('/home');
         }
       })
       .catch(() => {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
+        clearAuthSession();
       });
     }
   }, [navigate]);
@@ -93,14 +94,15 @@ const Login = () => {
 
         // NUEVO - MongoDB manejo de respuesta:
         if (response.data.token && response.data.user) {
-          localStorage.setItem('authToken', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
+          clearAuthSession();
+          localStorage.setItem(AUTH_TOKEN_KEY, response.data.token);
+          const normalizedUser = saveCurrentUser(response.data.user);
           
           // Verificar rol para navegación
-          if (response.data.user.role === 'admin') {
+          if (normalizedUser.role === 'admin' || normalizedUser.rol === 'Administrador') {
             navigate('/home');
           } else {
-            navigate('/dashboard');
+            navigate('/home');
           }
         }
 
@@ -133,7 +135,8 @@ const Login = () => {
 
         // NUEVO - MongoDB cliente storage:
         if (response.data.token && response.data.user) {
-          localStorage.setItem('authToken', response.data.token);
+          clearAuthSession();
+          localStorage.setItem(AUTH_TOKEN_KEY, response.data.token);
           localStorage.setItem('userCliente', JSON.stringify(response.data.user));
           
           // Si viene de solicitar un servicio, redirigir con esa info

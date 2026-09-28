@@ -1,0 +1,16 @@
+# Decisión de los seis pendientes AMA V3
+
+Fuente: `Application Documentation Formularios.pdf`, 17/08/2026. La segunda lectura encontró 83 `Show_If`; ocho estaban partidos por saltos de página y no aparecieron en la extracción inicial. No se consultó producción. El usuario confirma que V3 aún no se instaló allí.
+
+| AppSheet | Clave React actual | Tipo y Show_If exacto | Situación | Propuesta | Impacto histórico |
+|---|---|---|---|---|---|
+| 42 ¿CUANDO LE FUE NEGADA SU VISA? | `visa_negada_donde_cuando` | LongText; visa negada = `YES` | B: lugar y fecha mezclados; sin valor inicial ni fórmula | Agregar `visa_negada_fecha` LongText condicional; conservar combinado | No dividir ni convertir fechas antiguas |
+| 79 `hijos_guatemala_mexico`, “¿CUANTOS HIJOS TIENE EN SU PAIS DE RESIDENCIA?” | `hijos_pais_residencia` | LongText; familiares directos en EE.UU. = `yes` | A: mismo dato con otra clave; no es booleano ni relación | Conservar clave, usar textarea y condición; ajustar etiqueta del padre V3 | Misma clave; respuesta anterior intacta |
+| 80 EXPLICACION (TIPO DE HOSPITAL Y FECHA) | Ninguna inequívoca | LongText; tuvo hijo en EUA = `YES` | C: falta campo; sin `Required_If` | Agregar `explicacion_hospital_hijo_eeuu` textarea condicional | Clave nueva, sin backfill |
+| 84 LUGAR DE NACIMIENTO | `conyuge_fecha_lugar_nacimiento` | LongText; estado civil <> `SOLTERO/A` | B: fecha y lugar mezclados; AppSheet no desglosa ciudad/estado/país | Agregar `conyuge_lugar_nacimiento` textarea condicional; conservar combinado | No inferir lugar desde texto previo |
+| 117 FECHA DE FINALIZACION EMPLEO ANTERIOR | `empleo_anterior_periodo` | LongText; tuvo empleo anterior = `YES` | B: inicio y fin mezclados | Agregar `empleo_anterior_fin` textarea condicional; conservar periodo | No dividir periodos anteriores |
+| 134 Related FAMILIARES EN EE. UUs | `familiares_inmediatos_detalle` es texto, no relación | Lista virtual Ref; familiares directos en EE.UU. = `yes`; `REF_ROWS("FAMILIARES EN EE. UU", "ID APLICANTE")` | D/E: relación, no pregunta textual ni columna física | Grupo repetible `familiares_eeuu` enlazado al perfil mediante `perfil_respuestas_repetibles` | Conservar texto legado; no parsearlo en registros |
+
+En AppSheet, `FAMILIARES EN EE. UU`.`ID APLICANTE` es Ref a `PERFILES AMA`.`ID FORMULARIO`, marcado `IsAPartOf=true`. La tabla hija tiene clave `ID FAMILIAR` y datos `APELLIDOS`, `NOMBRE`, `ESTATUS`, `RELACION` y `EDAD EN LA QUE INGRESO A ESTADOS UNIDOS`, todos Text. El motor actual ya guarda grupos repetibles como filas de `perfil_respuestas_repetibles` (`id_repetible` PK, `id_perfil` FK, `grupo_key`, `item_uuid`, `datos_json`), y los snapshots de versiones conservan esos registros. La interfaz ofrece agregar, editar y eliminar elementos mediante el componente repetible existente. No se requiere una tabla nueva para esta representación, aunque debe verificarse que esa tabla V2 exista en cada ambiente antes de publicar V3.
+
+Los campos combinados se conservan visibles y opcionales como datos heredados; los nuevos campos son independientes. No hay fallback automático porque no existe una forma segura de separar texto libre antiguo en sus partes. Se conserva `familiares_inmediatos_detalle` como texto histórico adicional, sin convertirlo en la lista relacionada.

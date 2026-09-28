@@ -1,0 +1,267 @@
+.viajes-op {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  color: #172033;
+}
+
+.viajes-op__header,
+.viajes-op__tabs,
+.viajes-op__filters,
+.viajes-op__table-card,
+.viajes-op__alert {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.viajes-op__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px;
+}
+
+.viajes-op__header p {
+  margin: 0 0 5px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.viajes-op__header h1 {
+  margin: 0 0 6px;
+  color: #0f172a;
+  font-size: 28px;
+}
+
+.viajes-op__header span {
+  color: #64748b;
+}
+
+.viajes-op__header-actions,
+.viajes-op__actions,
+.viajes-op__modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.viajes-op button {
+  min-height: 36px;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.viajes-op__header-actions button:last-child,
+.viajes-op__actions button,
+.viajes-op__modal-actions button:first-child,
+.viajes-op__tabs button {
+  border-color: #cbd5e1;
+  background: #fff;
+  color: #334155;
+}
+
+.viajes-op__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+}
+
+.viajes-op__tabs button.is-active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.viajes-op__filters {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) 180px auto;
+  gap: 10px;
+  padding: 14px;
+}
+
+.viajes-op input,
+.viajes-op select,
+.viajes-op textarea {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #0f172a;
+  font: inherit;
+}
+
+.viajes-op textarea {
+  resize: vertical;
+}
+
+.viajes-op__alert {
+  padding: 12px 14px;
+  font-weight: 700;
+}
+
+.viajes-op__alert--success {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.viajes-op__alert--error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.viajes-op__table-card {
+  overflow-x: auto;
+}
+
+.viajes-op__table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+}
+
+.viajes-op__table th,
+.viajes-op__table td {
+  padding: 13px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.viajes-op__table th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.viajes-op__table small,
+.viajes-op__table span {
+  display: block;
+}
+
+.viajes-op__table small {
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.viajes-op__chip {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.viajes-op__empty {
+  padding: 28px;
+  color: #64748b;
+  text-align: center;
+}
+
+.viajes-op__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.45);
+  padding: 20px;
+}
+
+.viajes-op__modal {
+  width: min(860px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.25);
+}
+
+.viajes-op__modal header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+  padding: 16px 18px;
+}
+
+.viajes-op__modal h2 {
+  margin: 0;
+}
+
+.viajes-op__form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px;
+}
+
+.viajes-op__form-grid label {
+  display: grid;
+  gap: 6px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.viajes-op__wide,
+.viajes-op__modal-actions {
+  grid-column: 1 / -1;
+}
+
+.viajes-op__checkbox {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.viajes-op__checkbox input {
+  width: auto;
+  min-height: auto;
+}
+
+.viajes-op__modal-actions {
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+@media (max-width: 760px) {
+  .viajes-op {
+    padding: 16px;
+  }
+
+  .viajes-op__header,
+  .viajes-op__filters,
+  .viajes-op__form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .viajes-op__header {
+    display: grid;
+  }
+}

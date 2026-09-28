@@ -1,4 +1,4 @@
-const User = require('../models/user'); // ✅ Correcto - archivo en minúscula
+const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../config/env');
 
@@ -49,12 +49,12 @@ const register = async (req, res) => {
   }
 };
 
-// Login
+// Login para Empleados/Administradores
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log('Intento de login recibido para email:', email);
+    console.log('🔐 Intento de login (empleado) para:', email);
 
     if (!email || !password) {
       return res.status(400).json({ 
@@ -62,29 +62,29 @@ const login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
     
     if (!user) {
-      console.log('Usuario no encontrado:', email);
-      return res.status(401).json({ error: 'Usuario no encontrado' });
+      console.log('❌ Usuario no encontrado:', email);
+      return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+    }
+
+    // Validar que sea admin o user
+    if (user.role !== 'admin' && user.role !== 'user') {
+      console.log('❌ Usuario no es empleado:', email);
+      return res.status(403).json({ error: 'Este usuario no es empleado' });
     }
 
     const validPassword = await user.comparePassword(password);
     
     if (!validPassword) {
-      console.log('Contraseña incorrecta para:', email);
-      return res.status(401).json({ error: 'Contraseña incorrecta' });
+      console.log('❌ Contraseña incorrecta para:', email);
+      return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
     }
 
     const token = generateToken(user);
 
-    console.log('Login exitoso para:', email);
-
-    // CAMBIO: Actualizar rol para compatibilidad con frontend
-    let userRole = user.role;
-    if (user.role === 'user') {
-      userRole = 'admin'; // Temporalmente tratar users como admin
-    }
+    console.log('✅ Login exitoso (empleado) para:', email);
 
     res.json({
       message: 'Login exitoso',
@@ -93,13 +93,68 @@ const login = async (req, res) => {
         id: user._id,
         email: user.email,
         nombre: user.name,
-        role: userRole, // Usar el rol ajustado
-        rol: userRole   // Agregar compatibilidad con frontend existente
+        role: user.role,
+        rol: user.role === 'admin' ? 'Administrador' : 'Empleado'
       }
     });
 
   } catch (error) {
     console.error('Error en login:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+// Login para Clientes
+const clienteLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    console.log('🔐 Intento de login (cliente) para:', email);
+
+    if (!email || !password) {
+      return res.status(400).json({ 
+        error: 'Email y password son requeridos'
+      });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    
+    if (!user) {
+      console.log('❌ Cliente no encontrado:', email);
+      return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+    }
+
+    // Validar que sea cliente
+    if (user.role !== 'user' && user.role !== 'cliente') {
+      console.log('❌ Usuario no es cliente:', email);
+      return res.status(403).json({ error: 'Este usuario no es cliente' });
+    }
+
+    const validPassword = await user.comparePassword(password);
+    
+    if (!validPassword) {
+      console.log('❌ Contraseña incorrecta para:', email);
+      return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+    }
+
+    const token = generateToken(user);
+
+    console.log('✅ Login exitoso (cliente) para:', email);
+
+    res.json({
+      message: 'Login exitoso',
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        nombre: user.name,
+        role: 'cliente',
+        rol: 'Cliente'
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en login cliente:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
@@ -122,31 +177,9 @@ const verify = async (req, res) => {
   }
 };
 
-const getDashboardData = (req, res) => {
-  try {
-    res.json({
-      gruposActivos: [
-        { id: 1, nombre: 'Grupo A', descripcion: 'Descripción del Grupo A' },
-        { id: 2, nombre: 'Grupo B', descripcion: 'Descripción del Grupo B' }
-      ],
-      tramitesActivos: [
-        { id: 1, titulo: 'Trámite 1', estado: 'En progreso' },
-        { id: 2, titulo: 'Trámite 2', estado: 'Completado' }
-      ],
-      clientePorPais: [
-        { pais: 'Argentina', cantidad: 120 },
-        { pais: 'Brasil', cantidad: 80 },
-      ]
-    });
-  } catch (error) {
-    console.error('Error en obtener datos del dashboard:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-};
-      
 module.exports = {
   register,
   login,
-  verify,
-  getDashboardData
+  clienteLogin,
+  verify
 };

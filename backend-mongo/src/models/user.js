@@ -1,3 +1,40 @@
+const { DataTypes, Model } = require('sequelize');
+const sequelize = require('../config/sequelize');
+const bcrypt = require('bcryptjs');
+
+class User extends Model {
+  async comparePassword(candidate) {
+    return await bcrypt.compare(candidate, this.password);
+  }
+}
+
+User.init({
+  email: { type: DataTypes.STRING, allowNull: false, unique: true, validate: { isEmail: true } },
+  password: { type: DataTypes.STRING, allowNull: false },
+  name: { type: DataTypes.STRING, allowNull: false },
+  role: { type: DataTypes.STRING, allowNull: false, defaultValue: 'user' },
+  isActive: { type: DataTypes.BOOLEAN, defaultValue: true }
+}, {
+  sequelize,
+  modelName: 'User',
+  timestamps: true,
+  hooks: {
+    beforeCreate: async (user) => {
+      if (user.password) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+      }
+    },
+    beforeUpdate: async (user) => {
+      if (user.changed('password')) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+      }
+    }
+  }
+});
+
+module.exports = User;
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 

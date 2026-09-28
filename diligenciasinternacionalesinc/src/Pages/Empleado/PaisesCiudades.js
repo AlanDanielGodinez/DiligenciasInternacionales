@@ -1,154 +1,94 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { FaGlobeAmericas, FaRedo, FaSearch } from 'react-icons/fa';
+import { getPaises } from '../../services/configuracion.service';
 
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { FaTrash } from 'react-icons/fa';
+const getValue = (value) =>
+  value !== null && value !== undefined && String(value).trim() !== '' ? value : 'N/A';
 
 const GestionPaisesCiudades = () => {
   const [paises, setPaises] = useState([]);
-  const [ciudades, setCiudades] = useState([]);
-  const [nuevoPais, setNuevoPais] = useState('');
-  const [nuevaCiudad, setNuevaCiudad] = useState('');
-  const [paisParaCiudad, setPaisParaCiudad] = useState('');
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
-  const token = localStorage.getItem('authToken');
-  const headers = { Authorization: `Bearer ${token}` };
-
-  const cargarPaises = async () => {
+  const loadPaises = async () => {
+    setLoading(true);
+    setMessage('');
     try {
-      const resPaises = await axios.get('http://localhost:5000/api/paises', { headers });
-      setPaises(resPaises.data);
-    } catch (err) {
-      console.error('Error al cargar países:', err);
-    }
-  };
-
-  const cargarCiudadesPorPais = async (idPais) => {
-    if (!idPais) return setCiudades([]);
-    try {
-      const resCiudades = await axios.get(`http://localhost:5000/api/paises/${idPais}/ciudades`, { headers });
-      setCiudades(resCiudades.data);
-    } catch (err) {
-      console.error('Error al cargar ciudades:', err);
+      setPaises(await getPaises());
+    } catch (error) {
+      setMessage(error?.response?.data?.error?.message || 'No se pudieron cargar los paises.');
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    cargarPaises();
+    loadPaises();
   }, []);
 
-  useEffect(() => {
-    cargarCiudadesPorPais(paisParaCiudad);
-  }, [paisParaCiudad]);
-
-  const agregarPais = async () => {
-    if (!nuevoPais.trim()) return;
-    try {
-      const res = await axios.post('http://localhost:5000/api/paises', { nombrePais: nuevoPais }, { headers });
-      setPaises([...paises, res.data]);
-      setNuevoPais('');
-    } catch (err) {
-      console.error('Error al agregar país:', err);
-    }
-  };
-
-  const agregarCiudad = async () => {
-    if (!nuevaCiudad.trim() || !paisParaCiudad) return;
-    try {
-      const res = await axios.post('http://localhost:5000/api/ciudades', {
-        nombreCiudad: nuevaCiudad,
-        idPais: paisParaCiudad
-      }, { headers });
-      setCiudades([...ciudades, res.data]);
-      setNuevaCiudad('');
-    } catch (err) {
-      console.error('Error al agregar ciudad:', err);
-    }
-  };
-
-  const eliminarPais = async (id) => {
-    if (window.confirm('¿Eliminar este país?')) {
-      try {
-        await axios.delete(`http://localhost:5000/api/paises/${id}`, { headers });
-        setPaises(paises.filter(p => (p.idPais || p.idpais) !== id));
-      } catch (err) {
-        console.error('Error al eliminar país:', err);
-      }
-    }
-  };
-
-  const eliminarCiudad = async (id) => {
-    if (window.confirm('¿Eliminar esta ciudad?')) {
-      try {
-        await axios.delete(`http://localhost:5000/api/ciudades/${id}`, { headers });
-        setCiudades(ciudades.filter(c => (c.idCiudad || c.idciudad) !== id));
-      } catch (err) {
-        console.error('Error al eliminar ciudad:', err);
-      }
-    }
-  };
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return paises;
+    return paises.filter((pais) =>
+      [pais.nombre_pais, pais.nombre, pais.clave].some((value) =>
+        String(value || '').toLowerCase().includes(query)
+      )
+    );
+  }, [paises, search]);
 
   return (
-    <div className="gestion-paisesciudades-container">
-      <h1 className="gestion-paisesciudades-titulo">Gestión de Países y Ciudades</h1>
-
-      <div className="gestion-paisesciudades-panel">
-        {/* Países */}
-        <div className="gestion-paisesciudades-card">
-          <h2>Países</h2>
-          <div className="gestion-paisesciudades-form">
-            <input
-              type="text"
-              value={nuevoPais}
-              onChange={(e) => setNuevoPais(e.target.value)}
-              placeholder="Nombre del país"
-            />
-            <button onClick={agregarPais}>Agregar</button>
-          </div>
-          <ul>
-            {paises.map((p) => (
-              <li key={p.idPais || p.idpais}>
-                {p.nombrePais || p.nombrepais}
-                <button className="btn-eliminar" onClick={() => eliminarPais(p.idPais || p.idpais)}>
-                  <FaTrash />
-                </button>
-              </li>
-            ))}
-          </ul>
+    <main className="config-min">
+      <header className="config-min__header">
+        <div>
+          <span className="config-min__eyebrow"><FaGlobeAmericas /> Configuracion</span>
+          <h1>Paises y ciudades</h1>
+          <p>Listado real de paises. Ciudades aun no tiene endpoint PostgreSQL activo, por eso queda como pendiente visible.</p>
         </div>
+        <button type="button" onClick={loadPaises}><FaRedo /> Actualizar</button>
+      </header>
 
-        {/* Ciudades */}
-        <div className="gestion-paisesciudades-card">
-          <h2>Ciudades</h2>
-          <div className="gestion-paisesciudades-form">
-            <input
-              type="text"
-              value={nuevaCiudad}
-              onChange={(e) => setNuevaCiudad(e.target.value)}
-              placeholder="Nombre de la ciudad"
-            />
-            <select value={paisParaCiudad} onChange={(e) => setPaisParaCiudad(e.target.value)}>
-              <option value="">Selecciona un país</option>
-              {paises.map((p) => (
-                <option key={p.idPais || p.idpais} value={p.idPais || p.idpais}>
-                  {p.nombrePais || p.nombrepais}
-                </option>
-              ))}
-            </select>
-            <button onClick={agregarCiudad}>Agregar</button>
-          </div>
-          <ul>
-            {ciudades.map((c) => (
-              <li key={c.idCiudad || c.idciudad}>
-                {c.nombreCiudad || c.nombreciudad}
-                <button className="btn-eliminar" onClick={() => eliminarCiudad(c.idCiudad || c.idciudad)}>
-                  <FaTrash />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <section className="config-min__search">
+        <FaSearch />
+        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar pais" />
+      </section>
+
+      <div className="config-min__message">
+        Ciudades no esta conectado todavia. No se muestran botones de crear, editar o eliminar para evitar llamadas a endpoints inexistentes.
       </div>
-    </div>
+      {message && <div className="config-min__message">{message}</div>}
+
+      <section className="config-min__table-wrap">
+        {loading ? (
+          <div className="config-min__empty">Cargando paises...</div>
+        ) : filtered.length === 0 ? (
+          <div className="config-min__empty">No hay paises para mostrar.</div>
+        ) : (
+          <table className="config-min__table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Pais</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((pais) => (
+                <tr key={pais.id_pais || pais.idPais}>
+                  <td>{getValue(pais.id_pais || pais.idPais)}</td>
+                  <td><strong>{getValue(pais.nombre_pais || pais.nombre || pais.nombrePais)}</strong></td>
+                  <td>
+                    <span className={pais.activo === false ? 'config-min__badge is-off' : 'config-min__badge'}>
+                      {pais.activo === false ? 'Inactivo' : 'Activo'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+    </main>
   );
 };
 

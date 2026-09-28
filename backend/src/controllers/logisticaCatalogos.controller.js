@@ -1,0 +1,9 @@
+const service=require('../services/logisticaCatalogos.service');
+exports.listTours=async(req,res,next)=>{try{res.json({tours:await service.listTours()})}catch(e){next(e)}};
+exports.createTour=async(req,res,next)=>{try{res.status(201).json({tour:await service.saveTour(null,req.body)})}catch(e){next(e)}};
+exports.updateTour=async(req,res,next)=>{try{res.json({tour:await service.saveTour(req.params.id,req.body)})}catch(e){next(e)}};
+exports.listGroups=async(req,res,next)=>{try{res.json({grupos:await service.listGroups()})}catch(e){next(e)}};
+exports.createGroup=async(req,res,next)=>{try{res.status(201).json({grupo:await service.saveGroup(null,req.body)})}catch(e){next(e)}};
+exports.updateGroup=async(req,res,next)=>{try{res.json({grupo:await service.saveGroup(req.params.id,req.body)})}catch(e){next(e)}};
+exports.getGroup=async(req,res,next)=>{try{res.json({grupo:await service.getGroup(req.params.id)})}catch(e){next(e)}};
+exports.addMember=async(req,res,next)=>{try{res.json({grupo:await service.addMember(req.params.id,req.body.id_solicitud)})}catch(e){next(e)}};

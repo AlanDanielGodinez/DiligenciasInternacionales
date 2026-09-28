@@ -1,0 +1,256 @@
+.ama-page {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 28px;
+  color: #172033;
+}
+
+.ama-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.ama-eyebrow {
+  margin: 0 0 4px;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.ama-header h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.ama-header span {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.ama-header button,
+.ama-filters button,
+.ama-actions button,
+.ama-modal button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid #d7deea;
+  border-radius: 8px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ama-header button:hover,
+.ama-filters button:hover,
+.ama-actions button:hover,
+.ama-modal button:hover {
+  border-color: #0f766e;
+  color: #0f766e;
+}
+
+.ama-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(160px, 1fr)) auto;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ama-filters input,
+.ama-filters select,
+.ama-modal select {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #d7deea;
+  border-radius: 8px;
+  color: #0f172a;
+  font: inherit;
+  font-size: 14px;
+}
+
+.ama-alert {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ama-alert-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.ama-alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.ama-state {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  color: #607089;
+}
+
+.ama-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+}
+
+.ama-table {
+  width: 100%;
+  min-width: 1120px;
+  border-collapse: collapse;
+}
+
+.ama-table th {
+  padding: 12px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.ama-table td {
+  padding: 13px 12px;
+  border-top: 1px solid #eef2f7;
+  color: #172033;
+  font-size: 14px;
+  vertical-align: top;
+}
+
+.ama-stacked,
+.ama-progress {
+  display: grid;
+  gap: 5px;
+}
+
+.ama-stacked small,
+.ama-progress small,
+.ama-muted {
+  color: #64748b;
+}
+
+.ama-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #ccfbf1;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.ama-progress span {
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ama-progress-bar {
+  width: 140px;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.ama-progress-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0f766e, #2563eb);
+}
+
+.ama-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.ama-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.ama-modal {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.25);
+}
+
+.ama-modal header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ama-modal h2,
+.ama-modal p {
+  margin: 0;
+}
+
+.ama-modal label {
+  display: grid;
+  gap: 6px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.ama-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ama-modal-actions button[type="submit"] {
+  border-color: #0f766e;
+  background: #0f766e;
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .ama-page {
+    padding: 18px;
+  }
+
+  .ama-header,
+  .ama-filters {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

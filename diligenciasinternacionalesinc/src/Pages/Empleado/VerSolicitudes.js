@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import AgregarSeguimientoModal from './AgregarSeguimientoModal';
 import DetallesSolicitudModal from './DetallesSolicitudModal';
+import { getCurrentEmployeeId } from '../../utils/authUser';
 
 const VerSolicitudes = () => {
   const [solicitudes, setSolicitudes] = useState([]);
@@ -104,7 +105,7 @@ const VerSolicitudes = () => {
 
   const enviarDocumentos = async () => {
     const token = localStorage.getItem('authToken');
-    const idEmpleado = JSON.parse(localStorage.getItem('user'))?.id;
+    const idEmpleado = getCurrentEmployeeId();
 
     if (!archivos.documento1 || !archivos.documento2 || !archivos.documento3) {
       return alert('Debes seleccionar los 3 documentos');

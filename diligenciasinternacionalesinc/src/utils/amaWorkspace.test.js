@@ -1,0 +1,3 @@
+import {deriveAmaListAction,deriveAmaNextAction} from './amaWorkspace';
+test('próxima acción AMA sigue fuentes operativas',()=>{expect(deriveAmaNextAction({profilePercent:20})).toBe('Completar perfil');expect(deriveAmaNextAction({profilePercent:100,groupId:2,paymentStatus:'VALIDADO',calls:[],ds:[],protocol:[]})).toBe('Agendar llamada')});
+test('listado no persiste y deriva DS, protocolo, cita y resultado',()=>{expect(deriveAmaListAction({ds_terminada:true,protocolo_registrado:false})).toBe('Protocolo pendiente');expect(deriveAmaListAction({ds_terminada:true,protocolo_registrado:true,cita_registrada:true,resultado:'APROBADO',ama_visa_recibida:false})).toBe('Marcar visa recibida')});

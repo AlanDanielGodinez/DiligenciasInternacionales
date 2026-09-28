@@ -1,0 +1,11 @@
+.calendar-page__action { display: inline-flex; align-items: center; min-height: 42px; padding: 0 16px; border: 1px solid #d7dee7; border-radius: 12px; color: #1f3a5f; background: #fff; font-size: 12px; font-weight: 700; text-decoration: none; }
+.calendar-page__state { margin-bottom: 16px; border-radius: 24px; }
+.calendar-detail-backdrop { position: fixed; z-index: 1100; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(7,27,51,.5); }
+.calendar-detail { width: min(100%, 480px); padding: 24px; border-radius: 24px; background: #fff; box-shadow: 0 24px 60px rgba(7,27,51,.25); }
+.calendar-detail__header { display: flex; justify-content: space-between; gap: 16px; }
+.calendar-detail h2 { margin: 5px 0 18px; color: #071b33; }
+.calendar-detail__close { width: 36px; height: 36px; border: 0; border-radius: 50%; font-size: 22px; cursor: pointer; }
+.calendar-detail dl { display: grid; grid-template-columns: 130px 1fr; gap: 10px 14px; margin: 0 0 22px; font-size: 13px; }
+.calendar-detail dt { color: #64748b; font-weight: 700; }.calendar-detail dd { margin: 0; color: #45464d; }
+.calendar-detail__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.calendar-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:14px;border:1px solid #e2e8f0;border-radius:10px;background:#fff}.calendar-filters label,.schedule-call__grid label{display:grid;gap:6px;color:#475569;font-size:.82rem;font-weight:800}.calendar-filters select,.schedule-call input,.schedule-call select,.schedule-call textarea{min-height:40px;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;background:#fff}.calendar-legend{display:flex;gap:18px;align-items:center;color:#475569;font-weight:700}.calendar-legend span{display:flex;align-items:center;gap:7px}.calendar-legend i{width:10px;height:10px;border-radius:50%}.calendar-legend .is-call{background:#7c3aed}.calendar-legend .is-group{background:#0f766e}.schedule-call{width:min(720px,96vw)}.schedule-call__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:18px}.schedule-call__wide{grid-column:1/-1}.schedule-call__error{margin:12px 18px 0;color:#b91c1c}@media(max-width:700px){.calendar-filters,.schedule-call__grid{grid-template-columns:1fr}.schedule-call__wide{grid-column:auto}}

@@ -1,388 +1,93 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaSearch, FaPlus, FaEdit, FaTrash, FaUsers, FaChevronDown, FaChevronUp, FaInfoCircle } from 'react-icons/fa';
-import { MdOutlineMeetingRoom } from 'react-icons/md';
-import axios from 'axios';
+import React, { useEffect, useMemo, useState } from 'react';
+import { FaLayerGroup, FaRedo, FaSearch } from 'react-icons/fa';
+import { getAreas } from '../../services/configuracion.service';
 
-import AsignarResponsableModal from '../Empleado/AsignarResponsable';
+const getValue = (value) =>
+  value !== null && value !== undefined && String(value).trim() !== '' ? value : 'N/A';
 
 const AreasPage = () => {
-  // Estados
-  const [editingArea, setEditingArea] = useState(null);
   const [areas, setAreas] = useState([]);
-  const [filteredAreas, setFilteredAreas] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [expandedArea, setExpandedArea] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [newArea, setNewArea] = useState({ nombreArea: '', descripcion: '' });
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const [mostrarModalAsignar, setMostrarModalAsignar] = useState(null); // Guarda el id del área
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
+  const loadAreas = async () => {
+    setLoading(true);
+    setMessage('');
+    try {
+      setAreas(await getAreas());
+    } catch (error) {
+      setMessage(error?.response?.data?.error?.message || 'No se pudieron cargar las areas.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Colores para las tarjetas de áreas
-  const areaColors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c', '#d35400'];
-
-  // Configuración de axios
-  const api = axios.create({
-    baseURL: 'http://localhost:5000/api',
-    timeout: 10000,
-  });
-
-  api.interceptors.request.use(config => {
-    const token = localStorage.getItem('authToken');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-  }, error => Promise.reject(error));
-
-  // Obtener áreas del backend
   useEffect(() => {
-    const fetchAreas = async () => {
-      try {
-        setIsLoading(true);
-        setError('');
-        
-        console.log('Iniciando carga de áreas...'); // Debug
-        const response = await api.get('/areas');
-        console.log('Datos recibidos:', response.data); // Debug
-        
-        if (!response.data || !Array.isArray(response.data)) {
-          throw new Error('Formato de datos incorrecto');
-        }
-  
-        const areasWithColors = response.data.map((area, index) => ({
-          ...area,
-          idArea: area.idArea || 0,
-          nombreArea: area.nombreArea ? area.nombreArea.toString() : 'Área sin nombre',
-          descripcion: area.descripcion ? area.descripcion.toString() : 'Sin descripción',
-          responsable: area.responsable ? area.responsable.toString() : 'Sin asignar',
-          empleados: area.empleados || 0,
-          color: areaColors[index % areaColors.length]
-        }));
-  
-        console.log('Áreas procesadas:', areasWithColors); // Debug
-        setAreas(areasWithColors);
-        setFilteredAreas(areasWithColors);
-      } catch (err) {
-        console.error('Error al cargar áreas:', err);
-        setError(err.response?.data?.error || err.message || 'Error al cargar áreas');
-        if (err.response?.status === 401) navigate('/login');
-      } finally {
-        setIsLoading(false);
-        console.log('Carga de áreas completada'); // Debug
-      }
-    };
-  
-    fetchAreas();
+    loadAreas();
   }, []);
-  
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => setError(''), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
 
-  // Filtrado de áreas
-  useEffect(() => {
-    if (!areas.length) return;
-    
-    const searchTermLower = searchTerm.toLowerCase();
-    const results = areas.filter(area => {
-      // Asegurar que los campos sean strings válidos
-      const nombre = area.nombreArea ? area.nombreArea.toString().toLowerCase() : '';
-      const descripcion = area.descripcion ? area.descripcion.toString().toLowerCase() : '';
-      
-      return nombre.includes(searchTermLower) || 
-             descripcion.includes(searchTermLower);
-    });
-    
-    setFilteredAreas(results);
-  }, [searchTerm, areas]);
-
-  // Handlers
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewArea(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleCreateArea = async (e) => {
-    e.preventDefault();
-    setError('');
-    
-    try {
-      const response = await api.post('/areas', newArea);
-      const updatedAreas = await api.get('/areas');
-      
-      const areasWithColors = updatedAreas.data.map((area, index) => ({
-        ...area,
-        color: areaColors[index % areaColors.length]
-      }));
-      
-      setAreas(areasWithColors);
-      setFilteredAreas(areasWithColors);
-      setNewArea({ nombreArea: '', descripcion: '' });
-      setShowModal(false);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error al crear área');
-    }
-  };
-
-  const handleUpdateArea = async (e) => {
-    e.preventDefault();
-    setError('');
-    
-    try {
-      const response = await api.put(`/areas/${editingArea.idArea}`, editingArea);
-      
-      setAreas(areas.map(area => 
-        area.idArea === editingArea.idArea ? { ...response.data, color: area.color } : area
-      ));
-      
-      setFilteredAreas(filteredAreas.map(area => 
-        area.idArea === editingArea.idArea ? { ...response.data, color: area.color } : area
-      ));
-      
-      setEditingArea(null);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error al actualizar área');
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar esta área?')) return;
-    
-    try {
-      await api.delete(`/areas/${id}`);
-      
-      setAreas(areas.filter(area => area.idArea !== id));
-      setFilteredAreas(filteredAreas.filter(area => area.idArea !== id));
-      
-      alert('Área eliminada correctamente');
-    } catch (err) {
-      const errorMsg = err.response?.data?.error || 'Error al eliminar área';
-      setError(errorMsg);
-      alert(errorMsg);
-    }
-  };
-
-  const toggleExpand = (id) => {
-    setExpandedArea(expandedArea === id ? null : id);
-  };
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return areas;
+    return areas.filter((area) =>
+      [area.clave, area.nombre, area.nombre_area].some((value) =>
+        String(value || '').toLowerCase().includes(query)
+      )
+    );
+  }, [areas, search]);
 
   return (
-    <div className="areas-container">
-      <div className="areas-header">
-        <h1><MdOutlineMeetingRoom className="header-icon" /> Gestión de Áreas</h1>
-        <button onClick={() => setShowModal(true)} className="btn-add-area">
-          <span className="btn-icon-circle"><FaPlus className="btn-icon" /></span>
-          <span className="btn-text">Crear Nueva Área</span>
-        </button>
-      </div>
-
-      {error && <div className="error-message">{error}</div>}
-
-      <div className="search-container">
-        <div className="search-box">
-          <FaSearch className="search-icon" />
-          <input
-            type="text"
-            placeholder="Buscar áreas por nombre o descripción..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+    <main className="config-min">
+      <header className="config-min__header">
+        <div>
+          <span className="config-min__eyebrow"><FaLayerGroup /> Configuracion</span>
+          <h1>Areas operativas</h1>
+          <p>Catalogo de areas reales usado por solicitudes y bandejas operativas. El CRUD queda pendiente para fase 2.</p>
         </div>
-      </div>
+        <button type="button" onClick={loadAreas}><FaRedo /> Actualizar</button>
+      </header>
 
-      {/* Modal de Edición */}
-      {editingArea && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2><MdOutlineMeetingRoom /> Editar Área</h2>
-            
-            <form onSubmit={handleUpdateArea}>
-              <div className="form-group">
-                <label>Nombre del Área:</label>
-                <input
-                  type="text"
-                  value={editingArea.nombreArea}
-                  onChange={(e) => setEditingArea({
-                    ...editingArea,
-                    nombreArea: e.target.value
-                  })}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Descripción:</label>
-                <textarea
-                  value={editingArea.descripcion}
-                  onChange={(e) => setEditingArea({
-                    ...editingArea,
-                    descripcion: e.target.value
-                  })}
-                  rows="3"
-                />
-              </div>
-              
-              <div className="modal-actions">
-                <button 
-                  type="button" 
-                  className="btn-cancel"
-                  onClick={() => setEditingArea(null)}
-                >
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-confirm">
-                  Guardar Cambios
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <section className="config-min__search">
+        <FaSearch />
+        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por clave o nombre" />
+      </section>
 
-      {/* Contenido Principal */}
-      {isLoading ? (
-        <div className="loading-animation">
-          <div className="spinner"></div>
-          <p>Cargando áreas...</p>
-        </div>
-      ) : filteredAreas.length === 0 ? (
-        <div className="no-results">
-          <FaInfoCircle className="info-icon" />
-          <p>{searchTerm ? 'No hay resultados para tu búsqueda' : 'No hay áreas registradas'}</p>
-        </div>
-      ) : (
-        <div className="areas-grid">
-          {filteredAreas.map((area, index) => (
-            <div 
-              key={area.idArea} 
-              className={`area-card ${expandedArea === area.idArea ? 'expanded' : ''}`}
-              style={{ 
-                '--area-color': area.color,
-                '--area-color-light': `${area.color}20`,
-                animationDelay: `${index * 0.1}s`
-              }}
-            >
-              <div className="card-header" onClick={() => toggleExpand(area.idArea)}>
-                <h3>{area.nombreArea}</h3>
-                <span className="toggle-icon">
-                  {expandedArea === area.idArea ? <FaChevronUp /> : <FaChevronDown />}
-                </span>
-              </div>
-              
-              <div className="card-content">
-                <p className="area-description">{area.descripcion}</p>
-                
-                <div className="area-stats">
-                  <div className="stat-item">
-                    <span className="stat-label">Empleados:</span>
-                    <span className="stat-value">{area.empleados}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">Responsable:</span>
-                    <span className="stat-value">{area.responsable}</span>
-                  </div>
-                </div>
+      {message && <div className="config-min__message">{message}</div>}
 
-                {expandedArea === area.idArea && (
-                  <div className="expanded-content">
-                    <div className="area-actions">
-                      <button
-                        onClick={() => setEditingArea(area)}
-                        className="btn-edit"
-                      >
-                        <FaEdit /> Editar
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(area.idArea)}
-                        className="btn-delete"
-                      >
-                        <FaTrash /> Eliminar
-                      </button>
-                      <button
-                        onClick={() => setMostrarModalAsignar(area.idArea)}
-                        className="btn-assign"
-                      >
-                        <FaUsers /> Asignar
-                      </button>
-
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Modal para nueva área */}
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2><MdOutlineMeetingRoom /> Crear Nueva Área</h2>
-            
-            <form onSubmit={handleCreateArea}>
-              <div className="form-group">
-                <label>Nombre del Área:</label>
-                <input
-                  type="text"
-                  name="nombreArea"
-                  value={newArea.nombreArea}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Descripción:</label>
-                <textarea
-                  name="descripcion"
-                  value={newArea.descripcion}
-                  onChange={handleInputChange}
-                  rows="3"
-                />
-              </div>
-              
-              <div className="modal-actions">
-                <button 
-                  type="button" 
-                  className="btn-cancel"
-                  onClick={() => {
-                    setShowModal(false);
-                    setError('');
-                  }}
-                >
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-confirm">
-                  Crear Área
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      {mostrarModalAsignar && (
-          <AsignarResponsableModal 
-            areaId={mostrarModalAsignar}
-            onClose={() => setMostrarModalAsignar(null)}
-            onAsignado={async () => {
-              const response = await api.get('/areas');
-              const areasWithColors = response.data.map((area, index) => ({
-                ...area,
-                color: areaColors[index % areaColors.length]
-              }));
-              setAreas(areasWithColors);
-              setFilteredAreas(areasWithColors);
-            }}
-          />
+      <section className="config-min__table-wrap">
+        {loading ? (
+          <div className="config-min__empty">Cargando areas...</div>
+        ) : filtered.length === 0 ? (
+          <div className="config-min__empty">No hay areas para mostrar.</div>
+        ) : (
+          <table className="config-min__table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Clave</th>
+                <th>Nombre</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((area) => (
+                <tr key={area.id_area || area.idArea}>
+                  <td>{getValue(area.id_area || area.idArea)}</td>
+                  <td><strong>{getValue(area.clave)}</strong></td>
+                  <td>{getValue(area.nombre || area.nombre_area)}</td>
+                  <td>
+                    <span className={area.activo === false ? 'config-min__badge is-off' : 'config-min__badge'}>
+                      {area.activo === false ? 'Inactiva' : 'Activa'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
-
-    </div>
+      </section>
+    </main>
   );
 };
 

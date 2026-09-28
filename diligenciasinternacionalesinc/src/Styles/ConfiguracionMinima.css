@@ -1,0 +1,167 @@
+.config-min {
+  min-height: 100vh;
+  padding: 24px;
+  background: #f6f8fb;
+  color: #1f2937;
+}
+
+.config-min__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.config-min__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #2f6f73;
+  font-weight: 700;
+}
+
+.config-min h1 {
+  margin: 6px 0;
+  color: #14213d;
+  font-size: 28px;
+}
+
+.config-min p {
+  margin: 0;
+  color: #667085;
+}
+
+.config-min button {
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #1f2937;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-min button:hover {
+  border-color: #2f6f73;
+  color: #2f6f73;
+}
+
+.config-min__search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.config-min__search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font: inherit;
+  color: #1f2937;
+}
+
+.config-min__message {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+}
+
+.config-min__table-wrap,
+.config-min__placeholder {
+  background: #fff;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+}
+
+.config-min__table-wrap {
+  overflow-x: auto;
+}
+
+.config-min__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.config-min__table th,
+.config-min__table td {
+  text-align: left;
+  padding: 13px 14px;
+  border-bottom: 1px solid #eef2f6;
+  vertical-align: top;
+}
+
+.config-min__table th {
+  color: #475467;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  background: #f9fafb;
+}
+
+.config-min__table td strong,
+.config-min__table td small {
+  display: block;
+}
+
+.config-min__table td small {
+  color: #667085;
+  margin-top: 3px;
+}
+
+.config-min__empty,
+.config-min__placeholder {
+  padding: 26px;
+  color: #667085;
+  text-align: center;
+}
+
+.config-min__placeholder {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+
+.config-min__placeholder svg {
+  color: #2f6f73;
+  font-size: 34px;
+}
+
+.config-min__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #ecfdf3;
+  color: #067647;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.config-min__badge.is-off {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+@media (max-width: 760px) {
+  .config-min {
+    padding: 16px;
+  }
+
+  .config-min__header {
+    display: grid;
+  }
+}

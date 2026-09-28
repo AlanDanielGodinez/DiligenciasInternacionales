@@ -423,6 +423,15 @@
   padding: 6rem 2rem 4rem;
 }
 
+.catalogo-hero-etiqueta {
+  margin: 0 0 0.75rem;
+  color: #ff9e1c;
+  font-size: 0.9rem !important;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .catalogo-hero h1 {
   font-size: 3rem;
   margin-bottom: 1rem;
@@ -444,6 +453,7 @@
   text-align: center;
   max-width: 800px;
   margin: 0 auto 4rem;
+  padding: 0;
 }
 
 .catalogo-intro h2 {
@@ -458,21 +468,53 @@
   line-height: 1.8;
 }
 
+.catalogo-categorias {
+  display: grid;
+  gap: 3.5rem;
+}
+
+.catalogo-categoria {
+  padding: 0;
+}
+
+.catalogo-categoria-encabezado {
+  margin-bottom: 1.5rem;
+  border-left: 5px solid #ff9e1c;
+  padding-left: 1rem;
+}
+
+.catalogo-categoria-encabezado span {
+  color: #ed3b89;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.catalogo-categoria-encabezado h2 {
+  margin: 0.25rem 0 0;
+  color: #0d1a4e;
+  font-size: 1.8rem;
+}
+
 .servicios-catalogo-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2.5rem;
-  margin-bottom: 5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem;
+  margin-bottom: 0;
 }
 
 .servicio-catalogo-card {
   background: white;
-  padding: 2.5rem;
+  padding: 2rem;
   border-radius: 20px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  text-align: center;
   transition: all 0.3s ease;
   border: 2px solid transparent;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  text-align: left;
 }
 
 .servicio-catalogo-card:hover {
@@ -484,8 +526,16 @@
 .servicio-catalogo-icon {
   width: 80px;
   height: 80px;
-  margin: 0 auto 1.5rem;
+  margin: 0;
   display: block;
+  flex: 0 0 auto;
+}
+
+.servicio-catalogo-contenido {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .servicio-catalogo-card h3 {
@@ -514,6 +564,13 @@
   font-size: 0.95rem;
 }
 
+.servicio-caracteristicas-lista li::before {
+  content: '✓';
+  color: #ff9e1c;
+  font-weight: 700;
+  margin-right: 0.6rem;
+}
+
 .ver-mas-button {
   display: inline-block;
   background: #0d1a4e;
@@ -536,6 +593,7 @@
 
 .catalogo-garantias {
   margin: 5rem 0;
+  padding: 0;
 }
 
 .catalogo-garantias h2 {
@@ -658,5 +716,23 @@
 
   .servicio-section h2 {
     font-size: 1.8rem;
+  }
+
+  .catalogo-contenido {
+    padding: 3rem 1rem;
+  }
+
+  .servicio-catalogo-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .servicio-catalogo-contenido {
+    align-items: center;
+  }
+
+  .servicio-caracteristicas-lista {
+    width: 100%;
   }
 }

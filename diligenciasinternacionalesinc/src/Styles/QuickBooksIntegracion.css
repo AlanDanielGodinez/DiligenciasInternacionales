@@ -1,0 +1,56 @@
+.qb-admin__connection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 18px;
+  padding: 20px;
+  border: 1px solid #e4e7ec;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.qb-admin__connection > div:first-child { display: grid; gap: 5px; }
+.qb-admin__connection small { color: #667085; }
+.qb-admin__connection-actions, .qb-admin__row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.qb-admin button.is-danger { color: #b42318; border-color: #fecdca; }
+
+.qb-admin__connection-status {
+  width: fit-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #f2f4f7;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.qb-admin__connection-status.is-connected { background: #ecfdf3; color: #067647; }
+.qb-admin__connection-status.is-reconnect,
+.qb-admin__connection-status.is-error { background: #fef3f2; color: #b42318; }
+.qb-admin__connection-status.is-not-configured { background: #fff7ed; color: #9a3412; }
+
+.qb-admin__tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 12px;
+  align-items: start;
+}
+
+.qb-admin__tools select {
+  min-height: 50px;
+  padding: 0 12px;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  background: #fff;
+  color: #344054;
+}
+
+.qb-status--pending, .qb-status--syncing { background: #fff7ed; color: #9a3412; }
+.qb-status--error, .qb-status--requires_reconnection { background: #fef3f2; color: #b42318; }
+.qb-admin__pagination { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 14px; }
+
+@media (max-width: 760px) {
+  .qb-admin__connection { align-items: stretch; display: grid; }
+  .qb-admin__tools { grid-template-columns: 1fr; }
+}

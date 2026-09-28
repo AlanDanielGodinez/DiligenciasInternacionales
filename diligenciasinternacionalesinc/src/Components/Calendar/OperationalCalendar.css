@@ -1,0 +1,31 @@
+.operational-calendar { overflow: hidden; border: 1px solid rgba(198,198,205,.32); border-radius: 28px; background: #fff; box-shadow: 0 4px 12px rgba(19,27,46,.05); }
+.operational-calendar__toolbar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; padding: 16px 20px; border-bottom: 1px solid #eceef0; }
+.operational-calendar__toolbar h2 { margin: 0; color: #071b33; font-size: 19px; text-align: center; text-transform: capitalize; }
+.operational-calendar__navigation, .operational-calendar__views { display: flex; gap: 6px; }
+.operational-calendar__views { justify-content: flex-end; }
+.operational-calendar__toolbar button { min-height: 36px; padding: 0 12px; border: 1px solid #d7dee7; border-radius: 10px; color: #1f3a5f; background: #fff; cursor: pointer; }
+.operational-calendar__toolbar button.is-active { border-color: #0a9488; color: #fff; background: #0a9488; }
+.operational-calendar__weekdays, .operational-calendar__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.operational-calendar--day .operational-calendar__weekdays, .operational-calendar--day .operational-calendar__grid { grid-template-columns: 1fr; }
+.operational-calendar__weekdays span { padding: 10px; color: #64748b; background: #f2f4f6; font-size: 11px; font-weight: 700; text-align: center; text-transform: uppercase; }
+.operational-calendar__day { min-width: 0; min-height: 128px; padding: 9px; border-top: 1px solid #eceef0; border-right: 1px solid #eceef0; }
+.operational-calendar--week .operational-calendar__day { min-height: 420px; }
+.operational-calendar--day .operational-calendar__day { min-height: 480px; }
+.operational-calendar__day > time { display: grid; place-items: center; width: 27px; height: 27px; margin-bottom: 6px; color: #45464d; font-size: 12px; font-weight: 700; }
+.operational-calendar--day .operational-calendar__day > time { display: block; width: auto; }
+.operational-calendar__day.is-outside { background: #fafbfc; opacity: .62; }
+.operational-calendar__day.is-today > time { border-radius: 50%; color: #fff; background: #071b33; }
+.operational-calendar__events { display: grid; gap: 5px; }
+.operational-calendar__event { width: 100%; overflow: hidden; padding: 6px 7px; border: 0; border-left: 4px solid #64748b; border-radius: 7px; color: #334155; background: #e8edf4; font-size: 11px; font-weight: 700; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.operational-calendar__event span { margin-right: 4px; font-weight: 500; }
+.operational-calendar__event--success { border-color: #0a9488; background: #dff8f3; }
+.operational-calendar__event--warning { border-color: #d58a16; background: #ffebc9; }
+.operational-calendar__event--info { border-color: #2563eb; background: #dbeafe; }
+.operational-calendar__event--violet { border-color: #7c3aed; background: #ede9fe; }
+@media (max-width: 760px) {
+  .operational-calendar { overflow-x: auto; }
+  .operational-calendar__toolbar { position: sticky; left: 0; grid-template-columns: 1fr; min-width: 320px; }
+  .operational-calendar__toolbar h2 { grid-row: 1; }
+  .operational-calendar__navigation, .operational-calendar__views { justify-content: center; }
+  .operational-calendar__weekdays, .operational-calendar__grid { min-width: 760px; }
+}

@@ -1,0 +1,69 @@
+/* Solo particularidades sin equivalente directo en Solicitudes Nuevo. */
+.legales-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: #0a9488;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.solicitudes-nuevo-summary-card[role='button'] { cursor: pointer; }
+
+.legales-more-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid #76777d;
+  border-radius: 16px;
+  color: #191c1e;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.legales-more-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(170px, 1fr));
+  gap: 14px;
+  padding: 18px 22px;
+  border-bottom: 1px solid #eceef0;
+  background: rgba(242, 244, 246, .55);
+}
+
+.legales-more-filters label { display: grid; gap: 6px; min-width: 0; }
+.legales-more-filters label > span { color: #45464d; font-size: 11px; font-weight: 600; }
+.legales-more-filters select,
+.legales-more-filters input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid #c6c6cd;
+  border-radius: 16px;
+  outline: 0;
+  color: #191c1e;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.legales-more-filters :is(select, input):focus { border-color: #0c9488; box-shadow: 0 0 0 3px rgba(12, 148, 136, .12); }
+.legales-table { min-width: 1180px; }
+.legales-table .legales-foia-pill { margin-left: 5px; }
+
+@media (max-width: 1100px) {
+  .legales-more-filters { grid-template-columns: repeat(2, minmax(170px, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .legales-more-button { width: 100%; }
+  .legales-more-filters { grid-template-columns: 1fr; padding: 16px; }
+}

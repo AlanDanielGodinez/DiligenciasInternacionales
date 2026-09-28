@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { MdFamilyRestroom } from "react-icons/md";
 import { FaPlane, FaPassport, FaHandsHelping, FaUsers, FaGlobeAmericas } from "react-icons/fa";
 import backgroundImage from "../Images/PI.jpg";
-import fixedImage from "../Images/Carrucel/carrucel5.jpg";
 import LogoAMA from "../Images/4.png";
 import backgroundImage4 from "../Images/Carrucel/carrucel4.jpg";
 import imageD from "../Images/Carrucel/carrucel6.jpg";
@@ -10,11 +10,29 @@ import Footer from "../Components/Footer";
 import ServiceCard from "../Components/ServiceCard";
 import TestimonialCard from "../Components/TestimonialCard";
 import Navbar from "../Components/Navbar2";
+import { fetchNewsItems } from "../services/noticias.service";
 
 // Importa las imágenes para las cards
 import imageA from "../Images/Carrucel/carrucel1.jpg";
 import imageB from "../Images/Carrucel/carrucel2.jpg";
 import imageC from "../Images/Carrucel/carrucel3.jpg";
+
+const formatNewsDate = (date) => {
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return date;
+
+  return new Intl.DateTimeFormat('es-MX', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(parsedDate);
+};
+
+const getVisibleNewsCount = () => {
+  if (window.matchMedia('(max-width: 600px)').matches) return 1;
+  if (window.matchMedia('(max-width: 960px)').matches) return 2;
+  return 3;
+};
 
 const Dashboard = () => {
   
@@ -23,19 +41,22 @@ const Dashboard = () => {
       title: "Reencuentros familiares",
       description: "Te ayudamos con todo el proceso legal para reunir familias separadas por la migración",
       icon: <MdFamilyRestroom className="service-icon" />,
-      color: "#ff9e1c"
+      color: "#ff9e1c",
+      link: "/servicios/abrazos"
     },
     {
       title: "Tramite de visa",
       description: "Aprobación segura y sin estrés con nuestro soporte prioritario",
       icon: <FaPassport className="service-icon" />,
-      color: "#ed3b89"
+      color: "#ed3b89",
+      link: "/servicios/visa"
     },
     {
       title: "Tramite de pasaporte",
       description: "Guiamos paso a paso para que no pierdas tiempo en citas",
       icon: <FaGlobeAmericas className="service-icon" />,
-      color: "#1f96b8"
+      color: "#1f96b8",
+      link: "/servicios/pasaporte"
     }
   ];
 
@@ -63,6 +84,106 @@ const Dashboard = () => {
       name: "Laura T."
     }
   ];
+
+  // Fallback informativo. Conectar este array con el backend o una API
+  // cuando exista un feed oficial de noticias validado.
+  const newsItems = [
+    {
+      image: imageA,
+      title: "Reencuentros que inspiran",
+      description: "Conoce cómo acompañamos a las familias durante sus procesos de reunificación.",
+      date: "Contenido informativo",
+      source: "Diligencias Internacionales",
+      url: null,
+      isOfficial: false
+    },
+    {
+      image: imageB,
+      title: "Orientación para tus trámites",
+      description: "Recomendaciones generales para preparar documentos y dar seguimiento a cada etapa.",
+      date: "Contenido informativo",
+      source: "Diligencias Internacionales",
+      url: null,
+      isOfficial: false
+    },
+    {
+      image: imageC,
+      title: "Acompañamiento personalizado",
+      description: "Nuestro equipo analiza cada caso para ofrecer una ruta de atención clara y ordenada.",
+      date: "Contenido informativo",
+      source: "Diligencias Internacionales",
+      url: null,
+      isOfficial: false
+    }
+  ];
+
+  const [officialNews, setOfficialNews] = useState([]);
+  const [loadingNoticias, setLoadingNoticias] = useState(false);
+  const [newsIndex, setNewsIndex] = useState(0);
+  const [visibleNewsCount, setVisibleNewsCount] = useState(getVisibleNewsCount);
+  const [isNewsPaused, setIsNewsPaused] = useState(false);
+  const hasOfficialNews = officialNews.length > 0;
+  const displayedNews = hasOfficialNews ? officialNews : newsItems;
+  const canRotateNews = displayedNews.length > visibleNewsCount;
+  const visibleNews = Array.from(
+    { length: Math.min(visibleNewsCount, displayedNews.length) },
+    (_, offset) => displayedNews[(newsIndex + offset) % displayedNews.length]
+  );
+
+  const showPreviousNews = () => {
+    setNewsIndex((currentIndex) => (
+      (currentIndex - 1 + displayedNews.length) % displayedNews.length
+    ));
+  };
+
+  const showNextNews = () => {
+    setNewsIndex((currentIndex) => (currentIndex + 1) % displayedNews.length);
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadNews = async () => {
+      setLoadingNoticias(true);
+
+      try {
+        const items = await fetchNewsItems();
+        if (isMounted) setOfficialNews(items);
+      } catch {
+        if (isMounted) setOfficialNews([]);
+      } finally {
+        if (isMounted) setLoadingNoticias(false);
+      }
+    };
+
+    loadNews();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const updateVisibleNewsCount = () => {
+      setVisibleNewsCount(getVisibleNewsCount());
+    };
+
+    window.addEventListener('resize', updateVisibleNewsCount);
+    return () => window.removeEventListener('resize', updateVisibleNewsCount);
+  }, []);
+
+  useEffect(() => {
+    setNewsIndex(0);
+  }, [officialNews]);
+
+  useEffect(() => {
+    if (!canRotateNews || isNewsPaused) return undefined;
+
+    const intervalId = window.setInterval(() => {
+      setNewsIndex((currentIndex) => (currentIndex + 1) % displayedNews.length);
+    }, 6000);
+    return () => window.clearInterval(intervalId);
+  }, [canRotateNews, displayedNews.length, isNewsPaused]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -100,40 +221,117 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* About Section */}
-      <section className="about-section">
-        <div className="split-container animate-on-scroll">
-          <div className="image-container">
-            <img src={fixedImage} alt="Familia reunida" className="about-image" />
+      <section className="home-news-section animate-on-scroll">
+        <div className="section-header">
+          <h2>Noticias</h2>
+          <p>Información útil y novedades relevantes para tus procesos.</p>
+        </div>
+
+        {!loadingNoticias && !hasOfficialNews && (
+          <p className="home-news-notice">
+            No hay feed oficial configurado. Se muestran noticias informativas.
+          </p>
+        )}
+        {loadingNoticias && (
+          <p className="home-news-notice">Cargando noticias oficiales...</p>
+        )}
+
+        <div
+          className="home-news-carousel"
+          onMouseEnter={() => setIsNewsPaused(true)}
+          onMouseLeave={() => setIsNewsPaused(false)}
+        >
+          <div
+            className="home-news-grid"
+            style={{ '--home-news-columns': Math.min(visibleNewsCount, displayedNews.length) }}
+            aria-live="polite"
+          >
+            {visibleNews.map((newsItem, slotIndex) => (
+              <article
+                key={`${newsItem.url || newsItem.title}-${slotIndex}`}
+                className="home-news-card"
+              >
+                {newsItem.image && <img src={newsItem.image} alt="" className="home-news-image" />}
+                <div className="home-news-content">
+                  <div className="home-news-meta">
+                    <span>{formatNewsDate(newsItem.date)}</span>
+                    <span>{newsItem.source}</span>
+                  </div>
+                  {newsItem.isOfficial && <span className="home-news-official">Fuente oficial</span>}
+                  <h3>{newsItem.title}</h3>
+                  <p>{newsItem.description}</p>
+                  {newsItem.url && (
+                    <a
+                      href={newsItem.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="home-news-link"
+                    >
+                      Leer más
+                    </a>
+                  )}
+                </div>
+              </article>
+            ))}
           </div>
-          <div className="text-container">
-            <h2>Cada día nos esforzamos por reunir familias</h2>
-            <p>
-              En Diligencias Internacionales, trabajamos con pasión y compromiso para 
-              ayudar a las familias separadas por la migración a volverse a encontrar. 
-              Nuestro equipo de expertos guía cada caso con empatía y profesionalismo.
-            </p>
-          </div>
+
+          {canRotateNews && (
+            <>
+              <button
+                type="button"
+                className="home-news-control home-news-control-previous"
+                onClick={showPreviousNews}
+                aria-label="Ver noticias anteriores"
+              >
+                &#8249;
+              </button>
+              <button
+                type="button"
+                className="home-news-control home-news-control-next"
+                onClick={showNextNews}
+                aria-label="Ver noticias siguientes"
+              >
+                &#8250;
+              </button>
+              <div className="home-news-dots" aria-label="Paginación de noticias">
+                {displayedNews.map((newsItem, index) => (
+                  <button
+                    type="button"
+                    key={newsItem.url || `${newsItem.title}-${index}`}
+                    className={`home-news-dot ${index === newsIndex ? 'active' : ''}`}
+                    onClick={() => setNewsIndex(index)}
+                    aria-label={`Ir a la noticia ${index + 1}`}
+                    aria-current={index === newsIndex ? 'true' : undefined}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </section>
 
-      {/* Services Section */}
-      <section className="services-section animate-on-scroll">
+      <section className="services-section home-services-section animate-on-scroll">
         <div className="section-header">
-          <h2>Nuestros Servicios</h2>
-          <p>Soluciones personalizadas para tus necesidades migratorias</p>
+          <h2>Servicios destacados</h2>
+          <p>Accesos rápidos a los procesos más consultados.</p>
         </div>
         
         <div className="services-grid">
-          {servicios.map((service, index) => (
-            <ServiceCard 
-              key={index}
-              title={service.title}
-              description={service.description}
-              icon={service.icon}
-              color={service.color}
-            />
+          {servicios.map((service) => (
+            <Link key={service.title} to={service.link} className="home-service-link">
+              <ServiceCard
+                title={service.title}
+                description={service.description}
+                icon={service.icon}
+                color={service.color}
+              />
+            </Link>
           ))}
+        </div>
+        <div className="home-services-action">
+          <Link to="/servicios/catalogo" className="home-catalog-button">
+            Ver catálogo completo
+          </Link>
         </div>
       </section>
 
