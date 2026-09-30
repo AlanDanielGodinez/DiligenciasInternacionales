@@ -221,9 +221,7 @@ async function createContacto(payload) {
     ]
   );
 
-  const contacto = rows[0];
-  await require('./quickbooksSyncTrigger.service').scheduleContactSync(contacto.id_contacto);
-  return contacto;
+  return rows[0];
 }
 
 async function updateContacto(id, payload) {
@@ -267,9 +265,7 @@ async function updateContacto(id, payload) {
     values
   );
 
-  const contacto = rows[0];
-  await require('./quickbooksSyncTrigger.service').scheduleContactSync(contacto.id_contacto);
-  return contacto;
+  return rows[0];
 }
 
 module.exports = {

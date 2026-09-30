@@ -30,30 +30,30 @@ export const disconnectQuickBooks = async () => {
   return response.data;
 };
 
-export const getContactQuickBooksStatus = async (idContacto) => {
+export const getClientQuickBooksStatus = async (idCliente) => {
   const response = await api.get(
-    `/integraciones/quickbooks/contactos/${idContacto}/estado`,
+    `/integraciones/quickbooks/clientes/${idCliente}/estado`,
     authConfig()
   );
   return response.data;
 };
 
-export const syncContactToQuickBooks = async (idContacto) => {
+export const syncClientToQuickBooks = async (idCliente) => {
   const response = await api.post(
-    `/integraciones/quickbooks/contactos/${idContacto}/sincronizar`,
+    `/integraciones/quickbooks/clientes/${idCliente}/sincronizar`,
     {},
     authConfig()
   );
   return response.data?.quickbooks || response.data;
 };
 
-export const getPendingQuickBooksContacts = async (params = {}) => {
-  const response = await api.get('/integraciones/quickbooks/pendientes', {
+export const getQuickBooksClients = async (params = {}) => {
+  const response = await api.get('/integraciones/quickbooks/clientes', {
     ...authConfig(),
     params,
   });
   return {
-    contactos: Array.isArray(response.data?.contactos) ? response.data.contactos : [],
+    clientes: Array.isArray(response.data?.clientes) ? response.data.clientes : [],
     limit: response.data?.limit || params.limit || 20,
     offset: response.data?.offset || params.offset || 0,
   };
@@ -63,9 +63,9 @@ const quickbooksService = {
   getQuickBooksStatus,
   connectQuickBooks,
   disconnectQuickBooks,
-  getContactQuickBooksStatus,
-  syncContactToQuickBooks,
-  getPendingQuickBooksContacts,
+  getClientQuickBooksStatus,
+  syncClientToQuickBooks,
+  getQuickBooksClients,
 };
 
 export default quickbooksService;

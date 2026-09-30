@@ -308,7 +308,7 @@ async function createCliente(payload) {
 
   const { rows } = await pool.query(sql, values);
   const cliente = rows[0];
-  await require('./quickbooksSyncTrigger.service').scheduleContactSync(cliente.id_contacto);
+  await require('./quickbooksSyncTrigger.service').scheduleClientSync(cliente.id_cliente);
   return cliente;
 }
 
@@ -324,7 +324,7 @@ async function createAplicanteForContacto(idContacto, payload) {
       client.query.bind(client)
     );
     await client.query('COMMIT');
-    await require('./quickbooksSyncTrigger.service').scheduleContactSync(aplicante.id_contacto);
+    await require('./quickbooksSyncTrigger.service').scheduleClientSync(aplicante.id_cliente);
     return aplicante;
   } catch (err) {
     await client.query('ROLLBACK');
@@ -385,9 +385,7 @@ async function createClienteWithQuery(payload, query) {
     RETURNING *`;
 
   const { rows } = await query(sql, values);
-  const updated = rows[0];
-  await require('./quickbooksSyncTrigger.service').scheduleContactSync(updated.id_contacto);
-  return updated;
+  return rows[0];
 }
 
 async function updateCliente(id, payload) {
@@ -439,7 +437,9 @@ async function updateCliente(id, payload) {
     values
   );
 
-  return rows[0];
+  const updated = rows[0];
+  await require('./quickbooksSyncTrigger.service').scheduleClientSync(updated.id_cliente);
+  return updated;
 }
 
 module.exports = {

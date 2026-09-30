@@ -251,7 +251,7 @@ const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado, clientesSeleccion
         empleados: empleadosSeleccionados.map(Number)
       };
 
-      // Opcional: Formatear fechas si es necesario
+      // Enviar las fechas en formato YYYY-MM-DD
       if (datosParaEnviar.fecha_inicio) {
         datosParaEnviar.fecha_inicio = new Date(datosParaEnviar.fecha_inicio).toISOString().split('T')[0];
       }
@@ -282,7 +282,6 @@ const CrearTramiteModal = ({ mostrar, cerrar, onTramiteCreado, clientesSeleccion
     } catch (err) {
       console.error('Error al crear trámite:', err);
       
-      // Manejo mejorado de errores
       let mensajeError = 'Error al crear trámite';
       
       if (err.response) {

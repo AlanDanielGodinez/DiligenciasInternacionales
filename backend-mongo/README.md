@@ -1,6 +1,6 @@
 # Backend MongoDB - Diligencias Internacionales
 
-## 🚀 Tecnologías Utilizadas
+## Tecnologías Utilizadas
 - **Backend**: Node.js + Express.js
 - **Base de Datos**: MongoDB con Mongoose
 - **Autenticación**: JWT (JSON Web Tokens)
@@ -8,7 +8,7 @@
 - **Containerización**: Docker para MongoDB
 - **Desarrollo**: Nodemon
 
-## 📦 Instalación y Configuración
+## Instalación y Configuración
 
 ### 1. Instalar dependencias
 ```bash
@@ -44,7 +44,7 @@ npm run dev
 npm start
 ```
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Autenticación
 | Método | Endpoint | Descripción | Body |
@@ -58,7 +58,7 @@ npm start
 | GET | `/` | Verificar que el servidor funciona |
 | GET | `/health` | Estado del servidor y base de datos |
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 backend-mongo/
@@ -85,7 +85,7 @@ backend-mongo/
     └── documentos/              # Archivos subidos
 ```
 
-## 🧪 Pruebas con Insomnia/Postman
+## Pruebas con Insomnia/Postman
 
 ### Registro de Usuario
 ```json
@@ -137,7 +137,7 @@ Content-Type: application/json
 }
 ```
 
-## 🗄️ Modelos de Datos
+## Modelos de Datos
 
 ### Usuario (User)
 - `email`: String, único, requerido
@@ -164,7 +164,7 @@ Content-Type: application/json
 - `tamaño`: Number, requerido
 - `tipoMime`: String, requerido
 
-## 🔧 Características Implementadas
+## Características Implementadas
 
 - ✅ Autenticación JWT
 - ✅ Hash de passwords con bcryptjs
@@ -176,7 +176,7 @@ Content-Type: application/json
 - ✅ Compatible con frontend React existente
 - ✅ Persistencia de datos con Docker volumes
 
-## 📝 Próximas Implementaciones
+## Próximas Implementaciones
 
 - [ ] Middleware de autenticación para rutas protegidas
 - [ ] CRUD completo para Diligencias

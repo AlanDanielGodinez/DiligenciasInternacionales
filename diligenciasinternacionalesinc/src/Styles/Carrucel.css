@@ -1,6 +1,6 @@
 .custom-carousel {
   width: 100%; /* Ocupa todo el ancho del contenedor */
-  height: 50vh; /* Altura del carrusel (ajusta según tus necesidades) */
+  height: 50vh;
   overflow: hidden; /* Oculta el desbordamiento */
   position: relative; /* Necesario para posicionar los elementos internos */
 }

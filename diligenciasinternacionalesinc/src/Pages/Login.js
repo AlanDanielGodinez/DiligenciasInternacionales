@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaUser, FaLock, FaSignInAlt, FaUserTie, FaIdCard, FaPhone } from 'react-icons/fa';
 import axios from 'axios';
-// NUEVO: Import para API MongoDB
 import API_ENDPOINTS from '../config/api';
 import { saveCurrentUser } from '../utils/authUser';
 import { AUTH_TOKEN_KEY, clearAuthSession } from '../utils/authSession';
@@ -36,7 +35,6 @@ const Login = () => {
       //   headers: { 'Authorization': `Bearer ${token}` }
       // })
       
-      // NUEVO - MongoDB API:
       axios.get(API_ENDPOINTS.VERIFY, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -79,7 +77,6 @@ const Login = () => {
         //   password: formData.password
         // });
 
-        // NUEVO - MongoDB API:
         response = await axios.post(API_ENDPOINTS.LOGIN, {
           email: formData.email,
           password: formData.password
@@ -92,7 +89,6 @@ const Login = () => {
         //   });
         // }
 
-        // NUEVO - MongoDB manejo de respuesta:
         if (response.data.token && response.data.user) {
           clearAuthSession();
           localStorage.setItem(AUTH_TOKEN_KEY, response.data.token);
@@ -118,7 +114,6 @@ const Login = () => {
         //   telefono: formData.telefono
         // });
 
-        // NUEVO - MongoDB cliente login (pendiente de implementar):
         response = await axios.post(API_ENDPOINTS.CLIENTE_LOGIN, {
           identificacionunicanacional: formData.identificacionunicanacional,
           telefono: formData.telefono
@@ -133,7 +128,6 @@ const Login = () => {
         // localStorage.setItem('authToken', token);
         // localStorage.setItem('userCliente', JSON.stringify(response.data.userCliente));
 
-        // NUEVO - MongoDB cliente storage:
         if (response.data.token && response.data.user) {
           clearAuthSession();
           localStorage.setItem(AUTH_TOKEN_KEY, response.data.token);
@@ -157,7 +151,6 @@ const Login = () => {
       // COMENTADO - PostgreSQL error handling:
       // setError(err.response?.data?.error || 'Error al iniciar sesión');
       
-      // NUEVO - MongoDB error handling:
       setError(err.response?.data?.error || err.response?.data?.message || 'Error al iniciar sesión');
     } finally {
       setIsSubmitting(false);
@@ -173,7 +166,7 @@ const Login = () => {
           {/* Mensaje de servicio solicitado */}
           {servicioSolicitado && (
             <div className="servicio-info-banner">
-              <p>📋 Para solicitar <strong>{servicioSolicitado}</strong>, inicia sesión o regístrate</p>
+              <p>Para solicitar <strong>{servicioSolicitado}</strong>, inicia sesión o regístrate</p>
             </div>
           )}
 

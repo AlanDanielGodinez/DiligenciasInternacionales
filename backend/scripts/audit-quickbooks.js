@@ -12,9 +12,9 @@ async function main() {
     pool.query(`SELECT count(*)::int AS total,
       count(*) FILTER (WHERE sync_status = 'synced')::int AS synced,
       count(*) FILTER (WHERE sync_status IN ('pending', 'error', 'requires_reconnection'))::int AS actionable
-      FROM public.contacto_quickbooks`),
+      FROM public.cliente_quickbooks`),
     pool.query(`SELECT column_name FROM information_schema.columns
-      WHERE table_schema = 'public' AND table_name = 'contacto_quickbooks'
+      WHERE table_schema = 'public' AND table_name = 'cliente_quickbooks'
       ORDER BY ordinal_position`),
     pool.query(`SELECT expires_at, used_at, created_at,
       (used_at IS NOT NULL) AS consumed,

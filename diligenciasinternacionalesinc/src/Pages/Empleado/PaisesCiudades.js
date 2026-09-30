@@ -43,7 +43,7 @@ const GestionPaisesCiudades = () => {
         <div>
           <span className="config-min__eyebrow"><FaGlobeAmericas /> Configuracion</span>
           <h1>Paises y ciudades</h1>
-          <p>Listado real de paises. Ciudades aun no tiene endpoint PostgreSQL activo, por eso queda como pendiente visible.</p>
+          <p>Consulta los países registrados. El listado de ciudades aún no está disponible.</p>
         </div>
         <button type="button" onClick={loadPaises}><FaRedo /> Actualizar</button>
       </header>
@@ -54,7 +54,7 @@ const GestionPaisesCiudades = () => {
       </section>
 
       <div className="config-min__message">
-        Ciudades no esta conectado todavia. No se muestran botones de crear, editar o eliminar para evitar llamadas a endpoints inexistentes.
+        Por ahora solo se pueden consultar países; no se pueden crear, editar ni eliminar países o ciudades.
       </div>
       {message && <div className="config-min__message">{message}</div>}
 

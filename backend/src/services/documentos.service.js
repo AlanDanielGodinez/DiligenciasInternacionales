@@ -110,7 +110,6 @@ async function getOrCreateTipoDocumento(tipo, query = pool.query.bind(pool)) {
 }
 
 async function getDocumentos({ limit = 50, offset = 0 }) {
-  // Join documentos with solicitudes and clientes using real column names
   const sql = `SELECT d.*, 
     s.id_solicitud AS solicitud_id, s.id_cliente AS solicitud_id_cliente,
     c.id_cliente AS cliente_id, c.nombre AS cliente_nombre, c.apellido_paterno AS cliente_apellido_paterno, c.apellido_materno AS cliente_apellido_materno, c.telefono AS cliente_telefono, c.correo AS cliente_correo

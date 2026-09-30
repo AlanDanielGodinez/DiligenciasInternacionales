@@ -9,8 +9,8 @@ router.use(requireQuickBooksAccess);
 router.get('/estado', controller.getStatus);
 router.get('/conectar', requireQuickBooksAdmin, controller.connect);
 router.post('/desconectar', requireQuickBooksAdmin, controller.disconnect);
-router.post('/contactos/:idContacto/sincronizar', controller.syncContact);
-router.get('/contactos/:idContacto/estado', controller.getContactStatus);
-router.get('/pendientes', controller.listPending);
+router.post('/clientes/:idCliente/sincronizar', controller.syncClient);
+router.get('/clientes/:idCliente/estado', controller.getClientStatus);
+router.get('/clientes', controller.listClients);
 
 module.exports = router;

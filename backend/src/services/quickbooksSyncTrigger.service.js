@@ -1,33 +1,33 @@
 const repository = require('../repositories/quickbooks.repository');
 const quickbooksService = require('./quickbooks.service');
 
-const scheduledContacts = new Set();
+const scheduledClients = new Set();
 
-function logFailure(idContacto, error) {
+function logFailure(idCliente, error) {
   const message = quickbooksService.sanitizeError(error);
-  console.warn(`[quickbooks] Sincronizacion diferida fallida para contacto ${idContacto}: ${message}`);
+  console.warn(`[quickbooks] Sincronizacion diferida fallida para cliente ${idCliente}: ${message}`);
 }
 
-async function scheduleContactSync(idContacto) {
-  const safeId = Number(idContacto);
+async function scheduleClientSync(idCliente) {
+  const safeId = Number(idCliente);
   if (!Number.isInteger(safeId) || safeId <= 0) return;
 
   // Persist the work before returning control to the caller. The external request
   // runs after the local transaction and can never roll it back.
   try {
-    await repository.markContactPending(safeId);
+    await repository.markClientPending(safeId);
   } catch (error) {
     logFailure(safeId, error);
     return;
   }
 
-  if (scheduledContacts.has(safeId)) return;
-  scheduledContacts.add(safeId);
+  if (scheduledClients.has(safeId)) return;
+  scheduledClients.add(safeId);
   setImmediate(() => {
-    quickbooksService.syncContactToQuickBooks(safeId)
+    quickbooksService.syncClientToQuickBooks(safeId)
       .catch((error) => logFailure(safeId, error))
-      .finally(() => scheduledContacts.delete(safeId));
+      .finally(() => scheduledClients.delete(safeId));
   });
 }
 
-module.exports = { scheduleContactSync };
+module.exports = { scheduleClientSync };

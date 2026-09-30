@@ -31,7 +31,6 @@ const TramitePasaporte = () => {
                 <p>Tomamos las fotografías con las especificaciones exactas requeridas.</p>
               </div>
               <div className="caracteristica-card">
-                <div className="caracteristica-icono">🚀</div>
                 <h3>Trámite Express</h3>
                 <p>Servicio acelerado disponible para urgencias (3-5 días hábiles).</p>
               </div>

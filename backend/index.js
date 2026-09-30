@@ -4,7 +4,6 @@ const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
-// Reemplaza la configuración actual de multer con:
 const upload = require('./middlewares/upload');
 const path = require('path');
 
@@ -25,7 +24,7 @@ const pool = new Pool({
 
 // Middleware de CORS y JSON
 app.use(cors({
-  origin: 'http://localhost:3000', // URL de tu frontend
+  origin: 'http://localhost:3000',
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -41,13 +40,12 @@ app.use(express.json());
 // Middleware para proteger rutas con token (excepto públicas)
 // ===============================================
 
-    // ✅ APLICAR middleware solo a rutas protegidas
       app.use((req, res, next) => {
         const publicPaths = [
         '/api/login',
         '/api/registro',
         '/api/tramites/lista-simple',
-        '/api/clientes/login' // 👈 agrega esto
+        '/api/clientes/login'
       ];
 
 
@@ -125,7 +123,7 @@ app.use(express.json());
                     req.cookies?.token || 
                     req.query.token;
 
-      // Solo muestra logs para rutas importantes (opcional)
+      // No registrar las consultas de prueba ni el favicon
       const shouldLog = !req.path.includes('/api/protected') && 
                       !req.path.includes('/favicon.ico');
       
@@ -153,7 +151,6 @@ app.use(express.json());
       });
     }
 
-    // Añade esto en tus rutas de autenticación
     app.get('/api/verify-token', authenticateToken, (req, res) => {
       res.json({
         valid: true,
@@ -215,7 +212,7 @@ app.post('/api/login', async (req, res) => {
         id: user.idempleado,
         email: user.correoempleado || user.email,
         role: user.nombrerol,
-        version: SERVER_TOKEN_VERSION // Agrega esta línea
+        version: SERVER_TOKEN_VERSION
       },
       process.env.JWT_SECRET || 'secret_key',
       { expiresIn: '8h' }
@@ -268,7 +265,6 @@ app.post('/api/clientes/login', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    // 🔥 Aquí enviamos también los datos del cliente
     res.json({
       token,
       userCliente: {
@@ -352,7 +348,7 @@ app.get('/api/auth/current-user', authenticateToken, async (req, res) => {
 // Obtener todos los empleados
 app.get('/api/empleados', authenticateToken, async (req, res) => {
   try {
-    // Modifica tu consulta SQL para usar alias con las mayúsculas correctas:
+    // Los alias conservan las mayúsculas que usa el frontend
       const result = await pool.query(`
         SELECT 
           e.idEmpleado AS "idEmpleado",
@@ -526,7 +522,7 @@ app.post('/api/empleados', authenticateToken, async (req, res) => {
 
     console.log('[✓] Empleado insertado con ID:', nuevoId);
 
-    // Obtener info del empleado (intenta con LEFT JOIN)
+    // Traer también el rol y el área del empleado
     const empleadoCompleto = await pool.query(
       `SELECT 
         e.idEmpleado AS "idEmpleado",
@@ -678,7 +674,6 @@ app.post('/api/areas', authenticateToken, async (req, res) => {
   }
 });
 
-//versión mejorada:
 app.put('/api/areas/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { nombreArea, descripcion, responsableArea } = req.body;
@@ -766,7 +761,6 @@ app.put('/api/areas/:id/responsable', authenticateToken, async (req, res) => {
 });
 
 
-// Añade esta ruta DELETE para eliminar áreas
 app.delete('/api/areas/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
 
@@ -1610,7 +1604,6 @@ app.delete('/api/antecedentes/:id', authenticateToken, async (req, res) => {
 /**
  * Obtener un antecedente específico
  */
-// En el backend (index.js), modifica el endpoint para obtener un antecedente específico
 app.get('/api/antecedentes/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
 
@@ -1987,10 +1980,10 @@ app.delete('/api/ciudades/:id', authenticateToken, async (req, res) => {
 });
 
 // ==============================================
-// RUTAS PARA TRÁMITES (VERSIÓN CORREGIDA)
+// RUTAS PARA TRÁMITES
 // ==============================================
 
-// Configuración adicional para manejo de fechas
+// Dejar la fecha en formato YYYY-MM-DD
 const formatDate = (dateString) => {
   if (!dateString) return null;
   try {
@@ -2260,7 +2253,7 @@ app.get('/api/tramites/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// PUT /api/tramites/:id - Versión corregida
+// PUT /api/tramites/:id
 app.put('/api/tramites/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   
@@ -2281,7 +2274,6 @@ app.put('/api/tramites/:id', authenticateToken, async (req, res) => {
     empleados = []
   } = req.body;
 
-  // Validaciones mejoradas
   const errors = [];
   if (!tipoTramite?.trim()) errors.push('El tipo de trámite es requerido');
   if (!plazo_estimado?.trim()) errors.push('El plazo estimado es requerido');
@@ -2390,7 +2382,6 @@ app.put('/api/tramites/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Agrega esto en tu backend si no lo tienes:
 app.get('/api/tramites/lista-simple', async (req, res) => {
   try {
     const result = await pool.query(`
@@ -2941,7 +2932,6 @@ app.delete('/api/seguimientos/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// En tu backend (index.js)
 app.get('/api/solicitudes/:id/linea-tiempo', authenticateToken, async (req, res) => {
   const { id } = req.params;
 
@@ -3018,9 +3008,9 @@ const pasosPorTramite = {
  */
 app.post('/api/solicitudes/:idSolicitud/pagos', authenticateToken, async (req, res) => {
   const { idSolicitud } = req.params;
-  const { idMetodopago, monto, estadoPago, idEmpleado } = req.body; // Añadir idEmpleado al body
+  const { idMetodopago, monto, estadoPago, idEmpleado } = req.body;
 
-  if (!idMetodopago || !monto || !estadoPago || !idEmpleado) { // Validar idEmpleado
+  if (!idMetodopago || !monto || !estadoPago || !idEmpleado) {
     return res.status(400).json({ 
       error: 'Faltan campos requeridos',
       details: 'idMetodopago, monto, estadoPago y idEmpleado son obligatorios'
@@ -3967,7 +3957,6 @@ app.get('/api/dashboard/clientes-por-pais', authenticateToken, async (req, res) 
 // ==============================================
 // RUTAS PARA CLIENTE GRUPO
 // ==============================================
-// ...otros requires y middlewares...
 
 // Endpoint para obtener los clientes de un grupo (por idtramite)
 app.get('/api/grupos/:idGrupo/clientes', async (req, res) => {
@@ -3980,7 +3969,7 @@ app.get('/api/grupos/:idGrupo/clientes', async (req, res) => {
          WHERE tc.idtramite = $1`,
       [idGrupo]
     );
-    console.log("Clientes encontrados:", result.rows); // <-- Agrega esto
+    console.log("Clientes encontrados:", result.rows);
     res.json(result.rows);
   } catch (err) {
     console.error('Error al obtener clientes del grupo:', err);

@@ -4,13 +4,14 @@ const authService = require('./quickbooksAuth.service');
 const FIELD_LIMITS = Object.freeze({
   Title: 16,
   GivenName: 25,
+  FamilyName: 25,
   DisplayName: 100,
   CompanyName: 100,
   Notes: 1024,
   Email: 100,
   Phone: 30,
 });
-const contactSyncs = new Map();
+const clientSyncs = new Map();
 
 const normalizeSpaces = (value) => String(value || '')
   .normalize('NFKC')
@@ -57,35 +58,41 @@ function isValidPhone(value) {
   return /\d/.test(phone) && /^[+\d\s().-]+$/.test(phone);
 }
 
-function buildQuickBooksCustomerPayload(contactData) {
-  if (!contactData?.id_contacto) throw new Error('id_contacto is required');
+function buildQuickBooksCustomerPayload(clientData) {
+  if (!clientData?.id_cliente) throw new Error('id_cliente is required');
   const warnings = [];
-  let name = titleCase(contactData.nombre);
-  if (!name) throw new Error('Contact name is required');
-  if (name.length > FIELD_LIMITS.GivenName) {
+  let givenName = titleCase(clientData.nombre);
+  if (!givenName) throw new Error('Client name is required');
+  if (givenName.length > FIELD_LIMITS.GivenName) {
     warnings.push(`GivenName: el nombre fue recortado al límite de ${FIELD_LIMITS.GivenName} caracteres`);
-    name = name.slice(0, FIELD_LIMITS.GivenName).trimEnd();
+    givenName = givenName.slice(0, FIELD_LIMITS.GivenName).trimEnd();
   }
 
-  const suffix = ` (${contactData.id_contacto})`;
-  let displayName = `${name}${suffix}`;
+  let familyName = titleCase([clientData.apellido_paterno, clientData.apellido_materno]
+    .filter(Boolean).join(' '));
+  if (familyName.length > FIELD_LIMITS.FamilyName) {
+    warnings.push(`FamilyName: los apellidos fueron recortados al límite de ${FIELD_LIMITS.FamilyName} caracteres`);
+    familyName = familyName.slice(0, FIELD_LIMITS.FamilyName).trimEnd();
+  }
+  const fullName = titleCase([clientData.nombre, clientData.apellido_paterno, clientData.apellido_materno]
+    .filter(Boolean).join(' '));
+  const suffix = ` (${clientData.id_cliente})`;
+  let displayName = `${fullName}${suffix}`;
   if (displayName.length > FIELD_LIMITS.DisplayName) {
     warnings.push(`DisplayName: el nombre fue recortado conservando el identificador (${FIELD_LIMITS.DisplayName} caracteres)`);
-    displayName = `${name.slice(0, FIELD_LIMITS.DisplayName - suffix.length).trimEnd()}${suffix}`;
+    displayName = `${fullName.slice(0, FIELD_LIMITS.DisplayName - suffix.length).trimEnd()}${suffix}`;
   }
 
-  const applicants = uniqueNormalized(contactData.aplicantes, titleCase);
-  const procedures = uniqueNormalized(contactData.tramites);
+  const procedures = uniqueNormalized(clientData.tramites);
   const companyName = fitJoinedValues(procedures, ' | ', FIELD_LIMITS.CompanyName, 'CompanyName', warnings);
-  const notes = fitJoinedValues(applicants, ', ', FIELD_LIMITS.Notes, 'Notes', warnings);
-  const title = String(contactData.id_contacto);
-  if (title.length > FIELD_LIMITS.Title) throw new Error('id_contacto exceeds the QuickBooks Title limit');
+  const title = String(clientData.id_cliente);
+  if (title.length > FIELD_LIMITS.Title) throw new Error('id_cliente exceeds the QuickBooks Title limit');
 
-  const payload = { Title: title, GivenName: name, DisplayName: displayName };
+  const payload = { Title: title, GivenName: givenName, DisplayName: displayName };
+  if (familyName) payload.FamilyName = familyName;
   if (companyName) payload.CompanyName = companyName;
-  if (notes) payload.Notes = notes;
-  if (isValidEmail(contactData.correo)) payload.PrimaryEmailAddr = { Address: normalizeSpaces(contactData.correo) };
-  if (isValidPhone(contactData.telefono)) payload.PrimaryPhone = { FreeFormNumber: normalizeSpaces(contactData.telefono) };
+  if (isValidEmail(clientData.correo)) payload.PrimaryEmailAddr = { Address: normalizeSpaces(clientData.correo) };
+  if (isValidPhone(clientData.telefono)) payload.PrimaryPhone = { FreeFormNumber: normalizeSpaces(clientData.telefono) };
   return { payload, warnings };
 }
 
@@ -164,26 +171,26 @@ function publicSyncResult(link, message) {
   };
 }
 
-async function executeSync(idContacto, options = {}) {
-  const data = await repository.getContactData(idContacto);
-  if (!data) { const error = new Error('Contacto not found'); error.status = 404; throw error; }
-  await repository.markContactPending(idContacto);
+async function executeSync(idCliente, options = {}) {
+  const data = await repository.getClientData(idCliente);
+  if (!data) { const error = new Error('Cliente not found'); error.status = 404; throw error; }
+  await repository.markClientPending(idCliente);
   if (!authService.isConfigured()) {
     return { status: 'not_configured', customer_id: null, message: 'QuickBooks no está configurado' };
   }
   const connection = await repository.getLatestConnection();
   if (!connection || connection.status !== 'connected') {
     const status = connection?.status === 'requires_reconnection' ? 'requires_reconnection' : 'pending';
-    const link = await repository.markSyncFailure(idContacto, status, 'QuickBooks no está conectado');
+    const link = await repository.markSyncFailure(idCliente, status, 'QuickBooks no está conectado');
     return publicSyncResult(link, status === 'requires_reconnection'
       ? 'QuickBooks requiere reconexión' : 'QuickBooks no está conectado');
   }
 
-  await repository.markSyncing(idContacto);
+  await repository.markSyncing(idCliente);
   try {
     const { payload, warnings } = buildQuickBooksCustomerPayload(data);
-    warnings.forEach((warning) => console.warn(`[quickbooks] Contacto ${idContacto}: ${warning}`));
-    const link = await repository.getContactLink(idContacto, connection.realm_id);
+    warnings.forEach((warning) => console.warn(`[quickbooks] Cliente ${idCliente}: ${warning}`));
+    const link = await repository.getClientLink(idCliente, connection.realm_id);
     let customer;
     if (link?.quickbooks_customer_id) {
       const current = await getCustomer(link.quickbooks_customer_id, options);
@@ -195,30 +202,30 @@ async function executeSync(idContacto, options = {}) {
         ? await updateCustomer(matches[0], payload, options)
         : await createCustomer(payload, options);
     }
-    const saved = await repository.markSyncSuccess(idContacto, customer, connection.realm_id);
+    const saved = await repository.markSyncSuccess(idCliente, customer, connection.realm_id);
     return publicSyncResult(saved, warnings.length
-      ? `Sincronizado con ${warnings.length} advertencia(s) de longitud` : 'Contacto sincronizado con QuickBooks');
+      ? `Sincronizado con ${warnings.length} advertencia(s) de longitud` : 'Cliente sincronizado con QuickBooks');
   } catch (error) {
     const reconnect = error.requiresReconnection || error.code === 'QUICKBOOKS_NOT_CONNECTED';
     const saved = await repository.markSyncFailure(
-      idContacto, reconnect ? 'requires_reconnection' : 'error', sanitizeError(error)
+      idCliente, reconnect ? 'requires_reconnection' : 'error', sanitizeError(error)
     );
     return publicSyncResult(saved, reconnect ? 'QuickBooks requiere reconexión' : sanitizeError(error));
   }
 }
 
-async function syncContactToQuickBooks(idContacto, options = {}) {
-  const key = String(idContacto);
-  if (contactSyncs.has(key)) return contactSyncs.get(key);
+async function syncClientToQuickBooks(idCliente, options = {}) {
+  const key = String(idCliente);
+  if (clientSyncs.has(key)) return clientSyncs.get(key);
   const promise = repository
-    .withContactSyncLock(idContacto, () => executeSync(idContacto, options))
-    .finally(() => contactSyncs.delete(key));
-  contactSyncs.set(key, promise);
+    .withClientSyncLock(idCliente, () => executeSync(idCliente, options))
+    .finally(() => clientSyncs.delete(key));
+  clientSyncs.set(key, promise);
   return promise;
 }
 
 module.exports = {
   FIELD_LIMITS, titleCase, uniqueNormalized, isValidEmail, isValidPhone,
-  buildQuickBooksCustomerPayload, sanitizeError, syncContactToQuickBooks,
-  quickBooksRequest, findCustomerByDisplayName,
+  buildQuickBooksCustomerPayload, sanitizeError, syncClientToQuickBooks,
+  quickBooksRequest, findCustomerByDisplayName, apiBase,
 };

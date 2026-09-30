@@ -142,7 +142,6 @@ const VerSolicitudes = () => {
     <div className="solicitudes-container">
       <div className="solicitudes-header">
         <h1 className="solicitudes-title">
-          <span className="solicitudes-title-icon">📋</span>
           Solicitudes Registradas
           <span className="solicitudes-count">{solicitudes.length}</span>
         </h1>

@@ -5,9 +5,9 @@ import * as quickbooksApi from '../../services/quickbooks.service';
 jest.mock('../../services/quickbooks.service', () => ({
   connectQuickBooks: jest.fn(),
   disconnectQuickBooks: jest.fn(),
-  getPendingQuickBooksContacts: jest.fn(),
+  getQuickBooksClients: jest.fn(),
   getQuickBooksStatus: jest.fn(),
-  syncContactToQuickBooks: jest.fn(),
+  syncClientToQuickBooks: jest.fn(),
 }));
 let mockLocation = { pathname: '/empleado/configuracion/quickbooks', search: '' };
 const mockNavigate = jest.fn();
@@ -26,7 +26,7 @@ beforeEach(() => {
   const payload = btoa(JSON.stringify({ rol: 'Administrador', exp: Math.floor(Date.now() / 1000) + 3600 }));
   localStorage.setItem('authToken', `${payload}.test-signature`);
   localStorage.setItem('user', JSON.stringify({ rol: 'Administrador' }));
-  quickbooksApi.getPendingQuickBooksContacts.mockResolvedValue({ contactos: [] });
+  quickbooksApi.getQuickBooksClients.mockResolvedValue({ clientes: [] });
 });
 
 test('tolera connection null durante el render inicial', () => {
@@ -59,4 +59,25 @@ test('boton Conectar solicita URL mediante API autenticable', async () => {
   const button = await screen.findByRole('button', { name: /Conectar con QuickBooks/i });
   fireEvent.click(button);
   await waitFor(() => expect(quickbooksApi.connectQuickBooks).toHaveBeenCalledTimes(1));
+});
+
+test('muestra clientes y reintenta por id_cliente', async () => {
+  quickbooksApi.getQuickBooksStatus.mockResolvedValue({ configured: true, connected: true, environment: 'sandbox', status: 'connected' });
+  quickbooksApi.getQuickBooksClients.mockResolvedValue({
+    clientes: [{
+      id_cliente: 100,
+      id_contacto: 10,
+      nombre: 'Juan Pérez',
+      quickbooks_customer_id: '500',
+      sync_status: 'error',
+      attempts: 1,
+      last_error: 'Temporal',
+    }],
+  });
+  quickbooksApi.syncClientToQuickBooks.mockResolvedValue({ status: 'synced', customer_id: '500' });
+  renderPage();
+  expect(await screen.findByText('Juan Pérez')).toBeInTheDocument();
+  expect(screen.getByText('500')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /Reintentar/i }));
+  await waitFor(() => expect(quickbooksApi.syncClientToQuickBooks).toHaveBeenCalledWith(100));
 });

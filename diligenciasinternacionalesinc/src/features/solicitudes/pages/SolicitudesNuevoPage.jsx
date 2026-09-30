@@ -1772,12 +1772,21 @@ const SolicitudesNuevoPage = () => {
       };
       try {
         const authToken = localStorage.getItem('authToken');
-        const quickbooksResponse = await api.post(
-          `/integraciones/quickbooks/contactos/${contacto.id_contacto}/sincronizar`,
-          {},
-          authToken ? { headers: { Authorization: `Bearer ${authToken}` } } : undefined
+        const quickbooksResponses = await Promise.all(
+          aplicantesCreados.map((aplicante) => api.post(
+            `/integraciones/quickbooks/clientes/${aplicante.id_cliente}/sincronizar`,
+            {},
+            authToken ? { headers: { Authorization: `Bearer ${authToken}` } } : undefined
+          ))
         );
-        quickbooks = quickbooksResponse.data?.quickbooks || quickbooks;
+        const results = quickbooksResponses.map((response) => response.data?.quickbooks).filter(Boolean);
+        quickbooks = {
+          status: results.length > 0 && results.every((result) => result.status === 'synced')
+            ? 'synced'
+            : results.some((result) => result.status === 'error') ? 'error' : 'pending',
+          customer_id: results.length === 1 ? results[0].customer_id : null,
+          message: `${results.filter((result) => result.status === 'synced').length} de ${aplicantesCreados.length} aplicantes sincronizados con QuickBooks.`,
+        };
       } catch {
         quickbooks = {
           status: 'error',

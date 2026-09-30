@@ -469,7 +469,6 @@ body {
   background-color: var(--color-hover);
 }
 
-/* Agrega esto a tu archivo de estilos */
 .modal-content-crear-cliente {
   background-color: white;
   border-radius: var(--border-radius);

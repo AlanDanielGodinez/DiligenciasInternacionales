@@ -26,12 +26,14 @@ function restore() {
   }
 }
 
-const contact = {
-  id_contacto: 3944,
-  nombre: '  FELICITAS   REVILLA ',
+const client = {
+  id_cliente: 3944,
+  id_contacto: 10,
+  nombre: '  FELICITAS ',
+  apellido_paterno: 'REVILLA',
+  apellido_materno: 'PÉREZ',
   correo: 'felicitas@example.com',
   telefono: '+52 (614) 123-4567',
-  aplicantes: ['JUAN PÉREZ', 'Juan Pérez', "MARÍA O'CONNOR"],
   tramites: ['Visa', 'Pasaporte', 'Visa'],
 };
 
@@ -43,13 +45,13 @@ test('capitaliza espacios, acentos, guiones y apóstrofes', () => {
 });
 
 test('construye payload sin duplicados y con orden recibido estable', () => {
-  const { payload, warnings } = service.buildQuickBooksCustomerPayload(contact);
+  const { payload, warnings } = service.buildQuickBooksCustomerPayload(client);
   assert.deepEqual(payload, {
     Title: '3944',
-    GivenName: 'Felicitas Revilla',
-    DisplayName: 'Felicitas Revilla (3944)',
+    GivenName: 'Felicitas',
+    FamilyName: 'Revilla Pérez',
+    DisplayName: 'Felicitas Revilla Pérez (3944)',
     CompanyName: 'Visa | Pasaporte',
-    Notes: "Juan Pérez, María O'Connor",
     PrimaryEmailAddr: { Address: 'felicitas@example.com' },
     PrimaryPhone: { FreeFormNumber: '+52 (614) 123-4567' },
   });
@@ -58,7 +60,7 @@ test('construye payload sin duplicados y con orden recibido estable', () => {
 
 test('omite correo vacío y teléfono migrado inválido', () => {
   const { payload } = service.buildQuickBooksCustomerPayload({
-    ...contact, correo: '', telefono: '#ERROR!', aplicantes: [], tramites: [],
+    ...client, correo: '', telefono: '#ERROR!', tramites: [],
   });
   assert.equal(payload.PrimaryEmailAddr, undefined);
   assert.equal(payload.PrimaryPhone, undefined);
@@ -68,27 +70,27 @@ test('omite correo vacío y teléfono migrado inválido', () => {
 
 test('aplica estrategia explícita de longitud y emite advertencia', () => {
   const { payload, warnings } = service.buildQuickBooksCustomerPayload({
-    ...contact, tramites: ['A'.repeat(90), 'B'.repeat(20)],
+    ...client, tramites: ['A'.repeat(90), 'B'.repeat(20)],
   });
   assert.equal(payload.CompanyName, 'A'.repeat(90));
   assert.equal(warnings.length, 1);
 });
 
-test('respeta limites documentados de GivenName, DisplayName y Notes', () => {
+test('respeta limites documentados de GivenName, FamilyName y DisplayName', () => {
   const { payload, warnings } = service.buildQuickBooksCustomerPayload({
-    ...contact,
-    nombre: 'NOMBRE DE CONTACTO EXTRAORDINARIAMENTE LARGO',
-    aplicantes: ['A'.repeat(1000), 'B'.repeat(100)],
+    ...client,
+    nombre: 'NOMBRE DE CLIENTE EXTRAORDINARIAMENTE LARGO',
+    apellido_paterno: 'APELLIDO EXTRAORDINARIAMENTE LARGO',
   });
   assert.ok(payload.GivenName.length <= 25);
   assert.ok(payload.DisplayName.length <= 100);
-  assert.ok(payload.Notes.length <= 1024);
+  assert.ok(payload.FamilyName.length <= 25);
   assert.ok(warnings.length >= 2);
 });
 
 test('normaliza comillas y diagonales Unicode sin alterar correo', () => {
   const { payload } = service.buildQuickBooksCustomerPayload({
-    ...contact,
+    ...client,
     nombre: "MARIA\u2019LUISA \\ PEREZ",
     correo: 'Case.Sensitive@example.com',
   });
@@ -103,12 +105,12 @@ test('cifra y descifra tokens con AES-256-GCM', () => {
 });
 
 function installSyncMocks({ link = null } = {}) {
-  repository.withContactSyncLock = async (_, callback) => callback();
-  repository.getContactData = async () => contact;
-  repository.markContactPending = async () => ({ sync_status: 'pending' });
+  repository.withClientSyncLock = async (_, callback) => callback();
+  repository.getClientData = async () => client;
+  repository.markClientPending = async () => ({ sync_status: 'pending' });
   repository.getLatestConnection = async () => ({ status: 'connected' });
   repository.markSyncing = async () => ({ sync_status: 'syncing' });
-  repository.getContactLink = async () => link;
+  repository.getClientLink = async () => link;
   repository.markSyncSuccess = async (_, customer) => ({
     sync_status: 'synced', quickbooks_customer_id: customer.Id,
   });
@@ -129,7 +131,7 @@ test('crea Customer nuevo cuando no hay relación ni DisplayName', async () => {
     if (url.includes('/query?')) return response(200, { QueryResponse: {} });
     return response(200, { Customer: { Id: '101', SyncToken: '0' } });
   };
-  const result = await service.syncContactToQuickBooks(3944, { fetchImpl });
+  const result = await service.syncClientToQuickBooks(3944, { fetchImpl });
   assert.equal(result.status, 'synced');
   assert.equal(result.customer_id, '101');
   assert.equal(requests.length, 2);
@@ -145,7 +147,7 @@ test('vincula Customer encontrado y actualiza con SyncToken mediante sparse upda
     });
     return response(200, { Customer: { Id: '202', SyncToken: '5' } });
   };
-  const result = await service.syncContactToQuickBooks(3945, { fetchImpl });
+  const result = await service.syncClientToQuickBooks(3945, { fetchImpl });
   const updateBody = JSON.parse(requests[1].options.body);
   assert.equal(result.customer_id, '202');
   assert.equal(updateBody.SyncToken, '4');
@@ -155,14 +157,48 @@ test('vincula Customer encontrado y actualiza con SyncToken mediante sparse upda
 test('actualiza por quickbooks_customer_id local', async () => {
   installSyncMocks({ link: { quickbooks_customer_id: '303' } });
   const requests = [];
+  let persisted;
+  repository.markSyncSuccess = async (idCliente, customer) => {
+    persisted = { idCliente, customer };
+    return { sync_status: 'synced', quickbooks_customer_id: customer.Id };
+  };
   const fetchImpl = async (url, options) => {
     requests.push({ url, options });
     if ((options.method || 'GET') === 'GET') return response(200, { Customer: { Id: '303', SyncToken: '7' } });
     return response(200, { Customer: { Id: '303', SyncToken: '8' } });
   };
-  const result = await service.syncContactToQuickBooks(3946, { fetchImpl });
+  const result = await service.syncClientToQuickBooks(3946, { fetchImpl });
   assert.equal(result.customer_id, '303');
   assert.equal(JSON.parse(requests[1].options.body).SyncToken, '7');
+  assert.equal(persisted.idCliente, 3946);
+  assert.deepEqual(persisted.customer, { Id: '303', SyncToken: '8' });
+});
+
+test('dos clientes del mismo contacto generan Customers independientes', async () => {
+  installSyncMocks();
+  repository.getClientData = async (idCliente) => ({
+    ...client,
+    id_cliente: idCliente,
+    id_contacto: 10,
+    nombre: idCliente === 100 ? 'Juan' : 'Ana',
+  });
+  const created = [];
+  const fetchImpl = async (url, options) => {
+    if (url.includes('/query?')) return response(200, { QueryResponse: {} });
+    const body = JSON.parse(options.body);
+    created.push(body);
+    return response(200, {
+      Customer: { Id: body.Title === '100' ? '500' : '501', SyncToken: '0' },
+    });
+  };
+  const [first, second] = await Promise.all([
+    service.syncClientToQuickBooks(100, { fetchImpl }),
+    service.syncClientToQuickBooks(101, { fetchImpl }),
+  ]);
+  assert.equal(first.customer_id, '500');
+  assert.equal(second.customer_id, '501');
+  assert.deepEqual(created.map((payload) => payload.Title).sort(), ['100', '101']);
+  assert.ok(created.every((payload) => payload.Notes === undefined));
 });
 
 test('reintenta una sola vez después de 401 solicitando refresh', async () => {
@@ -190,13 +226,13 @@ test('refresh fallido produce error sin ciclo infinito', async () => {
 });
 
 test('QuickBooks desconectado conserva sincronización pendiente', async () => {
-  repository.withContactSyncLock = async (_, callback) => callback();
-  repository.getContactData = async () => contact;
-  repository.markContactPending = async () => ({ sync_status: 'pending' });
+  repository.withClientSyncLock = async (_, callback) => callback();
+  repository.getClientData = async () => client;
+  repository.markClientPending = async () => ({ sync_status: 'pending' });
   repository.getLatestConnection = async () => null;
   repository.markSyncFailure = async (_, status) => ({ sync_status: status });
   auth.isConfigured = () => true;
-  const result = await service.syncContactToQuickBooks(3950);
+  const result = await service.syncClientToQuickBooks(3950);
   assert.equal(result.status, 'pending');
 });
 
@@ -209,21 +245,21 @@ test('dos solicitudes simultáneas comparten una sola sincronización', async ()
     return response(200, { Customer: { Id: '404', SyncToken: '0' } });
   };
   const [first, second] = await Promise.all([
-    service.syncContactToQuickBooks(3999, { fetchImpl }),
-    service.syncContactToQuickBooks(3999, { fetchImpl }),
+    service.syncClientToQuickBooks(3999, { fetchImpl }),
+    service.syncClientToQuickBooks(3999, { fetchImpl }),
   ]);
   assert.deepEqual(first, second);
   assert.equal(queryCalls, 1);
 });
 
-test('rechaza payload sin id_contacto', () => {
-  assert.throws(() => service.buildQuickBooksCustomerPayload({ nombre: 'Demo' }), /id_contacto/);
+test('rechaza payload sin id_cliente', () => {
+  assert.throws(() => service.buildQuickBooksCustomerPayload({ nombre: 'Demo' }), /id_cliente/);
 });
-test('rechaza payload sin nombre de contacto', () => {
-  assert.throws(() => service.buildQuickBooksCustomerPayload({ id_contacto: 1 }), /Contact name/);
+test('rechaza payload sin nombre de cliente', () => {
+  assert.throws(() => service.buildQuickBooksCustomerPayload({ id_cliente: 1 }), /Client name/);
 });
-test('rechaza id_contacto mayor al limite de Title', () => {
-  assert.throws(() => service.buildQuickBooksCustomerPayload({ id_contacto: '12345678901234567', nombre: 'Demo' }), /Title limit/);
+test('rechaza id_cliente mayor al limite de Title', () => {
+  assert.throws(() => service.buildQuickBooksCustomerPayload({ id_cliente: '12345678901234567', nombre: 'Demo' }), /Title limit/);
 });
 test('acepta correo valido', () => assert.equal(service.isValidEmail('demo@example.com'), true));
 test('rechaza correo sin dominio', () => assert.equal(service.isValidEmail('demo@'), false));
@@ -235,11 +271,11 @@ test('deduplica valores ignorando mayusculas y espacios', () => {
   assert.deepEqual(service.uniqueNormalized([' Visa ', 'VISA', 'Pasaporte']), ['Visa', 'Pasaporte']);
 });
 test('conserva el identificador al recortar DisplayName', () => {
-  const { payload } = service.buildQuickBooksCustomerPayload({ id_contacto: 9876, nombre: 'X'.repeat(150) });
+  const { payload } = service.buildQuickBooksCustomerPayload({ id_cliente: 9876, nombre: 'X'.repeat(150) });
   assert.ok(payload.DisplayName.endsWith(' (9876)'));
 });
-test('contacto sin aplicantes ni tramites omite Notes y CompanyName', () => {
-  const { payload } = service.buildQuickBooksCustomerPayload({ id_contacto: 1, nombre: 'Contacto Demo', aplicantes: [], tramites: [] });
+test('cliente sin tramites omite Notes y CompanyName', () => {
+  const { payload } = service.buildQuickBooksCustomerPayload({ id_cliente: 1, nombre: 'Cliente Demo', tramites: [] });
   assert.equal(payload.Notes, undefined);
   assert.equal(payload.CompanyName, undefined);
 });

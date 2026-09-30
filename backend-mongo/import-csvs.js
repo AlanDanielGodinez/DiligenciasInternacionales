@@ -80,7 +80,7 @@ async function importCSV(fileName, config) {
     return;
   }
 
-  console.log(`\n📥 Importando ${fileName}...`);
+  console.log(`\nImportando ${fileName}...`);
   
   const csvContent = fs.readFileSync(filePath, 'utf-8');
   const rows = parseCSV(csvContent);
@@ -128,7 +128,7 @@ async function importCSV(fileName, config) {
 
 async function main() {
   try {
-    console.log('🔌 Conectando a MongoDB...');
+    console.log('Conectando a MongoDB...');
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Conectado a MongoDB');
 
@@ -136,7 +136,7 @@ async function main() {
       await importCSV(fileName, config);
     }
 
-    console.log('\n🎉 Importación completada exitosamente');
+    console.log('\nImportación completada');
     process.exit(0);
   } catch (error) {
     console.error('❌ Error:', error.message);

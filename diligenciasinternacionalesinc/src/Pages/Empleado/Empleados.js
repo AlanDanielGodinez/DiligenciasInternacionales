@@ -54,7 +54,7 @@ const EmpleadosPage = () => {
         <div>
           <span className="config-min__eyebrow"><FaUserTie /> Configuracion</span>
           <h1>Empleados</h1>
-          <p>Listado real de empleados activos/inactivos desde PostgreSQL. La edicion queda pendiente para Configuracion fase 2.</p>
+          <p>Consulta los empleados activos e inactivos. Por ahora no se pueden editar desde esta pantalla.</p>
         </div>
         <button type="button" onClick={loadEmpleados}><FaRedo /> Actualizar</button>
       </header>

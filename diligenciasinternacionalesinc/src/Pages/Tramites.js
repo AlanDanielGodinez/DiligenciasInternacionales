@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Footer from "../Components/Footer";
 import Navbar from "../Components/Navbar";
- // Asegúrate de que este import sea correcto
 
 const Tramites = () => {
   const [theme, setTheme] = useState('light');
@@ -70,7 +69,7 @@ const Tramites = () => {
         
         <header className="price-header">
           <h1>Nuestros servicios y tramites</h1>
-          <p>Descubre la opción que mejor se adapte a tus necesidades</p>
+          <p>Consulta los servicios y trámites disponibles</p>
         </header>
 
         <div className="content-wrap">
@@ -117,7 +116,7 @@ const Tramites = () => {
             <h2>¿Necesitas una solución personalizada?</h2>
             <p>Nuestros asesores pueden crear un paquete a medida para tu empresa</p>
             <button className="contact-button" style={{ backgroundColor: 'var(--color-warning)' }}>
-              Inicar sesión
+              Iniciar sesión
             </button>
           </div>
         </div>

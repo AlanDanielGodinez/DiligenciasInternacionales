@@ -23,10 +23,6 @@ import {
   moverSolicitudArea,
   updateContacto,
 } from '../../services/contactos.service';
-import {
-  getContactQuickBooksStatus,
-  syncContactToQuickBooks,
-} from '../../services/quickbooks.service';
 import '../../Styles/ContactosPage.css';
 
 const todayInput = () => new Date().toISOString().slice(0, 10);
@@ -106,8 +102,6 @@ const ContactosPage = () => {
   const [aplicanteForm, setAplicanteForm] = useState(emptyAplicanteForm);
   const [solicitudForm, setSolicitudForm] = useState(emptySolicitudForm);
   const [saving, setSaving] = useState(false);
-  const [quickbooksStatus, setQuickbooksStatus] = useState(null);
-  const [quickbooksBusy, setQuickbooksBusy] = useState(false);
 
   const selectedTipoPrincipal = useMemo(
     () => findTipoById(tiposTramite, solicitudForm.id_tipo_tramite),
@@ -150,11 +144,6 @@ const ContactosPage = () => {
     try {
       const data = await getContactoAplicantes(contacto.id_contacto);
       setDetalle(data);
-      try {
-        setQuickbooksStatus(await getContactQuickBooksStatus(contacto.id_contacto));
-      } catch (_) {
-        setQuickbooksStatus(null);
-      }
       setModal('detalle');
     } catch (error) {
       setMessage(getApiMessage(error, 'No se pudo cargar el contacto.'));
@@ -175,21 +164,6 @@ const ContactosPage = () => {
     initialize();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const retryQuickBooks = async (idContacto) => {
-    setQuickbooksBusy(true);
-    try {
-      const result = await syncContactToQuickBooks(idContacto);
-      setMessage(result.status === 'synced'
-        ? 'Contacto sincronizado con QuickBooks.'
-        : 'El contacto se guardó; la sincronización con QuickBooks permanece pendiente.');
-      setQuickbooksStatus(await getContactQuickBooksStatus(idContacto));
-    } catch (error) {
-      setMessage(getApiMessage(error, 'No fue posible reintentar la sincronización con QuickBooks.'));
-    } finally {
-      setQuickbooksBusy(false);
-    }
-  };
 
   const openNewContacto = () => {
     setContactoForm({ ...emptyContactoForm, fecha_ingreso: todayInput() });
@@ -374,22 +348,6 @@ const ContactosPage = () => {
             <div className="contactos-crm-detail-actions">
               <button type="button" onClick={() => openAplicante(contacto)}><FaUserPlus /> Agregar aplicante</button>
               <button type="button" onClick={() => openSolicitud(contacto)}><FaPlus /> Crear solicitud/tramite</button>
-              {quickbooksStatus && (
-                <span className={`contactos-crm-qb-status is-${quickbooksStatus.status}`}>
-                  QuickBooks: {{
-                    synced: 'Sincronizado',
-                    pending: 'Pendiente',
-                    syncing: 'Pendiente',
-                    error: 'Error',
-                    requires_reconnection: 'Requiere reconexión',
-                  }[quickbooksStatus.status] || 'Pendiente'}
-                </span>
-              )}
-              {quickbooksStatus && quickbooksStatus.status !== 'synced' && (
-                <button type="button" onClick={() => retryQuickBooks(contacto.id_contacto)} disabled={quickbooksBusy}>
-                  <FaRedo /> {quickbooksBusy ? 'Sincronizando...' : 'Reintentar sincronización'}
-                </button>
-              )}
             </div>
 
             <section className="admin-modal-section contactos-crm-section">

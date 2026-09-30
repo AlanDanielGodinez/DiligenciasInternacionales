@@ -335,7 +335,7 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* EXPERIENCIA AMA Section - OPCIÓN 1: TEXTO PLANO */}
+      {/* Experiencia AMA */}
       <section className="countries-section animate-on-scroll">
         <div className="section-header">
           <h2>EXPERIENCIA AMA</h2>

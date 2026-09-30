@@ -107,11 +107,11 @@ test('survey remains the independent client-related implementation', () => {
   assert.doesNotMatch(solicitudes, /CREATE TABLE.*encuesta/is);
 });
 
-test('QuickBooks uses a persistent contact link and duplicate-safe customer lookup', () => {
-  assert.match(quickbooks, /contacto_quickbooks/);
+test('QuickBooks uses a persistent client link and duplicate-safe customer lookup', () => {
+  assert.match(quickbooks, /cliente_quickbooks/);
   assert.match(quickbooks, /quickbooks_customer_id/);
   assert.match(quickbooks, /findCustomerByDisplayName/);
-  assert.match(quickbooks, /withContactSyncLock/);
+  assert.match(quickbooks, /withClientSyncLock/);
 });
 
 test('AppSheet QuickBooks behavior is documented only as an opaque process output', () => {

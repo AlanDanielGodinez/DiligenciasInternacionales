@@ -43,7 +43,7 @@ const Tramites = () => {
         <div>
           <span className="config-min__eyebrow"><FaClipboardList /> Configuracion</span>
           <h1>Tipos de tramite</h1>
-          <p>Catalogo real usado para crear solicitudes y resolver plantillas de perfil. La edicion queda pendiente para fase 2.</p>
+          <p>Consulta los tipos de trámite disponibles para las solicitudes y sus perfiles. Por ahora no se pueden editar.</p>
         </div>
         <button type="button" onClick={loadTipos}><FaRedo /> Actualizar</button>
       </header>

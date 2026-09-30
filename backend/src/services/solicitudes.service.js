@@ -1032,8 +1032,8 @@ async function updateSolicitud(idSolicitud, payload) {
 
     await client.query('COMMIT');
     if (Object.prototype.hasOwnProperty.call(payload, 'id_tipo_tramite')) {
-      await require('./quickbooksSyncTrigger.service').scheduleContactSync(
-        detailResult.rows[0]?.id_contacto
+      await require('./quickbooksSyncTrigger.service').scheduleClientSync(
+        detailResult.rows[0]?.id_cliente
       );
     }
     return {
@@ -1166,7 +1166,7 @@ async function createSolicitudRecord(payload, eventName = 'solicitud_creada') {
     await client.query('COMMIT');
 
     const solicitud = detailResult.rows[0];
-    await require('./quickbooksSyncTrigger.service').scheduleContactSync(solicitud?.id_contacto);
+    await require('./quickbooksSyncTrigger.service').scheduleClientSync(solicitud?.id_cliente);
     try {
       const driveResult = await driveExpedientesService.ensureExpedienteFoldersBySolicitud(idSolicitud);
       return {

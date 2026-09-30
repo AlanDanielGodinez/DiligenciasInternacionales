@@ -83,17 +83,17 @@ exports.disconnect = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-exports.syncContact = async (req, res, next) => {
+exports.syncClient = async (req, res, next) => {
   try {
-    const idContacto = Number(req.params.idContacto);
-    if (!Number.isInteger(idContacto) || idContacto <= 0) return res.status(400).json({ error: { message: 'idContacto inválido' } });
-    return res.json({ quickbooks: await quickbooksService.syncContactToQuickBooks(idContacto) });
+    const idCliente = Number(req.params.idCliente);
+    if (!Number.isInteger(idCliente) || idCliente <= 0) return res.status(400).json({ error: { message: 'idCliente inválido' } });
+    return res.json({ quickbooks: await quickbooksService.syncClientToQuickBooks(idCliente) });
   } catch (error) { return next(error); }
 };
 
-exports.getContactStatus = async (req, res, next) => {
+exports.getClientStatus = async (req, res, next) => {
   try {
-    const link = await repository.getContactLink(req.params.idContacto);
+    const link = await repository.getClientLink(req.params.idCliente);
     if (!link) return res.json({ status: 'pending', customer_id: null, attempts: 0, synced_at: null, last_error: null });
     return res.json({
       status: link.sync_status,
@@ -105,7 +105,7 @@ exports.getContactStatus = async (req, res, next) => {
   } catch (error) { return next(error); }
 };
 
-exports.listPending = async (req, res, next) => {
+exports.listClients = async (req, res, next) => {
   try {
     const statusMap = {
       pendiente: 'pending', error: 'error', requiere_reconexion: 'requires_reconnection',
@@ -116,7 +116,7 @@ exports.listPending = async (req, res, next) => {
     if (requested && !status) return res.status(400).json({ error: { message: 'Filtro de estado inválido' } });
     const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200);
     const offset = Math.max(Number(req.query.offset) || 0, 0);
-    const contacts = await repository.listContacts({ status, limit, offset });
-    return res.json({ contactos: contacts, limit, offset });
+    const clients = await repository.listClients({ status, limit, offset });
+    return res.json({ clientes: clients, limit, offset });
   } catch (error) { return next(error); }
 };

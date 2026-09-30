@@ -35,7 +35,7 @@ async function schema() {
   const required = {
     quickbooks_conexiones: ['id_quickbooks_conexion', 'realm_id', 'access_token_encrypted', 'refresh_token_encrypted', 'access_token_expires_at', 'environment', 'status'],
     quickbooks_oauth_states: ['state_hash', 'expires_at', 'used_at', 'created_at'],
-    contacto_quickbooks: ['id_contacto', 'realm_id', 'quickbooks_customer_id', 'sync_status', 'attempts'],
+    cliente_quickbooks: ['id_cliente', 'realm_id', 'quickbooks_customer_id', 'quickbooks_sync_token', 'sync_status', 'attempts'],
   };
   const tables = Object.keys(required);
   const { rows } = await pool.query("SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='public' AND table_name=ANY($1)", [tables]);
@@ -61,21 +61,19 @@ async function schema() {
 
 function config() {
   const aliases = {
-    QB_CLIENT_ID: ['QB_CLIENT_ID', 'QUICKBOOKS_CLIENT_ID'],
-    QB_CLIENT_SECRET: ['QB_CLIENT_SECRET', 'QUICKBOOKS_CLIENT_SECRET'],
-    QB_REDIRECT_URI: ['QB_REDIRECT_URI', 'QUICKBOOKS_REDIRECT_URI'],
-    QB_BASE_URL: ['QB_BASE_URL'],
+    QUICKBOOKS_CLIENT_ID: ['QUICKBOOKS_CLIENT_ID'],
+    QUICKBOOKS_CLIENT_SECRET: ['QUICKBOOKS_CLIENT_SECRET'],
+    QUICKBOOKS_REDIRECT_URI: ['QUICKBOOKS_REDIRECT_URI'],
     QUICKBOOKS_TOKEN_ENCRYPTION_KEY: ['QUICKBOOKS_TOKEN_ENCRYPTION_KEY'],
   };
   const facts = Object.entries(aliases).map(([label, keys]) => `${label}: ${keys.some(isPresent) ? 'PRESENT' : 'MISSING'}`);
   const required = ['QUICKBOOKS_CLIENT_ID', 'QUICKBOOKS_CLIENT_SECRET', 'QUICKBOOKS_REDIRECT_URI', 'QUICKBOOKS_TOKEN_ENCRYPTION_KEY'];
-  const redirect = process.env.QUICKBOOKS_REDIRECT_URI || process.env.QB_REDIRECT_URI || '';
+  const redirect = process.env.QUICKBOOKS_REDIRECT_URI || '';
   const fail = required.some((key) => !isPresent(key))
-    || !aliases.QB_BASE_URL.some(isPresent)
     || redirect !== EXPECTED_REDIRECT;
-  add('OAuth config', fail ? 'FAIL' : 'PASS', `${facts.join('; ')}; QB_REDIRECT_URI=${redirect || 'MISSING'}`);
+  add('OAuth config', fail ? 'FAIL' : 'PASS', `${facts.join('; ')}; QUICKBOOKS_REDIRECT_URI=${redirect || 'MISSING'}`);
   const environment = String(process.env.QUICKBOOKS_ENVIRONMENT || '').toLowerCase();
-  const apiBase = process.env.QB_BASE_URL || EXPECTED_API;
+  const apiBase = require('../src/services/quickbooks.service').apiBase(environment);
   add('Environment', environment === 'sandbox' && apiBase === EXPECTED_API ? 'PASS' : 'FAIL', `environment=${environment || 'MISSING'} api_base=${apiBase}`);
 }
 
@@ -86,7 +84,14 @@ function routes() {
     path: `/api/integraciones/quickbooks${layer.route.path}`,
     middleware: layer.route.stack.map((item) => item.handle.name || '<anonymous>'),
   }));
-  const required = [['GET', '/api/integraciones/quickbooks/estado'], ['GET', '/api/integraciones/quickbooks/conectar'], ['GET', '/api/integraciones/quickbooks/callback']];
+  const required = [
+    ['GET', '/api/integraciones/quickbooks/estado'],
+    ['GET', '/api/integraciones/quickbooks/conectar'],
+    ['GET', '/api/integraciones/quickbooks/callback'],
+    ['POST', '/api/integraciones/quickbooks/clientes/:idCliente/sincronizar'],
+    ['GET', '/api/integraciones/quickbooks/clientes/:idCliente/estado'],
+    ['GET', '/api/integraciones/quickbooks/clientes'],
+  ];
   const missing = required.filter(([method, routePath]) => !found.some((route) => route.method === method && route.path === routePath));
   add('Express routes', missing.length ? 'FAIL' : 'PASS', found.filter((route) => required.some((item) => item[1] === route.path)).map((route) => `${route.method} ${route.path} [${route.middleware.join(' -> ')}]`).join('; '));
 }
@@ -94,7 +99,10 @@ function routes() {
 function frontend() {
   const page = fs.readFileSync(path.join(FRONTEND, 'Pages/Empleado/QuickBooksIntegracionPage.js'), 'utf8');
   const service = fs.readFileSync(path.join(FRONTEND, 'services/quickbooks.service.js'), 'utf8');
-  const routeOk = service.includes("api.get('/integraciones/quickbooks/conectar'") && service.includes('Authorization: `Bearer ${token}`') && service.includes("params: { format: 'json' }");
+  const routeOk = service.includes("api.get('/integraciones/quickbooks/conectar'")
+    && service.includes('/integraciones/quickbooks/clientes/')
+    && service.includes('authHeaders')
+    && service.includes("params: { format: 'json' }");
   const clickOk = page.includes('onClick={handleConnect}') && page.includes('await connectQuickBooks()') && page.includes('window.location.assign(url)') && page.includes('[QB-FRONTEND] authorization-url-received');
   add('Frontend route', routeOk ? 'PASS' : 'FAIL', 'Axios GET /integraciones/quickbooks/conectar?format=json; Authorization Bearer <redacted>');
   add('Frontend connect action', clickOk ? 'PASS' : 'FAIL', 'onClick -> handleConnect -> connectQuickBooks -> Axios -> authorization_url -> window.location.assign');

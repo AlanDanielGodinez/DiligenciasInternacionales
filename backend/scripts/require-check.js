@@ -36,8 +36,7 @@ files.forEach((f) => {
 
 console.log('Require check finished');
 
-// Requiring services initializes the shared PostgreSQL pool. Close it so this
-// diagnostic script terminates without waiting for the pool idle timeout.
+// Los servicios abren el pool compartido; lo cerramos para que termine el script
 const { pool } = require('../src/config/db');
 pool.end().catch((error) => {
   console.error('ERROR closing database pool', error.message);

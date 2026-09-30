@@ -122,108 +122,105 @@ async function consumeOAuthState(rawState) {
   }
 }
 
-async function getContactData(idContacto, query = pool.query.bind(pool)) {
+async function getClientData(idCliente, query = pool.query.bind(pool)) {
   const { rows } = await query(
-    `WITH aplicantes AS (
-       SELECT DISTINCT c.id_contacto,
-         concat_ws(' ', nullif(btrim(c.nombre), ''),
-           nullif(btrim(c.apellido_paterno), ''), nullif(btrim(c.apellido_materno), '')) AS nombre_completo
-       FROM public.clientes c WHERE c.id_contacto = $1
-     ), tramites AS (
-       SELECT DISTINCT c.id_contacto, btrim(tt.nombre_tramite) AS nombre_tramite
-       FROM public.clientes c
-       JOIN public.solicitudes s ON s.id_cliente = c.id_cliente
+    `WITH tramites AS (
+       SELECT DISTINCT s.id_cliente, btrim(tt.nombre_tramite) AS nombre_tramite
+       FROM public.solicitudes s
        JOIN public.tipos_tramite tt ON tt.id_tipo_tramite = s.id_tipo_tramite
-       WHERE c.id_contacto = $1 AND nullif(btrim(tt.nombre_tramite), '') IS NOT NULL
+       WHERE s.id_cliente = $1 AND nullif(btrim(tt.nombre_tramite), '') IS NOT NULL
      )
-     SELECT co.id_contacto, co.nombre, co.telefono, co.correo,
-       COALESCE((SELECT json_agg(a.nombre_completo ORDER BY a.nombre_completo)
-         FROM aplicantes a WHERE nullif(a.nombre_completo, '') IS NOT NULL), '[]'::json) AS aplicantes,
+     SELECT c.id_cliente, c.id_contacto, c.nombre, c.apellido_paterno,
+       c.apellido_materno, c.telefono, c.correo,
        COALESCE((SELECT json_agg(t.nombre_tramite ORDER BY t.nombre_tramite)
-         FROM tramites t), '[]'::json) AS tramites
-     FROM public.contacto co WHERE co.id_contacto = $1`,
-    [idContacto]
+         FROM tramites t WHERE t.id_cliente = c.id_cliente), '[]'::json) AS tramites
+     FROM public.clientes c WHERE c.id_cliente = $1`,
+    [idCliente]
   );
   return rows[0] || null;
 }
 
-async function getContactLink(idContacto, realmId = null, query = pool.query.bind(pool)) {
+async function getClientLink(idCliente, realmId = null, query = pool.query.bind(pool)) {
   const { rows } = await query(
-    `SELECT * FROM public.contacto_quickbooks
-     WHERE id_contacto = $1 AND ($2::text IS NULL OR realm_id IS NULL OR realm_id = $2)
-     ORDER BY (realm_id = $2) DESC NULLS LAST LIMIT 1`, [idContacto, realmId]
+    `SELECT * FROM public.cliente_quickbooks
+     WHERE id_cliente = $1 AND ($2::text IS NULL OR realm_id IS NULL OR realm_id = $2)
+     ORDER BY (realm_id = $2) DESC NULLS LAST LIMIT 1`, [idCliente, realmId]
   );
   return rows[0] || null;
 }
 
-async function markContactPending(idContacto, query = pool.query.bind(pool)) {
+async function markClientPending(idCliente, query = pool.query.bind(pool)) {
   const { rows } = await query(
-    `INSERT INTO public.contacto_quickbooks (id_contacto, sync_status)
+    `INSERT INTO public.cliente_quickbooks (id_cliente, sync_status)
      VALUES ($1, 'pending')
-     ON CONFLICT (id_contacto) DO UPDATE SET
-       sync_status = CASE WHEN contacto_quickbooks.sync_status = 'synced' THEN 'pending'
-         ELSE contacto_quickbooks.sync_status END,
+     ON CONFLICT (id_cliente) DO UPDATE SET
+       sync_status = CASE WHEN cliente_quickbooks.sync_status = 'synced' THEN 'pending'
+         ELSE cliente_quickbooks.sync_status END,
        updated_at = now()
-     RETURNING *`, [idContacto]
+     RETURNING *`, [idCliente]
   );
   return rows[0];
 }
 
-async function markSyncing(idContacto, query = pool.query.bind(pool)) {
+async function markSyncing(idCliente, query = pool.query.bind(pool)) {
   const { rows } = await query(
-    `INSERT INTO public.contacto_quickbooks (id_contacto, sync_status, attempts, last_attempt_at)
+    `INSERT INTO public.cliente_quickbooks (id_cliente, sync_status, attempts, last_attempt_at)
      VALUES ($1, 'syncing', 1, now())
-     ON CONFLICT (id_contacto) DO UPDATE SET
-       sync_status = 'syncing', attempts = contacto_quickbooks.attempts + 1,
+     ON CONFLICT (id_cliente) DO UPDATE SET
+       sync_status = 'syncing', attempts = cliente_quickbooks.attempts + 1,
        last_error = NULL, last_attempt_at = now(), updated_at = now()
-     RETURNING *`, [idContacto]
+     RETURNING *`, [idCliente]
   );
   return rows[0];
 }
 
-async function markSyncSuccess(idContacto, customer, realmId, query = pool.query.bind(pool)) {
+async function markSyncSuccess(idCliente, customer, realmId, query = pool.query.bind(pool)) {
   const { rows } = await query(
-    `UPDATE public.contacto_quickbooks SET
+    `UPDATE public.cliente_quickbooks SET
        quickbooks_customer_id = $1, quickbooks_sync_token = $2, realm_id = $3,
        sync_status = 'synced', last_error = NULL, synced_at = now(), updated_at = now()
-     WHERE id_contacto = $4 RETURNING *`,
-    [customer.Id, customer.SyncToken, realmId, idContacto]
+     WHERE id_cliente = $4 RETURNING *`,
+    [customer.Id, customer.SyncToken, realmId, idCliente]
   );
   return rows[0];
 }
 
-async function markSyncFailure(idContacto, status, error, query = pool.query.bind(pool)) {
+async function markSyncFailure(idCliente, status, error, query = pool.query.bind(pool)) {
   const { rows } = await query(
-    `INSERT INTO public.contacto_quickbooks (id_contacto, sync_status, last_error, attempts)
+    `INSERT INTO public.cliente_quickbooks (id_cliente, sync_status, last_error, attempts)
      VALUES ($1, $2, $3, 1)
-     ON CONFLICT (id_contacto) DO UPDATE SET
+     ON CONFLICT (id_cliente) DO UPDATE SET
        sync_status = EXCLUDED.sync_status, last_error = EXCLUDED.last_error,
        updated_at = now()
-     RETURNING *`, [idContacto, status, error]
+     RETURNING *`, [idCliente, status, error]
   );
   return rows[0];
 }
 
-async function listContacts({ status, limit, offset }, query = pool.query.bind(pool)) {
+async function listClients({ status, limit, offset }, query = pool.query.bind(pool)) {
   const values = [];
-  const where = status ? `WHERE cq.sync_status = $${values.push(status)}` : '';
+  const where = status ? `WHERE COALESCE(cq.sync_status, 'pending') = $${values.push(status)}` : '';
   values.push(limit, offset);
   const { rows } = await query(
-    `SELECT cq.id_contacto, co.nombre, cq.quickbooks_customer_id,
-       cq.sync_status, cq.last_error, cq.attempts, cq.synced_at, cq.updated_at
-     FROM public.contacto_quickbooks cq
-     JOIN public.contacto co ON co.id_contacto = cq.id_contacto
+    `SELECT c.id_cliente, c.id_contacto,
+       concat_ws(' ', nullif(btrim(c.nombre), ''), nullif(btrim(c.apellido_paterno), ''),
+         nullif(btrim(c.apellido_materno), '')) AS nombre,
+       cq.quickbooks_customer_id, COALESCE(cq.sync_status, 'pending') AS sync_status,
+       cq.last_error, COALESCE(cq.attempts, 0) AS attempts,
+       cq.last_attempt_at, cq.synced_at, cq.updated_at
+     FROM public.clientes c
+     LEFT JOIN public.cliente_quickbooks cq ON cq.id_cliente = c.id_cliente
      ${where}
-     ORDER BY cq.updated_at ASC, cq.id_contacto ASC
+     ORDER BY cq.updated_at ASC NULLS FIRST, c.id_cliente ASC
      LIMIT $${values.length - 1} OFFSET $${values.length}`,
     values
   );
   return rows;
 }
 
-async function withContactSyncLock(idContacto, callback) {
+async function withClientSyncLock(idCliente, callback) {
   const client = await pool.connect();
-  const lockKey = Number(idContacto);
+  const lockKey = Number(idCliente);
   try {
     await client.query('SELECT pg_advisory_lock($1, $2)', [7142, lockKey]);
     return await callback();
@@ -236,6 +233,6 @@ async function withContactSyncLock(idContacto, callback) {
 module.exports = {
   getActiveConnection, getLatestConnection, saveConnection, updateConnectionTokens,
   setConnectionStatus, disconnectAll, storeOAuthState, hasOAuthState, consumeOAuthState,
-  getContactData, getContactLink, markContactPending, markSyncing,
-  markSyncSuccess, markSyncFailure, listContacts, withContactSyncLock,
+  getClientData, getClientLink, markClientPending, markSyncing,
+  markSyncSuccess, markSyncFailure, listClients, withClientSyncLock,
 };

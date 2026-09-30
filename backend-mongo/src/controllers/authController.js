@@ -54,7 +54,7 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log('🔐 Intento de login (empleado) para:', email);
+    console.log('Intento de login (empleado) para:', email);
 
     if (!email || !password) {
       return res.status(400).json({ 
@@ -109,7 +109,7 @@ const clienteLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log('🔐 Intento de login (cliente) para:', email);
+    console.log('Intento de login (cliente) para:', email);
 
     if (!email || !password) {
       return res.status(400).json({ 

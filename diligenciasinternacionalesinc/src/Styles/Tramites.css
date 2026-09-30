@@ -1,4 +1,3 @@
-/* Nuevas reglas para el layout */
 .page-container {
   display: flex;
   flex-direction: column;
@@ -17,7 +16,6 @@
   padding-bottom: 2rem; /* Espacio antes del footer */
 }
 
-/* Mantén todas las reglas anteriores y agrega estas al final */
 
 /* Asegurar que el footer siempre esté abajo */
 Footer {
@@ -33,7 +31,6 @@ footer {
   margin-top: 3rem;
 }
 
-/* Resto de tus estilos anteriores permanecen igual */
 .theme-toggle {
   position: fixed;
   top: 20px;

@@ -7,19 +7,18 @@ const RolesPage = () => (
       <div>
         <span className="config-min__eyebrow"><FaUserShield /> Configuracion</span>
         <h1>Roles y permisos</h1>
-        <p>Este modulo queda pendiente hasta definir el modelo productivo de permisos.</p>
+        <p>La administración de roles y permisos aún no está disponible.</p>
       </div>
     </header>
 
     <section className="config-min__placeholder">
       <FaUserShield />
-      <h2>Roles y permisos pendiente</h2>
+      <h2>Configuración pendiente</h2>
       <p>
-        No hay endpoint PostgreSQL activo para administrar roles desde esta pantalla.
-        Por seguridad se deshabilito el CRUD legacy que llamaba a /api/roles.
+        Por ahora no se pueden crear ni modificar roles desde esta pantalla.
       </p>
       <p>
-        Fase 2 recomendada: definir tablas de roles/permisos, relacion con empleados y reglas de acceso por area.
+        Falta definir los permisos de cada rol y el acceso de los empleados a las áreas.
       </p>
     </section>
   </main>

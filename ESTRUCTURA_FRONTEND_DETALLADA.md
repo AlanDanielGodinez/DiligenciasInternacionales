@@ -34,7 +34,7 @@ diligenciasinternacionalesinc/
 │
 └───src/                                                # Código fuente principal
     │
-    ├── index.js                                       # 🎯 Punto de entrada React
+    ├── index.js                                       # Punto de entrada React
     │   ├── import React from 'react'
     │   ├── import ReactDOM from 'react-dom/client'
     │   ├── import App from './App'
@@ -48,7 +48,7 @@ diligenciasinternacionalesinc/
     │   ├── Estilos de body
     │   └── Clases de utilidad
     │
-    ├── App.js                                         # 🎯 Componente raíz (156 líneas)
+    ├── App.js                                         # Componente raíz (156 líneas)
     │   ├── import React
     │   ├── import { BrowserRouter, Routes, Route }
     │   ├── import { ThemeProvider }
@@ -99,7 +99,7 @@ diligenciasinternacionalesinc/
     ├── setupTests.js                                  # Configuración de Jest
     ├── reportWebVitals.js                             # Métricas de rendimiento Web Vitals
     │
-    ├───Components/                                     # 🧩 Componentes reutilizables (16 archivos)
+    ├───Components/                                     # Componentes reutilizables (16 archivos)
     │   │
     │   ├── Card.js                                    # Componente de tarjeta genérica
     │   │   ├── Props: title, description, image, onClick
@@ -203,7 +203,7 @@ diligenciasinternacionalesinc/
     │   │   ├── Comillas decorativas
     │   │   └── Avatar circular
     │   │
-    │   ├── ThemeContext.js                            # 🎨 Context API para temas
+    │   ├── ThemeContext.js                            # Context API para temas
     │   │   ├── import { createContext, useContext, useState, useEffect }
     │   │   ├── const ThemeContext = createContext()
     │   │   ├── export const ThemeProvider = ({ children }) => {
@@ -241,7 +241,7 @@ diligenciasinternacionalesinc/
     │               { icon, label, path, roles: [] }
     │               ]
     │
-    ├───config/                                         # ⚙️ Configuraciones
+    ├───config/                                         # Configuraciones
     │   │
     │   └── api.js                                     # Configuración de API y endpoints
     │       ├── const API_BASE_URL = 'http://localhost:5000'
@@ -259,7 +259,7 @@ diligenciasinternacionalesinc/
     │       │
     │       └── export default API_ENDPOINTS
     │
-    ├───Images/                                         # 🖼️ Recursos de imágenes
+    ├───Images/                                         # Recursos de imágenes
     │   ├───Carrucel/                                  # Imágenes para carruseles
     │   │   ├── banner1.jpg
     │   │   ├── banner2.jpg
@@ -279,7 +279,7 @@ diligenciasinternacionalesinc/
     │       ├── asesoria-icon.svg
     │       └── ... (más iconos)
     │
-    ├───Pages/                                          # 📄 Páginas de la aplicación
+    ├───Pages/                                          # Páginas de la aplicación
     │   │
     │   ├── Dashboard.js                               # Dashboard público/landing
     │   │   ├── import HeroBackgroundImage, CustomCarousel
@@ -293,7 +293,7 @@ diligenciasinternacionalesinc/
     │   │   ├── Animaciones con AOS
     │   │   └── InfiniteScroll para testimonios
     │   │
-    │   ├── Login.js                                   # 🔐 Página de inicio de sesión
+    │   ├── Login.js                                   # Página de inicio de sesión
     │   │   ├── import { useNavigate }
     │   │   ├── import axios
     │   │   ├── import API_ENDPOINTS
@@ -373,7 +373,7 @@ diligenciasinternacionalesinc/
     │   │   ├── Búsqueda de servicios
     │   │   └── Comparador de servicios
     │   │
-    │   ├───Cliente/                                    # 👤 Módulo de Cliente (3 archivos)
+    │   ├───Cliente/                                    # Módulo de Cliente (3 archivos)
     │   │   │
     │   │   ├── InicioCliente.js                       # Dashboard del cliente
     │   │   │   ├── import { useState, useEffect }
@@ -437,9 +437,9 @@ diligenciasinternacionalesinc/
     │   │       ├── Próximos pasos
     │   │       └── Botón "Descargar resumen"
     │   │
-    │   └───Empleado/                                   # 👔 Módulo de Empleado (34 archivos)
+    │   └───Empleado/                                   # Módulo de Empleado (34 archivos)
     │       │
-    │       ├── Home.js                                # 📊 Dashboard principal empleado
+    │       ├── Home.js                                # Dashboard principal empleado
     │       │   ├── import { useState, useEffect }
     │       │   ├── import axios
     │       │   ├── import { BarChart, PieChart } from 'recharts'
@@ -489,7 +489,7 @@ diligenciasinternacionalesinc/
     │       │   │
     │       │   └── Accesos rápidos a módulos
     │       │
-    │       ├── Clientes.js                            # 👥 Gestión de clientes
+    │       ├── Clientes.js                            # Gestión de clientes
     │       │   ├── import { useState, useEffect }
     │       │   ├── import axios, { useNavigate }
     │       │   ├── import CrearCliente, EditarCliente, VerCliente
@@ -613,7 +613,7 @@ diligenciasinternacionalesinc/
     │       ├── AnadirCliente.js                       # Añadir cliente a trámite
     │       ├── AnadirTramite.js                       # Crear nuevo trámite
     │       │
-    │       ├── TramitesLista.js                       # 📋 Lista de todos los trámites
+    │       ├── TramitesLista.js                       # Lista de todos los trámites
     │       │   ├── useState: tramites, filtrados
     │       │   ├── useState: filtroEstado, filtroBusqueda
     │       │   ├── useEffect: cargarTramites()
@@ -649,7 +649,7 @@ diligenciasinternacionalesinc/
     │       │
     │       ├── NuevoTramite.js                        # Formulario nuevo trámite
     │       │
-    │       ├── GrupoDetalle.js                        # 🚌 Detalles de grupo AMA
+    │       ├── GrupoDetalle.js                        # Detalles de grupo AMA
     │       │   ├── import { useParams, useNavigate }
     │       │   ├── const { id } = useParams()
     │       │   ├── useState: grupo, participantes, itinerario
@@ -674,7 +674,7 @@ diligenciasinternacionalesinc/
     │       │
     │       ├── ItinerariosPendientes.js               # Lista de itinerarios pendientes
     │       │
-    │       ├── AgregarPagoModal.js                    # 💰 Modal registrar pago
+    │       ├── AgregarPagoModal.js                    # Modal registrar pago
     │       │   ├── Props: isOpen, onClose, tramiteId, clienteId
     │       │   ├── useState: formData {
     │       │   │   monto, metodoPago, fechaPago,
@@ -697,7 +697,7 @@ diligenciasinternacionalesinc/
     │       ├── PagosPendientes.js                     # Lista de pagos pendientes
     │       ├── MetodosPago.js                         # Gestión catálogo métodos de pago
     │       │
-    │       ├── EntregarDocumentos.js                  # 📄 Entrega de documentos
+    │       ├── EntregarDocumentos.js                  # Entrega de documentos
     │       │   ├── useState: tramites, seleccionados
     │       │   ├── handleMarcarEntregado(tramiteId, documentoId)
     │       │   │   ├── PUT /api/documentos/:id/entregar
@@ -738,7 +738,7 @@ diligenciasinternacionalesinc/
     │       ├── DetallesSolicitudModal.js              # Modal detalles de solicitud
     │       ├── SeleccionarTramiteModal.js             # Modal seleccionar tipo
     │       │
-    │       ├── Empleados.js                           # 👨‍💼 Gestión de empleados
+    │       ├── Empleados.js                           # Gestión de empleados
     │       │   ├── CRUD de empleados
     │       │   ├── Asignación de roles
     │       │   └── Estados activo/inactivo
@@ -748,7 +748,7 @@ diligenciasinternacionalesinc/
     │       ├── Asignarempleado.js                     # Asignar empleado a trámite
     │       ├── AsignarResponsable.js                  # Asignar responsable
     │       │
-    │       ├── Areas.js                               # 🏢 Gestión de áreas
+    │       ├── Areas.js                               # Gestión de áreas
     │       │   ├── Lista de áreas/departamentos
     │       │   ├── CRUD áreas
     │       │   └── Asignación de empleados a áreas
@@ -759,18 +759,18 @@ diligenciasinternacionalesinc/
     │       ├── CrearAntecedente.js                    # Crear antecedente
     │       ├── EditarAntecedente.js                   # Editar antecedente
     │       │
-    │       ├── PaisesCiudades.js                      # 🌍 Gestión países y ciudades
+    │       ├── PaisesCiudades.js                      # Gestión países y ciudades
     │       │   ├── Tabs: Países | Ciudades
     │       │   ├── CRUD países
     │       │   ├── CRUD ciudades
     │       │   └── Asociación ciudad-país
     │       │
-    │       └── Aerolineas.js                          # ✈️ Catálogo de aerolíneas
+    │       └── Aerolineas.js                          # Catálogo de aerolíneas
     │           ├── Lista de aerolíneas
     │           ├── CRUD aerolíneas
     │           └── Información: código, nombre, país
     │
-    └───Styles/                                         # 🎨 Archivos CSS (46 archivos)
+    └───Styles/                                         # Archivos CSS (46 archivos)
         │
         ├── colors.css                                 # Variables de colores del sistema
         │   ├── :root {
@@ -851,7 +851,7 @@ diligenciasinternacionalesinc/
 
 ## RESUMEN DE ESTADÍSTICAS
 
-### 📊 Conteo de archivos por categoría
+### Conteo de archivos por categoría
 
 ```
 ├── Archivos de configuración raíz:         4 archivos

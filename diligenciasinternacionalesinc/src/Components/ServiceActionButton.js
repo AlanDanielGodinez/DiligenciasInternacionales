@@ -6,7 +6,7 @@ const ServiceActionButton = ({ serviceName, children, className = 'servicio-cta-
 
   const handleClick = () => {
     // Verificar si el usuario está autenticado
-    const isAuthenticated = localStorage.getItem('userToken'); // Ajusta según tu sistema de auth
+    const isAuthenticated = localStorage.getItem('userToken');
     
     if (isAuthenticated) {
       // Si está autenticado, redirigir al área del cliente

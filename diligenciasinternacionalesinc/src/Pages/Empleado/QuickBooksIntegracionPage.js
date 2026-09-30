@@ -4,9 +4,9 @@ import { FaBook, FaLink, FaRedo, FaSearch, FaUnlink } from 'react-icons/fa';
 import {
   connectQuickBooks,
   disconnectQuickBooks,
-  getPendingQuickBooksContacts,
+  getQuickBooksClients,
   getQuickBooksStatus,
-  syncContactToQuickBooks,
+  syncClientToQuickBooks,
 } from '../../services/quickbooks.service';
 import '../../Styles/QuickBooksIntegracion.css';
 import { clearAuthSession, inspectStoredSession } from '../../utils/authSession';
@@ -47,7 +47,7 @@ const QuickBooksIntegracionPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [connection, setConnection] = useState(null);
-  const [contacts, setContacts] = useState([]);
+  const [clients, setClients] = useState([]);
   const [filter, setFilter] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -62,13 +62,13 @@ const QuickBooksIntegracionPage = () => {
     setConnection(data);
   };
 
-  const loadContacts = async (nextPage = page, nextFilter = filter) => {
-    const data = await getPendingQuickBooksContacts({
+  const loadClients = async (nextPage = page, nextFilter = filter) => {
+    const data = await getQuickBooksClients({
       status: nextFilter || undefined,
       limit: PAGE_SIZE,
       offset: (nextPage - 1) * PAGE_SIZE,
     });
-    setContacts(data.contactos);
+    setClients(data.clientes);
   };
 
   const refresh = async () => {
@@ -78,8 +78,8 @@ const QuickBooksIntegracionPage = () => {
       setConnection(status);
       setApiAvailable(true);
       setSessionInvalid(false);
-      if (status.configured) await loadContacts();
-      else setContacts([]);
+      if (status.configured) await loadClients();
+      else setClients([]);
     } catch (error) {
       const statusCode = error?.response?.status;
       const authCode = error?.response?.data?.error?.code;
@@ -132,14 +132,14 @@ const QuickBooksIntegracionPage = () => {
   }, []);
 
   const presentation = getConnectionPresentation(connection);
-  const filteredContacts = useMemo(() => {
+  const filteredClients = useMemo(() => {
     const term = search.trim().toLocaleLowerCase('es-MX');
-    if (!term) return contacts;
-    return contacts.filter((contact) =>
-      String(contact.id_contacto).includes(term)
-      || String(contact.nombre || '').toLocaleLowerCase('es-MX').includes(term)
+    if (!term) return clients;
+    return clients.filter((client) =>
+      String(client.id_cliente).includes(term)
+      || String(client.nombre || '').toLocaleLowerCase('es-MX').includes(term)
     );
-  }, [contacts, search]);
+  }, [clients, search]);
 
   const handleConnect = async () => {
     if (process.env.NODE_ENV === 'development') console.info('[QB-FRONTEND] connect-click');
@@ -158,7 +158,7 @@ const QuickBooksIntegracionPage = () => {
   };
 
   const handleDisconnect = async () => {
-    if (!window.confirm('¿Deseas desconectar QuickBooks? Los contactos guardados no se eliminarán.')) return;
+    if (!window.confirm('¿Deseas desconectar QuickBooks? Los clientes guardados no se eliminarán.')) return;
     setBusy('disconnect');
     try {
       await disconnectQuickBooks();
@@ -176,14 +176,14 @@ const QuickBooksIntegracionPage = () => {
     navigate('/login');
   };
 
-  const handleRetry = async (idContacto) => {
-    setBusy(`contact-${idContacto}`);
+  const handleRetry = async (idCliente) => {
+    setBusy(`client-${idCliente}`);
     try {
-      const result = await syncContactToQuickBooks(idContacto);
+      const result = await syncClientToQuickBooks(idCliente);
       setMessage(result.status === 'synced'
-        ? `El contacto #${idContacto} se sincronizó correctamente.`
-        : `El contacto #${idContacto} permanece pendiente de sincronización.`);
-      await Promise.all([loadConnection(), loadContacts()]);
+        ? `El cliente #${idCliente} se sincronizó correctamente.`
+        : `El cliente #${idCliente} permanece pendiente de sincronización.`);
+      await Promise.all([loadConnection(), loadClients()]);
     } catch (error) {
       setMessage(getErrorMessage(error, 'No fue posible reintentar la sincronización.'));
     } finally {
@@ -196,7 +196,7 @@ const QuickBooksIntegracionPage = () => {
     setFilter(value);
     setPage(1);
     setLoading(true);
-    try { await loadContacts(1, value); }
+    try { await loadClients(1, value); }
     catch (error) { setMessage(getErrorMessage(error, 'No fue posible aplicar el filtro.')); }
     finally { setLoading(false); }
   };
@@ -204,7 +204,7 @@ const QuickBooksIntegracionPage = () => {
   const changePage = async (nextPage) => {
     setPage(nextPage);
     setLoading(true);
-    try { await loadContacts(nextPage, filter); }
+    try { await loadClients(nextPage, filter); }
     catch (error) { setMessage(getErrorMessage(error, 'No fue posible cambiar de página.')); }
     finally { setLoading(false); }
   };
@@ -215,7 +215,7 @@ const QuickBooksIntegracionPage = () => {
         <div>
           <span className="config-min__eyebrow"><FaBook /> Configuración · Integraciones</span>
           <h1>QuickBooks Online</h1>
-          <p>Administra la conexión y revisa contactos pendientes de sincronización.</p>
+          <p>Administra la conexión y revisa clientes pendientes de sincronización.</p>
         </div>
         <button type="button" onClick={refresh} disabled={loading}><FaRedo /> Actualizar</button>
       </header>
@@ -258,22 +258,23 @@ const QuickBooksIntegracionPage = () => {
       <section className="config-min__table-wrap">
         {loading ? <div className="config-min__empty">Cargando integración...</div> : (
           <table className="config-min__table">
-            <thead><tr><th>Contacto</th><th>Estado</th><th>Intentos</th><th>Última sincronización</th><th>Error</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Cliente</th><th>Customer.Id</th><th>Estado</th><th>Intentos</th><th>Último intento</th><th>Error</th><th>Acciones</th></tr></thead>
             <tbody>
-              {filteredContacts.map((contact) => (
-                <tr key={contact.id_contacto}>
-                  <td><strong>{contact.nombre || 'Sin nombre'}</strong><small>Folio #{contact.id_contacto}</small></td>
-                  <td><span className={`config-min__badge qb-status--${contact.sync_status}`}>{statusLabels[contact.sync_status] || contact.sync_status}</span></td>
-                  <td>{contact.attempts || 0}</td>
-                  <td>{formatDate(contact.synced_at)}</td>
-                  <td title={contact.last_error || ''}>{summarizeError(contact.last_error)}</td>
+              {filteredClients.map((client) => (
+                <tr key={client.id_cliente}>
+                  <td><strong>{client.nombre || 'Sin nombre'}</strong><small>Cliente #{client.id_cliente}</small></td>
+                  <td>{client.quickbooks_customer_id || '—'}</td>
+                  <td><span className={`config-min__badge qb-status--${client.sync_status}`}>{statusLabels[client.sync_status] || client.sync_status}</span></td>
+                  <td>{client.attempts || 0}</td>
+                  <td>{formatDate(client.last_attempt_at)}</td>
+                  <td title={client.last_error || ''}>{summarizeError(client.last_error)}</td>
                   <td><div className="qb-admin__row-actions">
-                    {contact.sync_status !== 'synced' && <button type="button" onClick={() => handleRetry(contact.id_contacto)} disabled={busy === `contact-${contact.id_contacto}`}><FaRedo /> Reintentar</button>}
-                    <button type="button" onClick={() => navigate(`/empleado/contactos?contacto=${contact.id_contacto}`)}>Abrir contacto</button>
+                    <button type="button" onClick={() => handleRetry(client.id_cliente)} disabled={busy === `client-${client.id_cliente}`}><FaRedo /> {client.sync_status === 'synced' ? 'Sincronizar' : 'Reintentar'}</button>
+                    {client.id_contacto && <button type="button" onClick={() => navigate(`/empleado/contactos?contacto=${client.id_contacto}`)}>Abrir cliente</button>}
                   </div></td>
                 </tr>
               ))}
-              {filteredContacts.length === 0 && <tr><td colSpan="6" className="config-min__empty">No hay contactos para mostrar.</td></tr>}
+              {filteredClients.length === 0 && <tr><td colSpan="7" className="config-min__empty">No hay clientes para mostrar.</td></tr>}
             </tbody>
           </table>
         )}
@@ -282,7 +283,7 @@ const QuickBooksIntegracionPage = () => {
       <div className="qb-admin__pagination">
         <button type="button" onClick={() => changePage(page - 1)} disabled={page === 1 || loading}>Anterior</button>
         <span>Página {page}</span>
-        <button type="button" onClick={() => changePage(page + 1)} disabled={contacts.length < PAGE_SIZE || loading}>Siguiente</button>
+        <button type="button" onClick={() => changePage(page + 1)} disabled={clients.length < PAGE_SIZE || loading}>Siguiente</button>
       </div>
     </main>
   );

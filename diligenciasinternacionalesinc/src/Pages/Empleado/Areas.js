@@ -43,7 +43,7 @@ const AreasPage = () => {
         <div>
           <span className="config-min__eyebrow"><FaLayerGroup /> Configuracion</span>
           <h1>Areas operativas</h1>
-          <p>Catalogo de areas reales usado por solicitudes y bandejas operativas. El CRUD queda pendiente para fase 2.</p>
+          <p>Consulta las áreas de las solicitudes. Por ahora no se pueden crear ni editar áreas.</p>
         </div>
         <button type="button" onClick={loadAreas}><FaRedo /> Actualizar</button>
       </header>

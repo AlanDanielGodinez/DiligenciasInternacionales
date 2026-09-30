@@ -247,7 +247,6 @@ const CrearSolicitud = () => {
               alert('Debe seleccionar al menos un cliente');
               return;
             }
-            // Abrirá modal para seleccionar trámite (esto lo implementaremos en el paso B)
             setShowSeleccionarTramiteModal(true);
           }}
           className={`btn-next btn-secondary ${selectedClientes.length === 0 ? 'disabled' : ''}`}
@@ -267,7 +266,6 @@ const CrearSolicitud = () => {
                   mostrar={showCreateModal}
                   onClienteCreado={handleClienteCreado}
                   cerrar={() => setShowCreateModal(false)}
-                  // Asegúrate de pasar todas las props requeridas
                 />
               </div>
             </div>
