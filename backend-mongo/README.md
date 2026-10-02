@@ -28,11 +28,11 @@ docker ps
 ### 3. Configurar variables de entorno
 El archivo `.env` ya está configurado con:
 ```env
-MONGODB_URI=mongodb://localhost:27017/diligenciasinternacionales
-JWT_SECRET=tu_jwt_secret_key_super_segura_aqui_2024
+MONGODB_URI=mongodb+srv://<usuario>:<contraseña>@<cluster>/<base>
+JWT_SECRET=<generar: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))">
 PORT=5000
 ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=admin123
+ADMIN_PASSWORD=<definir solo en el entorno>
 ```
 
 ### 4. Ejecutar el servidor

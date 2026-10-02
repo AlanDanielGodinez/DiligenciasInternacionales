@@ -17,8 +17,8 @@
 ### 2.1 Verificar .env
 Tu archivo debe tener:
 ```
-MONGODB_URI=mongodb+srv://<CONFIGURAR_LOCALMENTE>
-JWT_SECRET=tu_jwt_secret_key_super_segura_aqui_2024
+MONGODB_URI=mongodb+srv://<usuario>:<contraseña>@<cluster>/<base>
+JWT_SECRET=<generar: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))">
 PORT=5000
 ```
 
@@ -35,7 +35,7 @@ node scripts/importFromCSV.js usuarios data/usuarios_ejemplo.csv
 
 # O crear manualmente en MongoDB Atlas:
 # Email: admin@example.com
-# Password: <REDACTED>
+# Password: <contraseña asignada por un administrador>
 # Nombre: Admin
 # Role: admin
 ```
@@ -66,7 +66,7 @@ curl http://localhost:5000/health
 # 2. Login de empleado
 curl -X POST http://localhost:5000/api/auth/login ^
   -H "Content-Type: application/json" ^
-  -d "{\"email\":\"admin@example.com\",\"password\":\"Admin123!\"}"
+  -d "{\"email\":\"admin@example.com\",\"password\":\"<contraseña>\"}"
 
 # DeberÃ­as recibir:
 {
@@ -96,7 +96,7 @@ curl http://localhost:5000/api/auth/verify \
 ```json
 {
   "email": "admin@example.com",
-Password: <REDACTED>
+Password: <contraseña asignada por un administrador>
 }
 ```
 6. Haz clic en "Send"
@@ -137,7 +137,7 @@ DeberÃ­a abrir en http://localhost:3000
 1. Ve al formulario de Login
 2. Ingresa:
    - Email: `admin@example.com`
-   - Password: <REDACTED>
+   - Password: <contraseña asignada por un administrador>
 3. Haz clic en "Ingresar"
 4. DeberÃ­as ser redirigido al dashboard
 
@@ -191,21 +191,21 @@ Si no, retorna error 403
 ### Empleado/Admin
 ```
 Email: admin@example.com
-Password: <REDACTED>
+Password: <contraseña asignada por un administrador>
 Role: admin
 ```
 
 ### Usuario Regular
 ```
 Email: usuario1@example.com
-Password: <REDACTED>
+Password: <contraseña asignada por un administrador>
 Role: user
 ```
 
 ### Cliente
 ```
 Email: cliente@example.com
-Password: <REDACTED>
+Password: <contraseña asignada por un administrador>
 Role: user (se convierte en cliente en login)
 ```
 
@@ -279,7 +279,7 @@ backend-mongo/
 4. Crea usuarios: `node scripts/importFromCSV.js usuarios data/usuarios_ejemplo.csv`
 5. Inicia backend: `npm run dev`
 6. Inicia frontend: `npm start`
-7. Prueba el login con admin@example.com / Admin123!
+7. Prueba el login con admin@example.com / <contraseña>
 
 ---
 

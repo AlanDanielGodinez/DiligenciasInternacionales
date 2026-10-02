@@ -1,3 +1,12 @@
+// ============================================================================
+// BACKEND HEREDADO — NO USAR. El servidor vigente es backend/src/server.js (npm start en backend/).
+// Este archivo contiene lógica de autenticación antigua (MongoDB, abandonado; secretos de respaldo).
+// Se bloquea su arranque accidental; se eliminará en la Fase 1 (limpieza).
+// ============================================================================
+if (process.env.ALLOW_LEGACY_BACKEND !== 'si-entiendo-el-riesgo') {
+  console.error('[seguridad] backend-mongo/server.js es un servidor heredado e inseguro. Use: npm start (src/server.js).');
+  process.exit(1);
+}
 const express = require('express');
 const cors = require('cors');
 // const connectDB = require('./src/config/database');

@@ -1705,10 +1705,10 @@ El archivo `.env` contiene configuraciones sensibles y específicas del entorno:
 PORT=5000
 
 # Conexión a MongoDB Atlas
-MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/diligencias?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://<usuario>:<contraseña>@<cluster>/<base>
 
 # JWT
-JWT_SECRET=clave_secreta_super_segura_cambiar_en_produccion
+JWT_SECRET=<generar: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))">
 JWT_EXPIRES_IN=7d
 
 # Google Sheets API (opcional)
@@ -2371,8 +2371,8 @@ npm run eject
    - Editar `.env` con tus valores:
      ```env
      PORT=5000
-     MONGODB_URI=tu_string_de_conexion_mongodb_atlas
-     JWT_SECRET=tu_clave_secreta_muy_segura
+     MONGODB_URI=mongodb+srv://<usuario>:<contraseña>@<cluster>/<base>
+     JWT_SECRET=<generar: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))">
      JWT_EXPIRES_IN=7d
      ```
 

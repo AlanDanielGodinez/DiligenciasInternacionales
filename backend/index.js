@@ -1,3 +1,13 @@
+// ============================================================================
+// BACKEND HEREDADO — NO USAR. El servidor vigente es backend/src/server.js (npm start).
+// Este archivo contiene lógica de autenticación antigua (secretos de respaldo y un
+// usuario administrador con contraseña fija que se restablece al arrancar).
+// Se bloquea su arranque accidental; se eliminará en la Fase 1 (limpieza).
+// ============================================================================
+if (process.env.ALLOW_LEGACY_BACKEND !== 'si-entiendo-el-riesgo') {
+  console.error('[seguridad] backend/index.js es un servidor heredado e inseguro. Use: npm start (src/server.js).');
+  process.exit(1);
+}
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
