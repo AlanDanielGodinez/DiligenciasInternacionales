@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const path = require('path');
@@ -28,13 +30,43 @@ const negadosRoutes = require('./routes/negados.routes');
 const legalesRoutes = require('./routes/legales.routes');
 const errorHandler = require('./middlewares/errorHandler');
 const notFound = require('./middlewares/notFound');
+const { authenticateApi, bindActor } = require('./middlewares/auth');
+const { getAllowedOrigins } = require('./config/security');
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// Detrás de un proxy/balanceador (Cloud Run, Nginx) defina TRUST_PROXY=1 para que req.ip sea el del cliente.
+if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY);
+
+app.disable('x-powered-by');
+app.use(helmet({
+  // El frontend React (build) se sirve desde este mismo servidor; CSP se afinará al migrar a Vite.
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: 'same-site' },
+}));
+
+const allowedOrigins = getAllowedOrigins();
+app.use(cors({
+  // Sin lista configurada (desarrollo local) se permite cualquier origen; la API usa token Bearer,
+  // no cookies, así que CORS no es la barrera de seguridad principal.
+  origin: allowedOrigins.length ? allowedOrigins : true,
+  credentials: false,
+}));
+app.use(express.json({ limit: '2mb' }));
+
+app.use('/api', rateLimit({
+  windowMs: 60 * 1000,
+  limit: Number(process.env.API_RATE_LIMIT_PER_MINUTE || 600),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+}));
+
+// Autenticación por defecto: toda ruta /api exige sesión salvo la lista pública de middlewares/auth.js.
+app.use('/api', authenticateApi);
+// La autoría (id_empleado, validado_por, registrado_por, subido_por) sale de la sesión, no del cuerpo.
+app.use('/api', bindActor);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/health', healthRoutes);

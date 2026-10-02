@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/calendarioAma.controller');
+const { requirePermissionForWrites } = require('../middlewares/auth');
+
+router.use(requirePermissionForWrites('ama.calendario.editar'));
 
 router.get('/', controller.listCalendarioAma);
 router.get('/llamadas', controller.listLlamadas);

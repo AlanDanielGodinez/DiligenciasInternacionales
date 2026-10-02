@@ -1,7 +1,11 @@
 const express = require('express');
 const controller = require('../controllers/gruposAma.controller');
 
+const { requirePermissionForWrites } = require('../middlewares/auth');
+
 const router = express.Router();
+
+router.use(requirePermissionForWrites('ama.grupos.editar'));
 
 router.get('/candidatos', controller.listCandidatos);
 router.get('/aplicantes', controller.listAplicantes);

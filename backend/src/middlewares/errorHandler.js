@@ -1,11 +1,13 @@
 function errorHandler(err, req, res, next) { // eslint-disable-line
-  console.error(err);
-  const status = err.status || 500;
+  const status = err.status || err.statusCode || 500;
+  if (status >= 500) console.error(err);
+  // En producción no se devuelven detalles internos (SQL, rutas, stack) de errores 5xx.
+  const hideDetails = status >= 500 && process.env.NODE_ENV === 'production';
   res.status(status).json({
     error: {
-      message: err.message || 'Internal Server Error',
-      ...(err.details ? { details: err.details } : {}),
-      ...(err.code ? { code: err.code } : {})
+      message: hideDetails ? 'Error interno del servidor' : (err.message || 'Internal Server Error'),
+      ...(!hideDetails && err.details ? { details: err.details } : {}),
+      ...(err.code && !hideDetails ? { code: err.code } : {})
     }
   });
 }

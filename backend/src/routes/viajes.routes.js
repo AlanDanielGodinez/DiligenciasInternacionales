@@ -2,7 +2,11 @@ const express = require('express');
 const controller = require('../controllers/viajes.controller');
 const catalogos = require('../controllers/logisticaCatalogos.controller');
 
+const { requirePermissionForWrites } = require('../middlewares/auth');
+
 const router = express.Router();
+
+router.use(requirePermissionForWrites('logistica.editar'));
 
 router.get('/cotizaciones', controller.listCotizaciones);
 router.patch('/cotizaciones/:idCotizacion', controller.updateCotizacion);

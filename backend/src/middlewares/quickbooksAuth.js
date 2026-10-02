@@ -16,7 +16,7 @@ const rejectAuth = (res, error) => res.status(error.status || 401).json({
 
 async function requireQuickBooksAccess(req, res, next) {
   try {
-    const result = await authService.verify(req.headers.authorization || '');
+    const result = req.user ? { user: req.user } : await authService.verify(req.headers.authorization || '');
     const role = normalizeRole(result.user?.rol || result.user?.role);
     if (!['ADMIN', 'INFORMES'].includes(role)) return res.status(403).json({
       error: { code: 'INSUFFICIENT_ROLE', message: 'No autorizado para administrar QuickBooks' },
@@ -28,7 +28,7 @@ async function requireQuickBooksAccess(req, res, next) {
 
 async function requireQuickBooksAdmin(req, res, next) {
   try {
-    const result = await authService.verify(req.headers.authorization || '');
+    const result = req.user ? { user: req.user } : await authService.verify(req.headers.authorization || '');
     const role = normalizeRole(result.user?.rol || result.user?.role);
     if (role !== 'ADMIN') return res.status(403).json({
       error: { code: 'INSUFFICIENT_ROLE', message: 'Solo un administrador puede gestionar la conexion de QuickBooks' },

@@ -1,4 +1,6 @@
 const router=require('express').Router();const controller=require('../controllers/negados.controller');
+const {requirePermissionForWrites}=require('../middlewares/auth');
+router.use(requirePermissionForWrites('negados.editar'));
 router.get('/',controller.list);router.get('/:idSolicitud',controller.detail);router.patch('/:idSolicitud',controller.update);
 router.post('/:idSolicitud/actividades',controller.activity);router.post('/:idSolicitud/notas',controller.note);
 router.put('/:idSolicitud/preguntas-consulado',controller.questions);router.post('/:idSolicitud/legal',controller.legal);

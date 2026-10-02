@@ -1,5 +1,7 @@
 const service = require('../services/documentos.service');
 const { downloadFileById } = require('../services/drive.service');
+const { assertDocumentoAccess } = require('../security/expedienteAccess');
+const { registrarAcceso } = require('../services/auditoria.service');
 
 exports.listDocumentos = async (req, res, next) => {
   try {
@@ -126,6 +128,20 @@ exports.downloadDocumento = async (req, res, next) => {
       });
     }
 
+    try {
+      await assertDocumentoAccess(req.user, idDocumento);
+    } catch (accessError) {
+      registrarAcceso({
+        evento: 'DOCUMENTO_DESCARGA_DENEGADA',
+        idEmpleado: req.user?.id_empleado,
+        correo: req.user?.email,
+        req,
+        recurso: `documento:${idDocumento}`,
+        exito: false,
+      });
+      throw accessError;
+    }
+
     const documento = await service.getDocumentoById(idDocumento);
 
     if (!documento) {
@@ -152,7 +168,17 @@ exports.downloadDocumento = async (req, res, next) => {
     const extension = getFileExtensionFromUrlArchivo(documento.url_archivo) || getFileExtensionFromMimeType(documento.mime_type);
     const filename = ensureFileExtension(baseName, extension);
 
+    registrarAcceso({
+      evento: 'DOCUMENTO_DESCARGA',
+      idEmpleado: req.user?.id_empleado,
+      correo: req.user?.email,
+      req,
+      recurso: `documento:${idDocumento}`,
+    });
+
     res.setHeader('Content-Type', documento.mime_type || 'application/octet-stream');
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
     stream.on('error', (err) => {

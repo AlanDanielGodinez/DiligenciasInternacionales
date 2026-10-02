@@ -1,8 +1,18 @@
 const http = require('http');
-const app = require('./app');
 const dotenv = require('dotenv');
 
 dotenv.config();
+
+const { assertSecurityConfig } = require('./config/security');
+
+try {
+  assertSecurityConfig();
+} catch (error) {
+  console.error(`[seguridad] ${error.message}`);
+  process.exit(1);
+}
+
+const app = require('./app');
 
 const PORT = process.env.PORT || 5000;
 

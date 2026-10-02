@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const controller = require('../controllers/pagos.controller');
+const { requirePermission } = require('../middlewares/auth');
 
 const router = express.Router();
 
@@ -25,10 +26,10 @@ const uploadComprobante = multer({
   },
 });
 
-router.get('/', controller.listPagos);
+router.get('/', requirePermission('pagos.bandeja'), controller.listPagos);
 router.get('/solicitud/:idSolicitud', controller.listPagosBySolicitud);
-router.patch('/:idPago/validar', controller.validarPago);
-router.patch('/:idPago/rechazar', controller.rechazarPago);
+router.patch('/:idPago/validar', requirePermission('pagos.validar'), controller.validarPago);
+router.patch('/:idPago/rechazar', requirePermission('pagos.validar'), controller.rechazarPago);
 
 router.uploadComprobante = uploadComprobante;
 
