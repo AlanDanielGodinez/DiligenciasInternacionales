@@ -55,6 +55,7 @@ import {
   updatePerfil,
 } from '../../../services/perfiles.service';
 import api from '../../../lib/api';
+import { downloadDocumentoAutenticado, describeDownloadError } from '../../../utils/downloadDocumento';
 import { shouldCommitSolicitudLoad } from '../../../utils/solicitudLoadGuard';
 import SolicitudReviewNotes from '../../../Components/AreaBandeja/SolicitudReviewNotes';
 import AmaSolicitudActivity from '../../../Components/AreaBandeja/AmaSolicitudActivity';
@@ -167,8 +168,9 @@ const getClientInitials = (solicitud = {}) => {
 
 const getClientId = (solicitud = {}) => solicitud.id_cliente || solicitud.cliente_id;
 const isWebUrl = (value) => /^https?:\/\//i.test(String(value || '').trim());
-const getDownloadUrl = (documento) =>
-  `${api.defaults.baseURL || ''}/documentos/${documento.id_documento}/descargar`;
+// La descarga exige sesión: se hace como blob con el token (ver utils/downloadDocumento.js).
+const descargarDocumento = (documento) =>
+  downloadDocumentoAutenticado(documento).catch((error) => window.alert(describeDownloadError(error)));
 const getPreviewUrl = (documento) =>
   documento?.drive_file_id
     ? `https://drive.google.com/file/d/${documento.drive_file_id}/preview`
@@ -2504,12 +2506,7 @@ const SolicitudesNuevoPage = () => {
 
   const handleDownloadDocumentoRequerido = (documento) => {
     if (!documento?.id_documento) return;
-    const link = document.createElement('a');
-    link.href = getDownloadUrl(documento);
-    link.download = documento.nombre_documento || `documento-${documento.id_documento}`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    descargarDocumento(documento);
   };
 
   const handlePreview = (documento) => {
@@ -3932,11 +3929,9 @@ const SolicitudesNuevoPage = () => {
                                       type="button"
                                       title="Descargar documento"
                                       onClick={() =>
-                                        openExternalLink(
-                                          documento.drive_file_id
-                                            ? getDownloadUrl(documento)
-                                            : documento.web_content_link
-                                        )
+                                        documento.drive_file_id
+                                          ? descargarDocumento(documento)
+                                          : openExternalLink(documento.web_content_link)
                                       }
                                     >
                                       <FaDownload />
@@ -4117,11 +4112,9 @@ const SolicitudesNuevoPage = () => {
                               <button
                                 type="button"
                                 onClick={() =>
-                                  openExternalLink(
-                                    documento.drive_file_id
-                                      ? getDownloadUrl(documento)
-                                      : documento.web_content_link
-                                  )
+                                  documento.drive_file_id
+                                    ? descargarDocumento(documento)
+                                    : openExternalLink(documento.web_content_link)
                                 }
                               >
                                 <FaDownload /> Descargar

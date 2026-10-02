@@ -24,6 +24,12 @@ const Login = () => {
   const searchParams = new URLSearchParams(location.search);
   const servicioSolicitado = searchParams.get('servicio');
   const action = searchParams.get('action');
+  const sesionExpirada = searchParams.get('sesion') === 'expirada';
+  // Sólo rutas internas (evita redirecciones abiertas a otros dominios).
+  const volverA = (() => {
+    const value = searchParams.get('volver') || '';
+    return value.startsWith('/') && !value.startsWith('//') ? value : '/home';
+  })();
 
   // Verificar token al cargar
   useEffect(() => {
@@ -97,12 +103,12 @@ const Login = () => {
           clearAuthSession();
           localStorage.setItem(AUTH_TOKEN_KEY, response.data.token);
           const normalizedUser = saveCurrentUser(response.data.user);
-          
-          // Verificar rol para navegación
-          if (normalizedUser.role === 'admin' || normalizedUser.rol === 'Administrador') {
-            navigate('/home');
+
+          // Contraseña temporal asignada por un administrador: debe cambiarse antes de continuar.
+          if (response.data.debe_cambiar_password || normalizedUser.debe_cambiar_password) {
+            navigate('/cambiar-password', { replace: true });
           } else {
-            navigate('/home');
+            navigate(volverA, { replace: true });
           }
         }
 
@@ -158,7 +164,13 @@ const Login = () => {
       // setError(err.response?.data?.error || 'Error al iniciar sesión');
       
       // NUEVO - MongoDB error handling:
-      setError(err.response?.data?.error || err.response?.data?.message || 'Error al iniciar sesión');
+      // El backend responde { error: { message, code } }; nunca se renderiza el objeto completo.
+      const apiError = err.response?.data?.error;
+      setError(
+        (typeof apiError === 'string' ? apiError : apiError?.message)
+        || err.response?.data?.message
+        || 'Error al iniciar sesión'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -194,6 +206,7 @@ const Login = () => {
             </button>
           </div>
 
+          {sesionExpirada && !error && <div className="error-message">Su sesión expiró. Inicie sesión de nuevo.</div>}
           {error && <div className="error-message">{error}</div>}
 
           {userType === 'empleado' ? (
@@ -218,7 +231,7 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  minLength="6"
+                  autoComplete="current-password"
                 />
               </div>
             </>

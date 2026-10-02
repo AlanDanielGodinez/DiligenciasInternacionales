@@ -4,6 +4,7 @@ import {
   getSolicitudById,
   getSolicitudes,
 } from '../../../services/solicitudes.service';
+import { downloadDocumentoAutenticado, describeDownloadError } from '../../../utils/downloadDocumento';
 
 const pageStyle = {
   minHeight: '100%',
@@ -370,7 +371,6 @@ const migratedBadgeStyle = {
   backgroundColor: '#fef3c7',
 };
 
-const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 const linkedBadgeStyle = {
   ...badgeStyle,
@@ -428,7 +428,9 @@ const getDrivePreviewUrl = (documento) => {
   return `https://drive.google.com/file/d/${documento.drive_file_id}/preview`;
 };
 
-const getDocumentoDownloadUrl = (documento) => `${apiBaseUrl}/documentos/${documento.id_documento}/descargar`;
+// La descarga exige sesión: se hace como blob con el token (ver utils/downloadDocumento.js).
+const descargarDocumento = (documento) =>
+  downloadDocumentoAutenticado(documento).catch((error) => window.alert(describeDownloadError(error)));
 
 const openExternalLink = (link) => {
   if (!link) return;
@@ -840,9 +842,9 @@ const SolicitudesPostgresPage = () => {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    openExternalLink(
-                                      hasBackendDownload ? getDocumentoDownloadUrl(documento) : documento.web_content_link
-                                    )
+                                    hasBackendDownload
+                                      ? descargarDocumento(documento)
+                                      : openExternalLink(documento.web_content_link)
                                   }
                                   style={secondaryLinkButtonStyle}
                                 >

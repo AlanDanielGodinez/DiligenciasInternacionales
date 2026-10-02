@@ -4,6 +4,7 @@ import { ThemeProvider } from "../src/Components/ThemeContext";
 import Dashboard from "./Pages/Dashboard";
 import Contacto from "./Pages/Contacto";
 import Login from "./Pages/Login";
+import CambiarPassword from "./Pages/CambiarPassword";
 import Tramites from "./Pages/Tramites";
 import DashboardPostgres from "./features/dashboard/pages/DashboardPage";
 import ClientesPostgresPage from "./features/clientes/pages/ClientesPostgresPage";
@@ -125,6 +126,7 @@ function App() {
             <Route path="/tramites" element={<Tramites />} />
             <Route path="/contacto" element={<Contacto />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/cambiar-password" element={<CambiarPassword />} />
             <Route path="/login/register" element={<Login initialMode="register" />} />
             <Route path="/cliente/inicio" element={<InicioCliente />} />
             <Route path="/dashboard-postgres" element={<DashboardPostgres />} />

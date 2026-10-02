@@ -102,6 +102,9 @@ const menuByRole = {
   AMA: ['dashboard', 'ama', 'aplicantes'],
   LEGALES: ['dashboard', 'aplicantes', 'legales'],
   VUELOS: ['dashboard', 'viajes', 'aplicantes'],
+  PROTOCOLO: ['dashboard', 'ama', 'aplicantes'],
+  NEGADOS: ['dashboard', 'aplicantes'],
+  SIN_ROL: ['dashboard'],
 };
 
 const roleSpecificItems = {
@@ -135,7 +138,7 @@ const normalizeText = (value) =>
 const roleAliases = [
   {
     key: 'ADMIN',
-    matches: ['admin', 'administrador', 'auditoria', 'direccion', 'configuracion'],
+    matches: ['admin', 'administrador', 'administracion', 'auditoria', 'direccion', 'configuracion'],
   },
   {
     key: 'INFORMES',
@@ -156,6 +159,14 @@ const roleAliases = [
   {
     key: 'LEGALES',
     matches: ['legales', 'legal', 'asesoria legal'],
+  },
+  {
+    key: 'PROTOCOLO',
+    matches: ['protocolo'],
+  },
+  {
+    key: 'NEGADOS',
+    matches: ['negados'],
   },
   {
     key: 'VUELOS',
@@ -197,12 +208,14 @@ export const getSidebarRole = (user) => {
     if (match) return match.key;
   }
 
-  return 'ADMIN';
+  // Rol/área no reconocidos: menú mínimo (antes mostraba el menú de administrador).
+  // El backend aplica los permisos reales; ver backend/src/security/permissions.js.
+  return 'SIN_ROL';
 };
 
 export const getMenuItemsByRole = (user) => {
   const roleKey = getSidebarRole(user);
-  const menuKeys = menuByRole[roleKey] || menuByRole.ADMIN;
+  const menuKeys = menuByRole[roleKey] || menuByRole.SIN_ROL;
   const itemOverrides = roleSpecificItems[roleKey] || {};
 
   return menuKeys

@@ -4,6 +4,10 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { ThemeProvider } from "../src/Components/ThemeContext"; 
+import { installAuthInterceptors } from './utils/apiAuth';
+
+// Adjunta el token de sesión a todas las llamadas al backend (axios y fetch).
+installAuthInterceptors();
 
 
 
