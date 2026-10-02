@@ -28,3 +28,11 @@
 - Retirar o impedir el arranque accidental de backends heredados.
 
 Hasta cerrar los puntos críticos, el sistema debe permanecer clasificado como **BLOQUEADO_AUTH para preproducción con datos reales**.
+
+## Estado 2026-10-02 (rama `semana1-seguridad`)
+
+Resueltos: 1 (contraseña con hash scrypt), 2 (API protegida por defecto con lista pública explícita),
+3 (sin secreto de respaldo; `JWT_SECRET` obligatorio), 4 (guard de rutas de empleado), 6 (matriz de permisos
+por área en el servidor, pendiente de validación del negocio), 7 (política central de acceso para documentos),
+9 parcial (backends heredados bloqueados para arranque) y 10 (pruebas 401/403 sobre todas las rutas).
+Pendientes: 5 (portal cliente) y 8 (tokens en `localStorage`). Detalle en `docs/seguridad/semana1-seguridad.md`.
